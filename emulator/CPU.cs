@@ -143,6 +143,210 @@ namespace JustinCredible.SIEmulator
                     _registers.C = _memory[_programCounter + 1];
                     break;
 
+                #region MOV X, X (from register to register)
+
+                case OpcodeBytes.MOV_B_B:
+                     ExecuteMOV(RegisterID.B, RegisterID.B);
+                     break;
+                case OpcodeBytes.MOV_B_C:
+                     ExecuteMOV(RegisterID.B, RegisterID.C);
+                     break;
+                case OpcodeBytes.MOV_B_D:
+                     ExecuteMOV(RegisterID.B, RegisterID.D);
+                     break;
+                case OpcodeBytes.MOV_B_E:
+                     ExecuteMOV(RegisterID.B, RegisterID.E);
+                     break;
+                case OpcodeBytes.MOV_B_H:
+                     ExecuteMOV(RegisterID.B, RegisterID.H);
+                     break;
+                case OpcodeBytes.MOV_B_L:
+                     ExecuteMOV(RegisterID.B, RegisterID.L);
+                     break;
+                case OpcodeBytes.MOV_B_A:
+                     ExecuteMOV(RegisterID.B, RegisterID.A);
+                     break;
+                case OpcodeBytes.MOV_C_B:
+                     ExecuteMOV(RegisterID.C, RegisterID.B);
+                     break;
+                case OpcodeBytes.MOV_C_C:
+                     ExecuteMOV(RegisterID.C, RegisterID.C);
+                     break;
+                case OpcodeBytes.MOV_C_D:
+                     ExecuteMOV(RegisterID.C, RegisterID.D);
+                     break;
+                case OpcodeBytes.MOV_C_E:
+                     ExecuteMOV(RegisterID.C, RegisterID.E);
+                     break;
+                case OpcodeBytes.MOV_C_H:
+                     ExecuteMOV(RegisterID.C, RegisterID.H);
+                     break;
+                case OpcodeBytes.MOV_C_L:
+                     ExecuteMOV(RegisterID.C, RegisterID.L);
+                     break;
+                case OpcodeBytes.MOV_C_A:
+                     ExecuteMOV(RegisterID.C, RegisterID.A);
+                     break;
+                case OpcodeBytes.MOV_D_B:
+                     ExecuteMOV(RegisterID.D, RegisterID.B);
+                     break;
+                case OpcodeBytes.MOV_D_C:
+                     ExecuteMOV(RegisterID.D, RegisterID.C);
+                     break;
+                case OpcodeBytes.MOV_D_D:
+                     ExecuteMOV(RegisterID.D, RegisterID.D);
+                     break;
+                case OpcodeBytes.MOV_D_E:
+                     ExecuteMOV(RegisterID.D, RegisterID.E);
+                     break;
+                case OpcodeBytes.MOV_D_H:
+                     ExecuteMOV(RegisterID.D, RegisterID.H);
+                     break;
+                case OpcodeBytes.MOV_D_L:
+                     ExecuteMOV(RegisterID.D, RegisterID.L);
+                     break;
+                case OpcodeBytes.MOV_D_A:
+                     ExecuteMOV(RegisterID.D, RegisterID.A);
+                     break;
+                case OpcodeBytes.MOV_E_B:
+                     ExecuteMOV(RegisterID.E, RegisterID.B);
+                     break;
+                case OpcodeBytes.MOV_E_C:
+                     ExecuteMOV(RegisterID.E, RegisterID.C);
+                     break;
+                case OpcodeBytes.MOV_E_D:
+                     ExecuteMOV(RegisterID.E, RegisterID.D);
+                     break;
+                case OpcodeBytes.MOV_E_E:
+                     ExecuteMOV(RegisterID.E, RegisterID.E);
+                     break;
+                case OpcodeBytes.MOV_E_H:
+                     ExecuteMOV(RegisterID.E, RegisterID.H);
+                     break;
+                case OpcodeBytes.MOV_E_L:
+                     ExecuteMOV(RegisterID.E, RegisterID.L);
+                     break;
+                case OpcodeBytes.MOV_E_A:
+                     ExecuteMOV(RegisterID.E, RegisterID.A);
+                     break;
+                case OpcodeBytes.MOV_H_B:
+                     ExecuteMOV(RegisterID.H, RegisterID.B);
+                     break;
+                case OpcodeBytes.MOV_H_C:
+                     ExecuteMOV(RegisterID.H, RegisterID.C);
+                     break;
+                case OpcodeBytes.MOV_H_D:
+                     ExecuteMOV(RegisterID.H, RegisterID.D);
+                     break;
+                case OpcodeBytes.MOV_H_E:
+                     ExecuteMOV(RegisterID.H, RegisterID.E);
+                     break;
+                case OpcodeBytes.MOV_H_H:
+                     ExecuteMOV(RegisterID.H, RegisterID.H);
+                     break;
+                case OpcodeBytes.MOV_H_L:
+                     ExecuteMOV(RegisterID.H, RegisterID.L);
+                     break;
+                case OpcodeBytes.MOV_H_A:
+                     ExecuteMOV(RegisterID.H, RegisterID.A);
+                     break;
+                case OpcodeBytes.MOV_L_B:
+                     ExecuteMOV(RegisterID.L, RegisterID.B);
+                     break;
+                case OpcodeBytes.MOV_L_C:
+                     ExecuteMOV(RegisterID.L, RegisterID.C);
+                     break;
+                case OpcodeBytes.MOV_L_D:
+                     ExecuteMOV(RegisterID.L, RegisterID.D);
+                     break;
+                case OpcodeBytes.MOV_L_E:
+                     ExecuteMOV(RegisterID.L, RegisterID.E);
+                     break;
+                case OpcodeBytes.MOV_L_H:
+                     ExecuteMOV(RegisterID.L, RegisterID.H);
+                     break;
+                case OpcodeBytes.MOV_L_L:
+                     ExecuteMOV(RegisterID.L, RegisterID.L);
+                     break;
+                case OpcodeBytes.MOV_L_A:
+                     ExecuteMOV(RegisterID.L, RegisterID.A);
+                     break;
+                case OpcodeBytes.MOV_A_B:
+                     ExecuteMOV(RegisterID.A, RegisterID.B);
+                     break;
+                case OpcodeBytes.MOV_A_C:
+                     ExecuteMOV(RegisterID.A, RegisterID.C);
+                     break;
+                case OpcodeBytes.MOV_A_D:
+                     ExecuteMOV(RegisterID.A, RegisterID.D);
+                     break;
+                case OpcodeBytes.MOV_A_E:
+                     ExecuteMOV(RegisterID.A, RegisterID.E);
+                     break;
+                case OpcodeBytes.MOV_A_H:
+                     ExecuteMOV(RegisterID.A, RegisterID.H);
+                     break;
+                case OpcodeBytes.MOV_A_L:
+                     ExecuteMOV(RegisterID.A, RegisterID.L);
+                     break;
+                case OpcodeBytes.MOV_A_A:
+                     ExecuteMOV(RegisterID.A, RegisterID.A);
+                     break;
+
+                #endregion
+
+                #region MOV X, M (from memory to register)
+
+                case OpcodeBytes.MOV_B_M:
+                    ExecuteMOVFromMemoryToRegister(RegisterID.B);
+                    break;
+                case OpcodeBytes.MOV_C_M:
+                    ExecuteMOVFromMemoryToRegister(RegisterID.C);
+                    break;
+                case OpcodeBytes.MOV_D_M:
+                    ExecuteMOVFromMemoryToRegister(RegisterID.D);
+                    break;
+                case OpcodeBytes.MOV_E_M:
+                    ExecuteMOVFromMemoryToRegister(RegisterID.E);
+                    break;
+                case OpcodeBytes.MOV_H_M:
+                    ExecuteMOVFromMemoryToRegister(RegisterID.H);
+                    break;
+                case OpcodeBytes.MOV_L_M:
+                    ExecuteMOVFromMemoryToRegister(RegisterID.L);
+                    break;
+                case OpcodeBytes.MOV_A_M:
+                    ExecuteMOVFromMemoryToRegister(RegisterID.A);
+                    break;
+
+                #endregion
+
+                #region MOV M, X (from register to memory)
+
+                case OpcodeBytes.MOV_M_B:
+                    ExecuteMOVFromRegisterToMemory(RegisterID.B);
+                    break;
+                case OpcodeBytes.MOV_M_C:
+                    ExecuteMOVFromRegisterToMemory(RegisterID.C);
+                    break;
+                case OpcodeBytes.MOV_M_D:
+                    ExecuteMOVFromRegisterToMemory(RegisterID.D);
+                    break;
+                case OpcodeBytes.MOV_M_E:
+                    ExecuteMOVFromRegisterToMemory(RegisterID.E);
+                    break;
+                case OpcodeBytes.MOV_M_H:
+                    ExecuteMOVFromRegisterToMemory(RegisterID.H);
+                    break;
+                case OpcodeBytes.MOV_M_L:
+                    ExecuteMOVFromRegisterToMemory(RegisterID.L);
+                    break;
+                case OpcodeBytes.MOV_M_A:
+                    ExecuteMOVFromRegisterToMemory(RegisterID.C);
+                    break;
+
+                #endregion
+
                 default:
                     throw new NotImplementedException(String.Format("Attempted to execute unknown opcode 0x{0:X2} at memory address 0x{0:X4}", opcode, _programCounter));
             }
@@ -164,6 +368,29 @@ namespace JustinCredible.SIEmulator
             _programCounter += elapsedCycles;
 
             return elapsedCycles;
+        }
+
+        private void ExecuteMOV(RegisterID dest, RegisterID source)
+        {
+            _registers[dest] = _registers[source];
+        }
+
+        private void ExecuteMOVFromMemoryToRegister(RegisterID dest)
+        {
+            var upper = _registers.H << 8;
+            var lower = (_registers.L);
+            var address = upper & lower;
+
+            _registers[dest] = _memory[address];
+        }
+
+        private void ExecuteMOVFromRegisterToMemory(RegisterID source)
+        {
+            var upper = _registers.H << 8;
+            var lower = (_registers.L);
+            var address = upper & lower;
+
+            _memory[address] = _registers[source];
         }
     }
 }
