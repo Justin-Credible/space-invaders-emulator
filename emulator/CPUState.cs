@@ -6,6 +6,7 @@ namespace JustinCredible.SIEmulator
     {
         public byte[] Memory { get; set; }
         public Registers Registers { get; set; }
+        public ConditionFlags Flags { get; set; }
         public UInt16 ProgramCounter { get; set; }
         public UInt16 StackPointer { get; set; }
     }

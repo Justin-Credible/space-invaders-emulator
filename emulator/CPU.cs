@@ -5,8 +5,10 @@ namespace JustinCredible.SIEmulator
 {
     public class CPU
     {
-        // Indicates the ROM has finished executing via a TODO opcode.
-        // Step should not be called again without first calling Reset.
+        /**
+         * Indicates the ROM has finished executing via a TODO opcode.
+         * Step should not be called again without first calling Reset.
+         */
         public bool Finished { get; private set; }
 
         /**
@@ -24,13 +26,16 @@ namespace JustinCredible.SIEmulator
          */
         private byte[] _memory;
 
-        // Registers
+        /** The primary CPU registers. */
         private Registers _registers;
 
-        // Program Counter; 16-bits
+        /** The encapsulated condition/flags regiser. */
+        private ConditionFlags _flags;
+
+        /** Program Counter; 16-bits */
         private UInt16 _programCounter;
 
-        // Stack Pointer; 16-bits
+        /** Stack Pointer; 16-bits */
         private UInt16 _stackPointer;
 
         public CPU()
@@ -42,6 +47,8 @@ namespace JustinCredible.SIEmulator
         {
             // Initialize the regisgters and memory.
             _memory = new byte[16*1024];
+            _registers = new Registers();
+            _flags = new ConditionFlags();
 
             // The ROMs are loaded at the lower 8K of addressable memory.
             _programCounter = 0x0000;
@@ -78,6 +85,7 @@ namespace JustinCredible.SIEmulator
             {
                 Memory = _memory,
                 Registers = _registers,
+                Flags = _flags,
                 ProgramCounter = _programCounter,
                 StackPointer = _stackPointer,
             };
@@ -85,7 +93,10 @@ namespace JustinCredible.SIEmulator
 
         public void PrintDebugSummary()
         {
-            var opcode = String.Format("0x{0:X2}", _memory[_programCounter]);
+            var opcodeByte = _memory[_programCounter];
+            var opcodeInstruction = OpcodeTable.Lookup[opcodeByte].Instruction;
+
+            var opcode = String.Format("0x{0:X2} {1}", opcodeByte, opcodeInstruction);
             var pc = String.Format("0x{0:X4}", _programCounter);
             var sp = String.Format("0x{0:X4}", _stackPointer);
             var regA = String.Format("0x{0:X2}", _registers.A);
@@ -95,46 +106,64 @@ namespace JustinCredible.SIEmulator
             var regE = String.Format("0x{0:X2}", _registers.E);
             var regH = String.Format("0x{0:X2}", _registers.H);
             var regL = String.Format("0x{0:X2}", _registers.L);
-            var regFlags = String.Format("0x{0:X2}", _registers.Flags);
 
+            Console.WriteLine($"Opcode: ${opcode}");
             Console.WriteLine($"PC: ${pc}\tSP: ${sp}");
             Console.WriteLine($"A: ${regA}\tB: ${regB}\tC: ${regC}\tD: ${regD}");
             Console.WriteLine($"E: ${regE}\tH: ${regH}\tL: ${regL}");
-            Console.WriteLine($"\tFlags: ${regFlags}");
+            Console.WriteLine($"Zero: ${_flags.Zero}\tSign: ${_flags.Sign}\tParity: ${_flags.Parity}");
+            Console.WriteLine($"Carry: ${_flags.Carry}\tAuxillary Carry: ${_flags.AuxCarry}");
         }
 
-        public void Step(double elapsedMilliseconds, Dictionary<byte, bool> keys = null)
+        /**
+         * Executes the next instruction and returns the number of cycles it took to execute.
+         */
+        public int Step()
         {
             // Sanity check.
             if (Finished)
                 throw new Exception("Program has finished execution; Reset() must be invoked before invoking Step() again.");
 
             // Fetch the next opcode to be executed.
-            var opcode = _memory[_programCounter];
+            var opcodeByte = _memory[_programCounter];
+            var opcode = OpcodeTable.Lookup[opcodeByte];
 
-            // Useful for adding to IDE's watched variables during debugging.
-            // var d_opcode = String.Format("0x{0:X2}", opcode);
-            // var d_pc = String.Format("0x{0:X4}", _programCounter);
-            // var d_sp = String.Format("0x{0:X4}", _stackPointer);
-            // var d_A = String.Format("0x{0:X2}", _registers.A);
-            // var d_B = String.Format("0x{0:X2}", _registers.B);
-            // var d_C = String.Format("0x{0:X2}", _registers.C);
-            // var d_D = String.Format("0x{0:X2}", _registers.D);
-            // var d_E = String.Format("0x{0:X2}", _registers.E);
-            // var d_H = String.Format("0x{0:X2}", _registers.H);
-            // var d_L = String.Format("0x{0:X2}", _registers.L);
-            // var d_Flags = String.Format("0x{0:X2}", _registers.Flags);
+            // Some instructions have an alternate cycle count depending on the outcome of
+            // the operation. This indicates how we should increment the program counter.
+            var useAlternateCycleCount = false;
 
-            // Decode and execute opcode.
-            // There are 30 opcodes; each is two bytes and stored big-endian.
-            if (opcode == 0x00)
+            // Execute the opcode.
+            switch (opcodeByte)
             {
+                case OpcodeBytes.NOP:
+                    break;
 
+                case OpcodeBytes.LXI_B:
+                    _registers.B = _memory[_programCounter + 2];
+                    _registers.C = _memory[_programCounter + 1];
+                    break;
+
+                default:
+                    throw new NotImplementedException(String.Format("Attempted to execute unknown opcode 0x{0:X2} at memory address 0x{0:X4}", opcode, _programCounter));
             }
-            else
+
+            // Determine how many cycles the instruction took.
+
+            var elapsedCycles = (UInt16)opcode.Cycles;
+
+            if (useAlternateCycleCount)
             {
-                throw new NotImplementedException(String.Format("Attempted to execute unknown opcode 0x{0:X2} at memory address 0x{0:X4}", opcode, _programCounter));
+                // Sanity check; if this fails an opcode definition or implementation is invalid.
+                if (opcode.AlternateCycles == null)
+                    throw new Exception(String.Format("The implementation for opcode 0x{0:X2} at memory address 0x{0:X4} indicated the alternate number of cycles should be used, but was not defined.", opcode, _programCounter));
+
+                elapsedCycles = (UInt16)opcode.AlternateCycles;
             }
+
+            // Increment the program counter.
+            _programCounter += elapsedCycles;
+
+            return elapsedCycles;
         }
     }
 }

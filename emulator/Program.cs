@@ -177,7 +177,8 @@ namespace JustinCredible.SIEmulator
 
                 stopwatch.Restart();
 
-                _cpu.Step(elapsedMilliseconds, _keys);
+                // _cpu.Step(elapsedMilliseconds, _keys);
+                _cpu.Step();
 
                 // if (_cpu.FrameBufferUpdated)
                 // {
