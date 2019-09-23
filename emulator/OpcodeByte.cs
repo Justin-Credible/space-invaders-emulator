@@ -8,6 +8,8 @@ namespace JustinCredible.SIEmulator
     public class OpcodeBytes
     {
         public const byte NOP = 0x00;
+        public const byte HLT = 0x76;
+
         public const byte LXI_B = 0x01;
 
         public const byte MOV_B_B = 0x40;

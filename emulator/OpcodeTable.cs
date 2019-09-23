@@ -10,6 +10,8 @@ namespace JustinCredible.SIEmulator
     public class OpcodeTable
     {
         public static Opcode NOP = new Opcode(OpcodeBytes.NOP, 1, "NOP", 4);
+        public static Opcode HLT = new Opcode(OpcodeBytes.HLT, 1, "NOP", 7);
+
         public static Opcode LXI_B = new Opcode(OpcodeBytes.LXI_B, 3, "LXI B,d16", 10); //B <- byte 3, C <- byte 2
 
         public static Opcode MOV_B_B = new Opcode(OpcodeBytes.MOV_B_B, 1, "MOV B,B", 5); // B <- B
@@ -79,6 +81,8 @@ namespace JustinCredible.SIEmulator
         public static Dictionary<byte, Opcode> Lookup = new Dictionary<byte, Opcode>()
         {
             [OpcodeBytes.NOP] = NOP,
+            [OpcodeBytes.HLT] = HLT,
+
             [OpcodeBytes.LXI_B] = LXI_B,
 
             [OpcodeBytes.MOV_B_B] = MOV_B_B,

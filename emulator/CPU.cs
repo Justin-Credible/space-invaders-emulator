@@ -43,7 +43,7 @@ namespace JustinCredible.SIEmulator
             this.Reset();
         }
 
-        public void Reset(int seed = -1)
+        public void Reset()
         {
             // Initialize the regisgters and memory.
             _memory = new byte[16*1024];
@@ -74,9 +74,14 @@ namespace JustinCredible.SIEmulator
             var memory = new byte[16*1024];
 
             // The ROM is the lower 8K of addressable memory.
-            Array.Copy(rom, memory, 8192);
+            Array.Copy(rom, memory, rom.Length);
 
             LoadMemory(memory);
+        }
+
+        public void LoadRegisters(Registers registers)
+        {
+             _registers = registers;
         }
 
         public CPUState DumpState()
@@ -136,6 +141,10 @@ namespace JustinCredible.SIEmulator
             switch (opcodeByte)
             {
                 case OpcodeBytes.NOP:
+                    break;
+
+               case OpcodeBytes.HLT:
+                    Finished = true;
                     break;
 
                 case OpcodeBytes.LXI_B:
@@ -365,7 +374,8 @@ namespace JustinCredible.SIEmulator
             }
 
             // Increment the program counter.
-            _programCounter += elapsedCycles;
+            if (opcode != OpcodeTable.HLT)
+               _programCounter += (UInt16)opcode.Size;
 
             return elapsedCycles;
         }
