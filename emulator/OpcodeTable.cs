@@ -14,6 +14,7 @@ namespace JustinCredible.SIEmulator
 
         public static Opcode LXI_B = new Opcode(OpcodeBytes.LXI_B, 3, "LXI B,d16", 10); //B <- byte 3, C <- byte 2
 
+        #region MOV
         public static Opcode MOV_B_B = new Opcode(OpcodeBytes.MOV_B_B, 1, "MOV B,B", 5); // B <- B
         public static Opcode MOV_B_C = new Opcode(OpcodeBytes.MOV_B_C, 1, "MOV B,C", 5); // B <- C
         public static Opcode MOV_B_D = new Opcode(OpcodeBytes.MOV_B_D, 1, "MOV B,D", 5); // B <- D
@@ -77,6 +78,18 @@ namespace JustinCredible.SIEmulator
         public static Opcode MOV_A_L = new Opcode(OpcodeBytes.MOV_A_L, 1, "MOV A,L", 5); // A <- L
         public static Opcode MOV_A_M = new Opcode(OpcodeBytes.MOV_A_M, 1, "MOV A,M", 7); // A <- (HL)
         public static Opcode MOV_A_A = new Opcode(OpcodeBytes.MOV_A_A, 1, "MOV A,A", 5); // A <- A
+        #endregion
+
+        #region MVI
+        public static Opcode MVI_B = new Opcode(OpcodeBytes.MVI_B, 2, "MVI B,d8", 7); // B <- byte 2
+        public static Opcode MVI_C = new Opcode(OpcodeBytes.MVI_C, 2, "MVI C,d8", 7); // C <- byte 2
+        public static Opcode MVI_D = new Opcode(OpcodeBytes.MVI_D, 2, "MVI D,d8", 7); // D <- byte 2
+        public static Opcode MVI_E = new Opcode(OpcodeBytes.MVI_E, 2, "MVI E,d8", 7); // E <- byte 2
+        public static Opcode MVI_H = new Opcode(OpcodeBytes.MVI_H, 2, "MVI H,d8", 7); // L <- byte 2
+        public static Opcode MVI_L = new Opcode(OpcodeBytes.MVI_L, 2, "MVI L,d8", 7); // L <- byte 2
+        public static Opcode MVI_M = new Opcode(OpcodeBytes.MVI_M, 2, "MVI M,d8", 10); // (HL) <- byte 2
+        public static Opcode MVI_A = new Opcode(OpcodeBytes.MVI_A, 2, "MVI A,d8", 7); // A <- byte 2
+        #endregion
 
         public static Dictionary<byte, Opcode> Lookup = new Dictionary<byte, Opcode>()
         {
@@ -85,6 +98,7 @@ namespace JustinCredible.SIEmulator
 
             [OpcodeBytes.LXI_B] = LXI_B,
 
+            #region MOV
             [OpcodeBytes.MOV_B_B] = MOV_B_B,
             [OpcodeBytes.MOV_B_C] = MOV_B_C,
             [OpcodeBytes.MOV_B_D] = MOV_B_D,
@@ -148,6 +162,18 @@ namespace JustinCredible.SIEmulator
             [OpcodeBytes.MOV_A_L] = MOV_A_L,
             [OpcodeBytes.MOV_A_M] = MOV_A_M,
             [OpcodeBytes.MOV_A_A] = MOV_A_A,
+            #endregion
+
+            #region MVI
+            [OpcodeBytes.MVI_B] = MVI_B,
+            [OpcodeBytes.MVI_C] = MVI_C,
+            [OpcodeBytes.MVI_D] = MVI_D,
+            [OpcodeBytes.MVI_E] = MVI_E,
+            [OpcodeBytes.MVI_H] = MVI_H,
+            [OpcodeBytes.MVI_L] = MVI_L,
+            [OpcodeBytes.MVI_M] = MVI_M,
+            [OpcodeBytes.MVI_A] = MVI_A,
+            #endregion
         };
     }
 }
