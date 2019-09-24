@@ -101,5 +101,10 @@ namespace JustinCredible.SIEmulator
         public const byte LXI_H = 0x21;
         public const byte LXI_SP = 0x31;
         #endregion
+
+        #region STAX
+        public const byte STAX_B = 0x02;
+        public const byte STAX_D = 0x12;
+        #endregion
     }
 }

@@ -29,7 +29,7 @@ namespace JustinCredible.SIEmulator.Tests
         }
 
         [Fact]
-        public void TestXLIToStackPointer()
+        public void TestLXIToStackPointer()
         {
             var rom = AssembleSource($@"
                 org 00h

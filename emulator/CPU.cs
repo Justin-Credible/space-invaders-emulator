@@ -312,25 +312,25 @@ namespace JustinCredible.SIEmulator
                 #region MOV X, M (from memory to register)
 
                 case OpcodeBytes.MOV_B_M:
-                    ExecuteMOVFromMemoryToRegister(RegisterID.B);
+                    _registers[RegisterID.B] = _memory[GetAddress()];
                     break;
                 case OpcodeBytes.MOV_C_M:
-                    ExecuteMOVFromMemoryToRegister(RegisterID.C);
+                    _registers[RegisterID.C] = _memory[GetAddress()];
                     break;
                 case OpcodeBytes.MOV_D_M:
-                    ExecuteMOVFromMemoryToRegister(RegisterID.D);
+                    _registers[RegisterID.D] = _memory[GetAddress()];
                     break;
                 case OpcodeBytes.MOV_E_M:
-                    ExecuteMOVFromMemoryToRegister(RegisterID.E);
+                    _registers[RegisterID.E] = _memory[GetAddress()];
                     break;
                 case OpcodeBytes.MOV_H_M:
-                    ExecuteMOVFromMemoryToRegister(RegisterID.H);
+                    _registers[RegisterID.H] = _memory[GetAddress()];
                     break;
                 case OpcodeBytes.MOV_L_M:
-                    ExecuteMOVFromMemoryToRegister(RegisterID.L);
+                    _registers[RegisterID.L] = _memory[GetAddress()];
                     break;
                 case OpcodeBytes.MOV_A_M:
-                    ExecuteMOVFromMemoryToRegister(RegisterID.A);
+                    _registers[RegisterID.A] = _memory[GetAddress()];
                     break;
 
                 #endregion
@@ -406,11 +406,28 @@ namespace JustinCredible.SIEmulator
                     _registers.L = _memory[_programCounter + 1];
                     break;
                 case OpcodeBytes.LXI_SP:
+                {
                     var upper = _memory[_programCounter + 2] << 8;
                     var lower = _memory[_programCounter + 1];
                     var address = upper | lower;
                     _stackPointer = (UInt16)address;
                     break;
+                }
+                #endregion
+
+                #region STAX
+                case OpcodeBytes.STAX_B:
+                {
+                    var address = GetAddress(RegisterID.B, RegisterID.C);
+                    _memory[address] = _registers.A;
+                    break;
+                }
+                case OpcodeBytes.STAX_D:
+                {
+                    var address = GetAddress(RegisterID.D, RegisterID.E);
+                    _memory[address] = _registers.A;
+                    break;
+                }
                 #endregion
 
                 default:
@@ -437,25 +454,26 @@ namespace JustinCredible.SIEmulator
             return elapsedCycles;
         }
 
+        /**
+         * Used to build a memory address from the two given register values.
+         * Using registers H and L are the most common for this, so they are the default parameters.
+         */
+        private UInt16 GetAddress(RegisterID upperReg = RegisterID.H, RegisterID lowerReg = RegisterID.L)
+        {
+            var upper = _registers[upperReg] << 8;
+            var lower = _registers[lowerReg];
+            var address = upper | lower;
+            return (UInt16)address;
+        }
+
         private void ExecuteMOV(RegisterID dest, RegisterID source)
         {
             _registers[dest] = _registers[source];
         }
 
-        private void ExecuteMOVFromMemoryToRegister(RegisterID dest)
-        {
-            var upper = _registers.H << 8;
-            var lower = (_registers.L);
-            var address = upper | lower;
-
-            _registers[dest] = _memory[address];
-        }
-
         private void ExecuteMOVFromRegisterToMemory(RegisterID source)
         {
-            var upper = _registers.H << 8;
-            var lower = (_registers.L);
-            var address = upper | lower;
+            var address = GetAddress();
 
             // TODO: Should allow write to memory mirror area?
             // TODO: Should not panic on ROM area write?
@@ -463,7 +481,7 @@ namespace JustinCredible.SIEmulator
             // Only allow writes to the work/video RAM and not the ROM or memory mirror.
             // $2000-$23ff:  work RAM (1K)
             // $2400-$3fff:  video RAM (7K)
-            if (address >= 0x2000 && address <= 0x3FFFF)
+            if (address >= 0x2000 && address <= 0x3FFF)
                 _memory[address] = _registers[source];
             else
             {
@@ -474,9 +492,7 @@ namespace JustinCredible.SIEmulator
 
         private void ExecuteMOVIToMemory(byte data)
         {
-            var upper = _registers.H << 8;
-            var lower = (_registers.L);
-            var address = upper | lower;
+            var address = GetAddress();
 
             // TODO: Should allow write to memory mirror area?
             // TODO: Should not panic on ROM area write?
@@ -484,7 +500,7 @@ namespace JustinCredible.SIEmulator
             // Only allow writes to the work/video RAM and not the ROM or memory mirror.
             // $2000-$23ff:  work RAM (1K)
             // $2400-$3fff:  video RAM (7K)
-            if (address >= 0x2000 && address <= 0x3FFFF)
+            if (address >= 0x2000 && address <= 0x3FFF)
                 _memory[address] = data;
             else
             {

@@ -75,7 +75,7 @@ namespace JustinCredible.SIEmulator
         public static Opcode MOV_M_E = new Opcode(OpcodeBytes.MOV_M_E, 1, "MOV M,E", 7); // (HL) <- E
         public static Opcode MOV_M_H = new Opcode(OpcodeBytes.MOV_M_H, 1, "MOV M,H", 7); // (HL) <- H
         public static Opcode MOV_M_L = new Opcode(OpcodeBytes.MOV_M_L, 1, "MOV M,L", 7); // (HL) <- L
-        public static Opcode MOV_M_A = new Opcode(OpcodeBytes.MOV_M_A, 1, "MOV M,A", 7); // (HL) <- C
+        public static Opcode MOV_M_A = new Opcode(OpcodeBytes.MOV_M_A, 1, "MOV M,A", 7); // (HL) <- A
         public static Opcode MOV_A_B = new Opcode(OpcodeBytes.MOV_A_B, 1, "MOV A,B", 5); // A <- B
         public static Opcode MOV_A_C = new Opcode(OpcodeBytes.MOV_A_C, 1, "MOV A,C", 5); // A <- C
         public static Opcode MOV_A_D = new Opcode(OpcodeBytes.MOV_A_D, 1, "MOV A,D", 5); // A <- D
@@ -102,7 +102,12 @@ namespace JustinCredible.SIEmulator
         public static Opcode LXI_D = new Opcode(OpcodeBytes.LXI_D, 3, "LXI D,D16", 10); // D <- byte 3, E <- byte 2
         public static Opcode LXI_H = new Opcode(OpcodeBytes.LXI_H, 3, "LXI H,D16", 10); // H <- byte 3, L <- byte 2
         public static Opcode LXI_SP = new Opcode(OpcodeBytes.LXI_SP, 3, "LXI SP, D16", 10); // SP.hi <- byte 3, SP.lo <- byte 2
-        #endregion LXI
+        #endregion
+
+        #region STAX
+        public static Opcode STAX_B = new Opcode(OpcodeBytes.STAX_B, 1, "STAX B", 7); // (BC) <- A
+        public static Opcode STAX_D = new Opcode(OpcodeBytes.STAX_D, 1, "STAX D", 7); // (DE) <- A
+        #endregion
 
         public static Dictionary<byte, Opcode> Lookup = new Dictionary<byte, Opcode>()
         {
@@ -193,6 +198,11 @@ namespace JustinCredible.SIEmulator
             [OpcodeBytes.LXI_D] = LXI_D,
             [OpcodeBytes.LXI_H] = LXI_H,
             [OpcodeBytes.LXI_SP] = LXI_SP,
+            #endregion
+
+            #region STAX
+            [OpcodeBytes.STAX_B] = STAX_B,
+            [OpcodeBytes.STAX_D] = STAX_D,
             #endregion
         };
     }
