@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using Xunit;
 
 namespace JustinCredible.SIEmulator.Tests
 {
@@ -102,6 +103,15 @@ namespace JustinCredible.SIEmulator.Tests
             };
 
             return extendedState;
+        }
+
+        protected void AssertFlagsFalse(CPUState state)
+        {
+            Assert.False(state.Flags.AuxCarry);
+            Assert.False(state.Flags.Carry);
+            Assert.False(state.Flags.Parity);
+            Assert.False(state.Flags.Sign);
+            Assert.False(state.Flags.Zero);
         }
     }
 }

@@ -18,11 +18,7 @@ namespace JustinCredible.SIEmulator.Tests
 
             Assert.Equal(0x42, state.Registers[destReg]);
 
-            Assert.False(state.Flags.AuxCarry);
-            Assert.False(state.Flags.Carry);
-            Assert.False(state.Flags.Parity);
-            Assert.False(state.Flags.Sign);
-            Assert.False(state.Flags.Zero);
+            AssertFlagsFalse(state);
 
             Assert.Equal(2, state.Iterations);
             Assert.Equal(7 + 7, state.Cycles);
@@ -51,11 +47,7 @@ namespace JustinCredible.SIEmulator.Tests
 
             Assert.Equal(0x42, state.Memory[0x2233]);
 
-            Assert.False(state.Flags.AuxCarry);
-            Assert.False(state.Flags.Carry);
-            Assert.False(state.Flags.Parity);
-            Assert.False(state.Flags.Sign);
-            Assert.False(state.Flags.Zero);
+            AssertFlagsFalse(state);
 
             Assert.Equal(2, state.Iterations);
             Assert.Equal(10 + 7, state.Cycles);

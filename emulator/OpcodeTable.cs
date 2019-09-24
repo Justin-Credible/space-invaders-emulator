@@ -12,8 +12,6 @@ namespace JustinCredible.SIEmulator
         public static Opcode NOP = new Opcode(OpcodeBytes.NOP, 1, "NOP", 4);
         public static Opcode HLT = new Opcode(OpcodeBytes.HLT, 1, "NOP", 7);
 
-        public static Opcode LXI_B = new Opcode(OpcodeBytes.LXI_B, 3, "LXI B,d16", 10); //B <- byte 3, C <- byte 2
-
         #region MOV
         public static Opcode MOV_B_B = new Opcode(OpcodeBytes.MOV_B_B, 1, "MOV B,B", 5); // B <- B
         public static Opcode MOV_B_C = new Opcode(OpcodeBytes.MOV_B_C, 1, "MOV B,C", 5); // B <- C
@@ -81,15 +79,22 @@ namespace JustinCredible.SIEmulator
         #endregion
 
         #region MVI
-        public static Opcode MVI_B = new Opcode(OpcodeBytes.MVI_B, 2, "MVI B,d8", 7); // B <- byte 2
-        public static Opcode MVI_C = new Opcode(OpcodeBytes.MVI_C, 2, "MVI C,d8", 7); // C <- byte 2
-        public static Opcode MVI_D = new Opcode(OpcodeBytes.MVI_D, 2, "MVI D,d8", 7); // D <- byte 2
-        public static Opcode MVI_E = new Opcode(OpcodeBytes.MVI_E, 2, "MVI E,d8", 7); // E <- byte 2
-        public static Opcode MVI_H = new Opcode(OpcodeBytes.MVI_H, 2, "MVI H,d8", 7); // L <- byte 2
-        public static Opcode MVI_L = new Opcode(OpcodeBytes.MVI_L, 2, "MVI L,d8", 7); // L <- byte 2
-        public static Opcode MVI_M = new Opcode(OpcodeBytes.MVI_M, 2, "MVI M,d8", 10); // (HL) <- byte 2
-        public static Opcode MVI_A = new Opcode(OpcodeBytes.MVI_A, 2, "MVI A,d8", 7); // A <- byte 2
+        public static Opcode MVI_B = new Opcode(OpcodeBytes.MVI_B, 2, "MVI B,D8", 7); // B <- byte 2
+        public static Opcode MVI_C = new Opcode(OpcodeBytes.MVI_C, 2, "MVI C,D8", 7); // C <- byte 2
+        public static Opcode MVI_D = new Opcode(OpcodeBytes.MVI_D, 2, "MVI D,D8", 7); // D <- byte 2
+        public static Opcode MVI_E = new Opcode(OpcodeBytes.MVI_E, 2, "MVI E,D8", 7); // E <- byte 2
+        public static Opcode MVI_H = new Opcode(OpcodeBytes.MVI_H, 2, "MVI H,D8", 7); // L <- byte 2
+        public static Opcode MVI_L = new Opcode(OpcodeBytes.MVI_L, 2, "MVI L,D8", 7); // L <- byte 2
+        public static Opcode MVI_M = new Opcode(OpcodeBytes.MVI_M, 2, "MVI M,D8", 10); // (HL) <- byte 2
+        public static Opcode MVI_A = new Opcode(OpcodeBytes.MVI_A, 2, "MVI A,D8", 7); // A <- byte 2
         #endregion
+
+        #region LXI
+        public static Opcode LXI_B = new Opcode(OpcodeBytes.LXI_B, 3, "LXI B,D16", 10); // B <- byte 3, C <- byte 2
+        public static Opcode LXI_D = new Opcode(OpcodeBytes.LXI_D, 3, "LXI D,D16", 10); // D <- byte 3, E <- byte 2
+        public static Opcode LXI_H = new Opcode(OpcodeBytes.LXI_H, 3, "LXI H,D16", 10); // H <- byte 3, L <- byte 2
+        public static Opcode LXI_SP = new Opcode(OpcodeBytes.LXI_SP, 3, "LXI SP, D16", 10); // SP.hi <- byte 3, SP.lo <- byte 2
+        #endregion LXI
 
         public static Dictionary<byte, Opcode> Lookup = new Dictionary<byte, Opcode>()
         {
@@ -173,6 +178,13 @@ namespace JustinCredible.SIEmulator
             [OpcodeBytes.MVI_L] = MVI_L,
             [OpcodeBytes.MVI_M] = MVI_M,
             [OpcodeBytes.MVI_A] = MVI_A,
+            #endregion
+
+            #region LXI
+            [OpcodeBytes.LXI_B] = LXI_B,
+            [OpcodeBytes.LXI_D] = LXI_D,
+            [OpcodeBytes.LXI_H] = LXI_H,
+            [OpcodeBytes.LXI_SP] = LXI_SP,
             #endregion
         };
     }

@@ -148,162 +148,157 @@ namespace JustinCredible.SIEmulator
                     Finished = true;
                     break;
 
-                case OpcodeBytes.LXI_B:
-                    _registers.B = _memory[_programCounter + 2];
-                    _registers.C = _memory[_programCounter + 1];
-                    break;
-
                 #region MOV
 
                 #region MOV X, X (from register to register)
 
                 case OpcodeBytes.MOV_B_B:
-                     _registers[RegisterID.B] = _registers[RegisterID.B];
-                     break;
+                    // NOP
+                    break;
                 case OpcodeBytes.MOV_B_C:
-                     _registers[RegisterID.B] = _registers[RegisterID.C];
-                     break;
+                    _registers.B = _registers.C;
+                    break;
                 case OpcodeBytes.MOV_B_D:
-                     _registers[RegisterID.B] = _registers[RegisterID.D];
-                     break;
+                    _registers.B = _registers.D;
+                    break;
                 case OpcodeBytes.MOV_B_E:
-                     _registers[RegisterID.B] = _registers[RegisterID.E];
-                     break;
+                    _registers.B = _registers.E;
+                    break;
                 case OpcodeBytes.MOV_B_H:
-                     _registers[RegisterID.B] = _registers[RegisterID.H];
-                     break;
+                    _registers.B = _registers.H;
+                    break;
                 case OpcodeBytes.MOV_B_L:
-                     _registers[RegisterID.B] = _registers[RegisterID.L];
-                     break;
+                    _registers.B = _registers.L;
+                    break;
                 case OpcodeBytes.MOV_B_A:
-                     _registers[RegisterID.B] = _registers[RegisterID.A];
-                     break;
+                    _registers.B = _registers.A;
+                    break;
                 case OpcodeBytes.MOV_C_B:
-                     _registers[RegisterID.C] = _registers[RegisterID.B];
-                     break;
+                    _registers.C = _registers.B;
+                    break;
                 case OpcodeBytes.MOV_C_C:
-                     _registers[RegisterID.C] = _registers[RegisterID.C];
-                     break;
+                    // NOP
+                    break;
                 case OpcodeBytes.MOV_C_D:
-                     _registers[RegisterID.C] = _registers[RegisterID.D];
-                     break;
+                    _registers.C = _registers.D;
+                    break;
                 case OpcodeBytes.MOV_C_E:
-                     _registers[RegisterID.C] = _registers[RegisterID.E];
-                     break;
+                    _registers.C = _registers.E;
+                    break;
                 case OpcodeBytes.MOV_C_H:
-                     _registers[RegisterID.C] = _registers[RegisterID.H];
-                     break;
+                    _registers.C = _registers.H;
+                    break;
                 case OpcodeBytes.MOV_C_L:
-                     _registers[RegisterID.C] = _registers[RegisterID.L];
-                     break;
+                    _registers.C = _registers.L;
+                    break;
                 case OpcodeBytes.MOV_C_A:
-                     _registers[RegisterID.C] = _registers[RegisterID.A];
-                     break;
+                    _registers.C = _registers.A;
+                    break;
                 case OpcodeBytes.MOV_D_B:
-                     _registers[RegisterID.D] = _registers[RegisterID.B];
-                     break;
+                    _registers.D = _registers.B;
+                    break;
                 case OpcodeBytes.MOV_D_C:
-                     _registers[RegisterID.D] = _registers[RegisterID.C];
-                     break;
+                    _registers.D = _registers.C;
+                    break;
                 case OpcodeBytes.MOV_D_D:
-                     _registers[RegisterID.D] = _registers[RegisterID.D];
-                     break;
+                    // NOP
+                    break;
                 case OpcodeBytes.MOV_D_E:
-                     _registers[RegisterID.D] = _registers[RegisterID.E];
-                     break;
+                    _registers.D = _registers.E;
+                    break;
                 case OpcodeBytes.MOV_D_H:
-                     _registers[RegisterID.D] = _registers[RegisterID.H];
-                     break;
+                    _registers.D = _registers.H;
+                    break;
                 case OpcodeBytes.MOV_D_L:
-                     _registers[RegisterID.D] = _registers[RegisterID.L];
-                     break;
+                    _registers.D = _registers.L;
+                    break;
                 case OpcodeBytes.MOV_D_A:
-                     _registers[RegisterID.D] = _registers[RegisterID.A];
-                     break;
+                    _registers.D = _registers.A;
+                    break;
                 case OpcodeBytes.MOV_E_B:
-                     _registers[RegisterID.E] = _registers[RegisterID.B];
-                     break;
+                    _registers.E = _registers.B;
+                    break;
                 case OpcodeBytes.MOV_E_C:
-                     _registers[RegisterID.E] = _registers[RegisterID.C];
-                     break;
+                    _registers.E = _registers.C;
+                    break;
                 case OpcodeBytes.MOV_E_D:
-                     _registers[RegisterID.E] = _registers[RegisterID.D];
-                     break;
+                    _registers.E = _registers.D;
+                    break;
                 case OpcodeBytes.MOV_E_E:
-                     _registers[RegisterID.E] = _registers[RegisterID.E];
-                     break;
+                    // NOP
+                    break;
                 case OpcodeBytes.MOV_E_H:
-                     _registers[RegisterID.E] = _registers[RegisterID.H];
-                     break;
+                    _registers.E = _registers.H;
+                    break;
                 case OpcodeBytes.MOV_E_L:
-                     _registers[RegisterID.E] = _registers[RegisterID.L];
-                     break;
+                    _registers.E = _registers.L;
+                    break;
                 case OpcodeBytes.MOV_E_A:
-                     _registers[RegisterID.E] = _registers[RegisterID.A];
-                     break;
+                    _registers.E = _registers.A;
+                    break;
                 case OpcodeBytes.MOV_H_B:
-                     _registers[RegisterID.H] = _registers[RegisterID.B];
-                     break;
+                    _registers.H = _registers.B;
+                    break;
                 case OpcodeBytes.MOV_H_C:
-                     _registers[RegisterID.H] = _registers[RegisterID.C];
-                     break;
+                    _registers.H = _registers.C;
+                    break;
                 case OpcodeBytes.MOV_H_D:
-                     _registers[RegisterID.H] = _registers[RegisterID.D];
-                     break;
+                    _registers.H = _registers.D;
+                    break;
                 case OpcodeBytes.MOV_H_E:
-                     _registers[RegisterID.H] = _registers[RegisterID.E];
-                     break;
+                    _registers.H = _registers.E;
+                    break;
                 case OpcodeBytes.MOV_H_H:
-                     _registers[RegisterID.H] = _registers[RegisterID.H];
-                     break;
+                    // NOP
+                    break;
                 case OpcodeBytes.MOV_H_L:
-                     _registers[RegisterID.H] = _registers[RegisterID.L];
-                     break;
+                    _registers.H = _registers.L;
+                    break;
                 case OpcodeBytes.MOV_H_A:
-                     _registers[RegisterID.H] = _registers[RegisterID.A];
-                     break;
+                    _registers.H = _registers.A;
+                    break;
                 case OpcodeBytes.MOV_L_B:
-                     _registers[RegisterID.L] = _registers[RegisterID.B];
-                     break;
+                    _registers.L = _registers.B;
+                    break;
                 case OpcodeBytes.MOV_L_C:
-                     _registers[RegisterID.L] = _registers[RegisterID.C];
-                     break;
+                    _registers.L = _registers.C;
+                    break;
                 case OpcodeBytes.MOV_L_D:
-                     _registers[RegisterID.L] = _registers[RegisterID.D];
-                     break;
+                    _registers.L = _registers.D;
+                    break;
                 case OpcodeBytes.MOV_L_E:
-                     _registers[RegisterID.L] = _registers[RegisterID.E];
-                     break;
+                    _registers.L = _registers.E;
+                    break;
                 case OpcodeBytes.MOV_L_H:
-                     _registers[RegisterID.L] = _registers[RegisterID.H];
-                     break;
+                    _registers.L = _registers.H;
+                    break;
                 case OpcodeBytes.MOV_L_L:
-                     _registers[RegisterID.L] = _registers[RegisterID.L];
-                     break;
+                    // NOP
+                    break;
                 case OpcodeBytes.MOV_L_A:
-                     _registers[RegisterID.L] = _registers[RegisterID.A];
-                     break;
+                    _registers.L = _registers.A;
+                    break;
                 case OpcodeBytes.MOV_A_B:
-                     _registers[RegisterID.A] = _registers[RegisterID.B];
-                     break;
+                    _registers.A = _registers.B;
+                    break;
                 case OpcodeBytes.MOV_A_C:
-                     _registers[RegisterID.A] = _registers[RegisterID.C];
-                     break;
+                    _registers.A = _registers.C;
+                    break;
                 case OpcodeBytes.MOV_A_D:
-                     _registers[RegisterID.A] = _registers[RegisterID.D];
-                     break;
+                    _registers.A = _registers.D;
+                    break;
                 case OpcodeBytes.MOV_A_E:
-                     _registers[RegisterID.A] = _registers[RegisterID.E];
-                     break;
+                    _registers.A = _registers.E;
+                    break;
                 case OpcodeBytes.MOV_A_H:
-                     _registers[RegisterID.A] = _registers[RegisterID.H];
-                     break;
+                    _registers.A = _registers.H;
+                    break;
                 case OpcodeBytes.MOV_A_L:
-                     _registers[RegisterID.A] = _registers[RegisterID.L];
-                     break;
+                    _registers.A = _registers.L;
+                    break;
                 case OpcodeBytes.MOV_A_A:
-                     _registers[RegisterID.A] = _registers[RegisterID.A];
-                     break;
+                    // NOP
+                    break;
 
                 #endregion
 
@@ -364,30 +359,51 @@ namespace JustinCredible.SIEmulator
                 #region MVI
 
                 case OpcodeBytes.MVI_B:
-                    _registers[RegisterID.B] = _memory[_programCounter + 1];
+                    _registers.B = _memory[_programCounter + 1];
                     break;
                 case OpcodeBytes.MVI_C:
-                    _registers[RegisterID.C] = _memory[_programCounter + 1];
+                    _registers.C = _memory[_programCounter + 1];
                     break;
                 case OpcodeBytes.MVI_D:
-                    _registers[RegisterID.D] = _memory[_programCounter + 1];
+                    _registers.D = _memory[_programCounter + 1];
                     break;
                 case OpcodeBytes.MVI_E:
-                    _registers[RegisterID.E] = _memory[_programCounter + 1];
+                    _registers.E = _memory[_programCounter + 1];
                     break;
                 case OpcodeBytes.MVI_H:
-                    _registers[RegisterID.H] = _memory[_programCounter + 1];
+                    _registers.H = _memory[_programCounter + 1];
                     break;
                 case OpcodeBytes.MVI_L:
-                    _registers[RegisterID.L] = _memory[_programCounter + 1];
+                    _registers.L = _memory[_programCounter + 1];
                     break;
                 case OpcodeBytes.MVI_M:
                     ExecuteMOVIToMemory(_memory[_programCounter + 1]);
                     break;
                 case OpcodeBytes.MVI_A:
-                    _registers[RegisterID.A] = _memory[_programCounter + 1];
+                    _registers.A = _memory[_programCounter + 1];
                     break;
 
+                #endregion
+
+                #region LXI
+                case OpcodeBytes.LXI_B:
+                    _registers.B = _memory[_programCounter + 2];
+                    _registers.C = _memory[_programCounter + 1];
+                    break;
+                case OpcodeBytes.LXI_D:
+                    _registers.D = _memory[_programCounter + 2];
+                    _registers.E = _memory[_programCounter + 1];
+                    break;
+                case OpcodeBytes.LXI_H:
+                    _registers.H = _memory[_programCounter + 2];
+                    _registers.L = _memory[_programCounter + 1];
+                    break;
+                case OpcodeBytes.LXI_SP:
+                    var upper = _memory[_programCounter + 2] << 8;
+                    var lower = _memory[_programCounter + 1];
+                    var address = upper | lower;
+                    _stackPointer = (UInt16)address;
+                    break;
                 #endregion
 
                 default:

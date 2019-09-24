@@ -10,8 +10,6 @@ namespace JustinCredible.SIEmulator
         public const byte NOP = 0x00;
         public const byte HLT = 0x76;
 
-        public const byte LXI_B = 0x01;
-
         #region MOV
         public const byte MOV_B_B = 0x40;
         public const byte MOV_B_C = 0x41;
@@ -87,6 +85,13 @@ namespace JustinCredible.SIEmulator
         public const byte MVI_L = 0x2e;
         public const byte MVI_M = 0x36;
         public const byte MVI_A = 0x3e;
+        #endregion
+
+        #region LXI
+        public const byte LXI_B = 0x01;
+        public const byte LXI_D = 0x11;
+        public const byte LXI_H = 0x21;
+        public const byte LXI_SP = 0x31;
         #endregion
     }
 }
