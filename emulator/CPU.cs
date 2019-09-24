@@ -142,6 +142,13 @@ namespace JustinCredible.SIEmulator
             switch (opcodeByte)
             {
                 case OpcodeBytes.NOP:
+                case OpcodeBytes.NOP2:
+                case OpcodeBytes.NOP3:
+                case OpcodeBytes.NOP4:
+                case OpcodeBytes.NOP5:
+                case OpcodeBytes.NOP6:
+                case OpcodeBytes.NOP7:
+                case OpcodeBytes.NOP8:
                     break;
 
                 case OpcodeBytes.HLT:

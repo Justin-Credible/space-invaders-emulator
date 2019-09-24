@@ -10,7 +10,15 @@ namespace JustinCredible.SIEmulator
     public class OpcodeTable
     {
         public static Opcode NOP = new Opcode(OpcodeBytes.NOP, 1, "NOP", 4);
-        public static Opcode HLT = new Opcode(OpcodeBytes.HLT, 1, "NOP", 7);
+        public static Opcode NOP2 = new Opcode(OpcodeBytes.NOP2, 1, "NOP2", 4);
+        public static Opcode NOP3 = new Opcode(OpcodeBytes.NOP3, 1, "NOP3", 4);
+        public static Opcode NOP4 = new Opcode(OpcodeBytes.NOP4, 1, "NOP4", 4);
+        public static Opcode NOP5 = new Opcode(OpcodeBytes.NOP5, 1, "NOP5", 4);
+        public static Opcode NOP6 = new Opcode(OpcodeBytes.NOP6, 1, "NOP6", 4);
+        public static Opcode NOP7 = new Opcode(OpcodeBytes.NOP7, 1, "NOP7", 4);
+        public static Opcode NOP8 = new Opcode(OpcodeBytes.NOP8, 1, "NOP8", 4);
+
+        public static Opcode HLT = new Opcode(OpcodeBytes.HLT, 1, "HLT", 7);
 
         #region MOV
         public static Opcode MOV_B_B = new Opcode(OpcodeBytes.MOV_B_B, 1, "MOV B,B", 5); // B <- B
