@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 
 namespace JustinCredible.SIEmulator
 {
@@ -60,18 +59,13 @@ namespace JustinCredible.SIEmulator
             Finished = false;
         }
 
-        private void LoadMemory(byte[] memory)
-        {
-            _memory = memory;
-        }
-
         public void LoadRom(byte[] rom)
         {
             // Ensure the ROM data is not larger than we can load.
             if (rom.Length > 8192)
                 throw new Exception("ROM filesize cannot exceed 8 kilobytes.");
 
-            var memory = new byte[16*1024];
+            var memory = new byte[16384];
 
             // The ROM is the lower 8K of addressable memory.
             Array.Copy(rom, memory, rom.Length);
@@ -79,9 +73,18 @@ namespace JustinCredible.SIEmulator
             LoadMemory(memory);
         }
 
+        public void LoadMemory(byte[] memory)
+        {
+            // Ensure the memory data is not larger than we can load.
+            if (memory.Length > 16384)
+                throw new Exception("Memory cannot exceed 16 kilobytes.");
+
+            _memory = memory;
+        }
+
         public void LoadRegisters(Registers registers)
         {
-             _registers = registers;
+            _registers = registers;
         }
 
         public CPUState DumpState()
@@ -120,9 +123,7 @@ namespace JustinCredible.SIEmulator
             Console.WriteLine($"Carry: ${_flags.Carry}\tAuxillary Carry: ${_flags.AuxCarry}");
         }
 
-        /**
-         * Executes the next instruction and returns the number of cycles it took to execute.
-         */
+        /** Executes the next instruction and returns the number of cycles it took to execute. */
         public int Step()
         {
             // Sanity check.
@@ -351,7 +352,7 @@ namespace JustinCredible.SIEmulator
                     ExecuteMOVFromRegisterToMemory(RegisterID.L);
                     break;
                 case OpcodeBytes.MOV_M_A:
-                    ExecuteMOVFromRegisterToMemory(RegisterID.C);
+                    ExecuteMOVFromRegisterToMemory(RegisterID.A);
                     break;
 
                 #endregion
@@ -389,7 +390,7 @@ namespace JustinCredible.SIEmulator
         {
             var upper = _registers.H << 8;
             var lower = (_registers.L);
-            var address = upper & lower;
+            var address = upper | lower;
 
             _registers[dest] = _memory[address];
         }
@@ -398,9 +399,21 @@ namespace JustinCredible.SIEmulator
         {
             var upper = _registers.H << 8;
             var lower = (_registers.L);
-            var address = upper & lower;
+            var address = upper | lower;
 
-            _memory[address] = _registers[source];
+            // TODO: Should allow write to memory mirror area?
+            // TODO: Should not panic on ROM area write?
+
+            // Only allow writes to the work/video RAM and not the ROM or memory mirror.
+            // $2000-$23ff:  work RAM (1K)
+            // $2400-$3fff:  video RAM (7K)
+            if (address >= 0x2000 && address <= 0x3FFFF)
+                _memory[address] = _registers[source];
+            else
+            {
+                var addressFormatted = String.Format("0x{0:X4}", address);
+                throw new Exception($"Illegal memory address ({addressFormatted}) specified for 'MOV M, {source}' operation; expected address to be between 0x2000 and 0x3FFF inclusive.");
+            }
         }
     }
 }
