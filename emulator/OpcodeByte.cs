@@ -121,5 +121,12 @@ namespace JustinCredible.SIEmulator
         public const byte INX_H = 0x23;
         public const byte INX_SP = 0x33;
         #endregion
+
+        #region DCX
+        public const byte DCX_B = 0x0b;
+        public const byte DCX_D = 0x1b;
+        public const byte DCX_H = 0x2b;
+        public const byte DCX_SP = 0x3b;
+        #endregion
     }
 }

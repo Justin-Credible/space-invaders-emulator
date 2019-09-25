@@ -124,6 +124,13 @@ namespace JustinCredible.SIEmulator
         public static Opcode INX_SP = new Opcode(OpcodeBytes.INX_SP, 1, "INX SP", 5); // SP = SP + 1
         #endregion
 
+        #region DCX
+        public static Opcode DCX_B = new Opcode(OpcodeBytes.DCX_B, 1, "DCX B", 5); // BC = BC-1
+        public static Opcode DCX_D = new Opcode(OpcodeBytes.DCX_D, 1, "DCX D", 5); // DE = DE-1
+        public static Opcode DCX_H = new Opcode(OpcodeBytes.DCX_H, 1, "DCX H", 5); // HL = HL-1
+        public static Opcode DCX_SP = new Opcode(OpcodeBytes.DCX_SP, 1, "DCX SP", 5); // SP = SP-1
+        #endregion
+
         public static Dictionary<byte, Opcode> Lookup = new Dictionary<byte, Opcode>()
         {
             [OpcodeBytes.NOP] = NOP,
@@ -239,6 +246,13 @@ namespace JustinCredible.SIEmulator
             [OpcodeBytes.INX_D] = INX_D,
             [OpcodeBytes.INX_H] = INX_H,
             [OpcodeBytes.INX_SP] = INX_SP,
+            #endregion
+
+            #region DCX
+            [OpcodeBytes.DCX_B] = DCX_B,
+            [OpcodeBytes.DCX_D] = DCX_D,
+            [OpcodeBytes.DCX_H] = DCX_H,
+            [OpcodeBytes.DCX_SP] = DCX_SP,
             #endregion
         };
     }

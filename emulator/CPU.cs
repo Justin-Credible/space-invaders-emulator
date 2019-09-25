@@ -495,6 +495,42 @@ namespace JustinCredible.SIEmulator
                     break;
                 #endregion
 
+                #region DCX
+                case OpcodeBytes.DCX_B:
+                {
+                    var upper = _registers.B << 8;
+                    var lower = _registers.C;
+                    var value = upper | lower;
+                    value--;
+                    _registers.B = (byte)((0xFF00 & value) >> 8);
+                    _registers.C = (byte)(0x00FF & value);
+                    break;
+                }
+                case OpcodeBytes.DCX_D:
+                {
+                    var upper = _registers.D << 8;
+                    var lower = _registers.E;
+                    var value = upper | lower;
+                    value--;
+                    _registers.D = (byte)((0xFF00 & value) >> 8);
+                    _registers.E = (byte)(0x00FF & value);
+                    break;
+                }
+                case OpcodeBytes.DCX_H:
+                {
+                    var upper = _registers.H << 8;
+                    var lower = _registers.L;
+                    var value = upper | lower;
+                    value--;
+                    _registers.H = (byte)((0xFF00 & value) >> 8);
+                    _registers.L = (byte)(0x00FF & value);
+                    break;
+                }
+                case OpcodeBytes.DCX_SP:
+                    StackPointer--;
+                    break;
+                #endregion
+
                 default:
                     throw new NotImplementedException(String.Format("Attempted to execute unknown opcode 0x{0:X2} at memory address 0x{0:X4}", opcode, ProgramCounter));
             }
