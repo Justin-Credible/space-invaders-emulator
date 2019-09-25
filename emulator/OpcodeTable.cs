@@ -131,6 +131,20 @@ namespace JustinCredible.SIEmulator
         public static Opcode DCX_SP = new Opcode(OpcodeBytes.DCX_SP, 1, "DCX SP", 5); // SP = SP-1
         #endregion
 
+        #region PUSH
+        public static Opcode PUSH_B = new Opcode(OpcodeBytes.PUSH_B, 1, "PUSH B", 10); // (sp-2)<-C; (sp-1)<-B; sp <- sp - 2
+        public static Opcode PUSH_D = new Opcode(OpcodeBytes.PUSH_D, 1, "PUSH D", 10); // (sp-2)<-E; (sp-1)<-D; sp <- sp - 2
+        public static Opcode PUSH_H = new Opcode(OpcodeBytes.PUSH_H, 1, "PUSH H", 10); // (sp-2)<-L; (sp-1)<-H; sp <- sp - 2
+        public static Opcode PUSH_PSW = new Opcode(OpcodeBytes.PUSH_PSW, 1, "PUSH PSW", 10); // (sp-2)<-flags; (sp-1)<-A; sp <- sp - 2
+        #endregion
+
+        #region POP
+        public static Opcode POP_B = new Opcode(OpcodeBytes.POP_B, 1, "POP B", 11); // C <- (sp); B <- (sp+1); sp <- sp+2
+        public static Opcode POP_D = new Opcode(OpcodeBytes.POP_D, 1, "POP D", 11); // E <- (sp); D <- (sp+1); sp <- sp+2
+        public static Opcode POP_H = new Opcode(OpcodeBytes.POP_H, 1, "POP H", 11); // L <- (sp); H <- (sp+1); sp <- sp+2
+        public static Opcode POP_PSW = new Opcode(OpcodeBytes.POP_PSW, 1, "POP PSW", 11); // flags <- (sp); A <- (sp+1); sp <- sp+2
+        #endregion
+
         public static Dictionary<byte, Opcode> Lookup = new Dictionary<byte, Opcode>()
         {
             [OpcodeBytes.NOP] = NOP,
@@ -253,6 +267,20 @@ namespace JustinCredible.SIEmulator
             [OpcodeBytes.DCX_D] = DCX_D,
             [OpcodeBytes.DCX_H] = DCX_H,
             [OpcodeBytes.DCX_SP] = DCX_SP,
+            #endregion
+
+            #region PUSH
+            [OpcodeBytes.PUSH_B] = PUSH_B,
+            [OpcodeBytes.PUSH_D] = PUSH_D,
+            [OpcodeBytes.PUSH_H] = PUSH_H,
+            [OpcodeBytes.PUSH_PSW] = PUSH_PSW,
+            #endregion
+
+            #region POP
+            [OpcodeBytes.POP_B] = POP_B,
+            [OpcodeBytes.POP_D] = POP_D,
+            [OpcodeBytes.POP_H] = POP_H,
+            [OpcodeBytes.POP_PSW] = POP_PSW,
             #endregion
         };
     }

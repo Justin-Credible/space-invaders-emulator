@@ -531,6 +531,52 @@ namespace JustinCredible.SIEmulator
                     break;
                 #endregion
 
+                #region PUSH
+                case OpcodeBytes.PUSH_B:
+                    Memory[StackPointer - 1] = _registers.B;
+                    Memory[StackPointer - 2] = _registers.C;
+                    StackPointer = (UInt16)(StackPointer - 2);
+                    break;
+                case OpcodeBytes.PUSH_D:
+                    Memory[StackPointer - 1] = _registers.D;
+                    Memory[StackPointer - 2] = _registers.E;
+                    StackPointer = (UInt16)(StackPointer - 2);
+                    break;
+                case OpcodeBytes.PUSH_H:
+                    Memory[StackPointer - 1] = _registers.H;
+                    Memory[StackPointer - 2] = _registers.L;
+                    StackPointer = (UInt16)(StackPointer - 2);
+                    break;
+                case OpcodeBytes.PUSH_PSW:
+                    Memory[StackPointer - 1] = _registers.A;
+                    Memory[StackPointer - 2] = Flags.ToByte();
+                    StackPointer = (UInt16)(StackPointer - 2);
+                    break;
+                #endregion
+
+                #region POP
+                case OpcodeBytes.POP_B:
+                    _registers.B = Memory[StackPointer + 1];
+                    _registers.C = Memory[StackPointer];
+                    StackPointer = (UInt16)(StackPointer - 2);
+                    break;
+                case OpcodeBytes.POP_D:
+                    _registers.D = Memory[StackPointer + 1];
+                    _registers.E = Memory[StackPointer];
+                    StackPointer = (UInt16)(StackPointer - 2);
+                    break;
+                case OpcodeBytes.POP_H:
+                    _registers.H = Memory[StackPointer + 1];
+                    _registers.L = Memory[StackPointer];
+                    StackPointer = (UInt16)(StackPointer - 2);
+                    break;
+                case OpcodeBytes.POP_PSW:
+                    _registers.A = Memory[StackPointer + 1];
+                    Flags.SetFromByte(Memory[StackPointer]);
+                    StackPointer = (UInt16)(StackPointer - 2);
+                    break;
+                #endregion
+
                 default:
                     throw new NotImplementedException(String.Format("Attempted to execute unknown opcode 0x{0:X2} at memory address 0x{0:X4}", opcode, ProgramCounter));
             }
