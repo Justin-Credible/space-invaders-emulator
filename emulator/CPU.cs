@@ -155,6 +155,15 @@ namespace JustinCredible.SIEmulator
                     Finished = true;
                     break;
 
+                case OpcodeBytes.STA:
+                {
+                    var upper = _memory[_programCounter + 2] << 8;
+                    var lower = _memory[_programCounter + 1];
+                    var address = upper | lower;
+                    _memory[address] = _registers.A;
+                    break;
+                }
+
                 #region MOV
 
                 #region MOV X, X (from register to register)
@@ -426,6 +435,21 @@ namespace JustinCredible.SIEmulator
                 {
                     var address = GetAddress(RegisterID.D, RegisterID.E);
                     _memory[address] = _registers.A;
+                    break;
+                }
+                #endregion
+
+                #region LDAX
+                case OpcodeBytes.LDAX_B:
+                {
+                    var address = GetAddress(RegisterID.B, RegisterID.C);
+                    _registers.A = _memory[address];
+                    break;
+                }
+                case OpcodeBytes.LDAX_D:
+                {
+                    var address = GetAddress(RegisterID.D, RegisterID.E);
+                    _registers.A = _memory[address];
                     break;
                 }
                 #endregion

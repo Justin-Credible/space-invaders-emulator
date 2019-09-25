@@ -17,6 +17,7 @@ namespace JustinCredible.SIEmulator
         public const byte NOP8 = 0x38;
 
         public const byte HLT = 0x76;
+        public const byte STA = 0x32;
 
         #region MOV
         public const byte MOV_B_B = 0x40;
@@ -105,6 +106,11 @@ namespace JustinCredible.SIEmulator
         #region STAX
         public const byte STAX_B = 0x02;
         public const byte STAX_D = 0x12;
+        #endregion
+
+        #region LDAX
+        public const byte LDAX_B = 0x0a;
+        public const byte LDAX_D = 0x1a;
         #endregion
     }
 }

@@ -2,23 +2,19 @@ using Xunit;
 
 namespace JustinCredible.SIEmulator.Tests
 {
-    public class STAXTests : BaseTest
+    public class STATests : BaseTest
     {
-        [Theory]
-        [InlineData(RegisterID.B, RegisterID.C)]
-        [InlineData(RegisterID.D, RegisterID.E)]
-        public void TestSTAX(RegisterID destReg, RegisterID destReg2)
+        [Fact]
+        public void TestSTA()
         {
             var rom = AssembleSource($@"
                 org 00h
-                STAX {destReg}
+                STA 2477h
                 HLT
             ");
 
             var registers = new Registers();
             registers.A = 0x42;
-            registers[destReg] = 0x24;
-            registers[destReg2] = 0x77;
 
             var initialState = new CPUState()
             {
@@ -33,8 +29,8 @@ namespace JustinCredible.SIEmulator.Tests
             AssertFlagsFalse(state);
 
             Assert.Equal(2, state.Iterations);
-            Assert.Equal(7 + 7, state.Cycles);
-            Assert.Equal(0x01, state.ProgramCounter);
+            Assert.Equal(7 + 13, state.Cycles);
+            Assert.Equal(0x03, state.ProgramCounter);
         }
     }
 }

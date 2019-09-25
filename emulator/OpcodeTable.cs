@@ -19,6 +19,7 @@ namespace JustinCredible.SIEmulator
         public static Opcode NOP8 = new Opcode(OpcodeBytes.NOP8, 1, "NOP8", 4);
 
         public static Opcode HLT = new Opcode(OpcodeBytes.HLT, 1, "HLT", 7);
+        public static Opcode STA = new Opcode(OpcodeBytes.HLT, 3, "STA adr", 13);
 
         #region MOV
         public static Opcode MOV_B_B = new Opcode(OpcodeBytes.MOV_B_B, 1, "MOV B,B", 5); // B <- B
@@ -109,12 +110,24 @@ namespace JustinCredible.SIEmulator
         public static Opcode STAX_D = new Opcode(OpcodeBytes.STAX_D, 1, "STAX D", 7); // (DE) <- A
         #endregion
 
+        #region LDAX
+        public static Opcode LDAX_B = new Opcode(OpcodeBytes.LDAX_B, 1, "LDAX B", 7); // A <- (BC)
+        public static Opcode LDAX_D = new Opcode(OpcodeBytes.LDAX_D, 1, "LDAX D", 7); // A <- (DE)
+        #endregion
+
         public static Dictionary<byte, Opcode> Lookup = new Dictionary<byte, Opcode>()
         {
             [OpcodeBytes.NOP] = NOP,
-            [OpcodeBytes.HLT] = HLT,
+            [OpcodeBytes.NOP2] = NOP2,
+            [OpcodeBytes.NOP3] = NOP3,
+            [OpcodeBytes.NOP4] = NOP4,
+            [OpcodeBytes.NOP5] = NOP5,
+            [OpcodeBytes.NOP6] = NOP6,
+            [OpcodeBytes.NOP7] = NOP7,
+            [OpcodeBytes.NOP8] = NOP8,
 
-            [OpcodeBytes.LXI_B] = LXI_B,
+            [OpcodeBytes.HLT] = HLT,
+            [OpcodeBytes.STA] = STA,
 
             #region MOV
             [OpcodeBytes.MOV_B_B] = MOV_B_B,
@@ -203,6 +216,11 @@ namespace JustinCredible.SIEmulator
             #region STAX
             [OpcodeBytes.STAX_B] = STAX_B,
             [OpcodeBytes.STAX_D] = STAX_D,
+            #endregion
+
+            #region LDAX
+            [OpcodeBytes.LDAX_B] = LDAX_B,
+            [OpcodeBytes.LDAX_D] = LDAX_D,
             #endregion
         };
     }
