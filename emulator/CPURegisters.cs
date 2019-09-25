@@ -3,7 +3,10 @@ using System;
 
 namespace JustinCredible.SIEmulator
 {
-    public struct Registers
+    /**
+     * Represents the collection registers available on the Intel 8080 CPU.
+     */
+    public struct CPURegisters
     {
         /** Accumulator */
         public byte A;
@@ -15,25 +18,25 @@ namespace JustinCredible.SIEmulator
         public byte H;
         public byte L;
 
-        public byte this[RegisterID registerID]
+        public byte this[Register registerID]
         {
             get
             {
                 switch (registerID)
                 {
-                    case RegisterID.A:
+                    case Register.A:
                         return A;
-                    case RegisterID.B:
+                    case Register.B:
                         return B;
-                    case RegisterID.C:
+                    case Register.C:
                         return C;
-                    case RegisterID.D:
+                    case Register.D:
                         return D;
-                    case RegisterID.E:
+                    case Register.E:
                         return E;
-                    case RegisterID.H:
+                    case Register.H:
                         return H;
-                    case RegisterID.L:
+                    case Register.L:
                         return L;
                     default:
                         throw new NotImplementedException("Unandled register ID.");
@@ -43,25 +46,25 @@ namespace JustinCredible.SIEmulator
             {
                 switch (registerID)
                 {
-                    case RegisterID.A:
+                    case Register.A:
                         A = value;
                         break;
-                    case RegisterID.B:
+                    case Register.B:
                         B = value;
                         break;
-                    case RegisterID.C:
+                    case Register.C:
                         C = value;
                         break;
-                    case RegisterID.D:
+                    case Register.D:
                         D = value;
                         break;
-                    case RegisterID.E:
+                    case Register.E:
                         E = value;
                         break;
-                    case RegisterID.H:
+                    case Register.H:
                         H = value;
                         break;
-                    case RegisterID.L:
+                    case Register.L:
                         L = value;
                         break;
                     default:

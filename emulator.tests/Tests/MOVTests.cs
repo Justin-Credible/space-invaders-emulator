@@ -6,7 +6,7 @@ namespace JustinCredible.SIEmulator.Tests
     {
         [Theory]
         [ClassData(typeof(RegisterPermutationsClassData))]
-        public void TestMOVFromRegisterToRegister(RegisterID destReg, RegisterID sourceReg)
+        public void TestMOVFromRegisterToRegister(Register destReg, Register sourceReg)
         {
             var rom = AssembleSource($@"
                 org 00h
@@ -14,10 +14,10 @@ namespace JustinCredible.SIEmulator.Tests
                 HLT
             ");
 
-            var registers = new Registers();
+            var registers = new CPURegisters();
             registers[sourceReg] = 42;
 
-            var initialState = new CPUState()
+            var initialState = new InitialCPUState()
             {
                 Registers = registers,
             };
@@ -36,7 +36,7 @@ namespace JustinCredible.SIEmulator.Tests
 
         [Theory]
         [ClassData(typeof(RegistersClassData))]
-        public void TestMOVFromRegisterToMemory(RegisterID sourceReg)
+        public void TestMOVFromRegisterToMemory(Register sourceReg)
         {
             var rom = AssembleSource($@"
                 org 00h
@@ -44,26 +44,26 @@ namespace JustinCredible.SIEmulator.Tests
                 HLT
             ");
 
-            var registers = new Registers();
+            var registers = new CPURegisters();
 
-            if (sourceReg != RegisterID.H && sourceReg != RegisterID.L)
+            if (sourceReg != Register.H && sourceReg != Register.L)
                 registers[sourceReg] = 0x77;
 
-            registers[RegisterID.H] = 0x21;
-            registers[RegisterID.L] = 0x35;
+            registers[Register.H] = 0x21;
+            registers[Register.L] = 0x35;
 
-            var initialState = new CPUState()
+            var initialState = new InitialCPUState()
             {
                 Registers = registers,
             };
 
             var state = Execute(rom, initialState);
 
-            if (sourceReg == RegisterID.H)
+            if (sourceReg == Register.H)
             {
                 Assert.Equal(0x21, state.Memory[0x2135]);
             }
-            else if (sourceReg == RegisterID.L)
+            else if (sourceReg == Register.L)
             {
                 Assert.Equal(0x35, state.Memory[0x2135]);
             }
@@ -74,8 +74,8 @@ namespace JustinCredible.SIEmulator.Tests
             }
 
             // Address registers should remain unmodified.
-            Assert.Equal(0x21, state.Registers[RegisterID.H]);
-            Assert.Equal(0x35, state.Registers[RegisterID.L]);
+            Assert.Equal(0x21, state.Registers[Register.H]);
+            Assert.Equal(0x35, state.Registers[Register.L]);
 
             AssertFlagsFalse(state);
 
@@ -86,7 +86,7 @@ namespace JustinCredible.SIEmulator.Tests
 
         [Theory]
         [ClassData(typeof(RegistersClassData))]
-        public void TestMOVFromMemoryToRegister(RegisterID destReg)
+        public void TestMOVFromMemoryToRegister(Register destReg)
         {
             var rom = AssembleSource($@"
                 org 00h
@@ -94,15 +94,15 @@ namespace JustinCredible.SIEmulator.Tests
                 HLT
             ");
 
-            var registers = new Registers();
+            var registers = new CPURegisters();
 
-            registers[RegisterID.H] = 0x21;
-            registers[RegisterID.L] = 0x35;
+            registers[Register.H] = 0x21;
+            registers[Register.L] = 0x35;
 
             var memory = new byte[16384];
             memory[0x2135] = 0x42;
 
-            var initialState = new CPUState()
+            var initialState = new InitialCPUState()
             {
                 Registers = registers,
                 Memory = memory,
@@ -113,15 +113,15 @@ namespace JustinCredible.SIEmulator.Tests
             // Memory should remain unmodified.
             Assert.Equal(0x42, state.Memory[0x2135]);
 
-            if (destReg == RegisterID.H)
+            if (destReg == Register.H)
             {
-                Assert.Equal(0x42, state.Registers[RegisterID.H]);
-                Assert.Equal(0x35, state.Registers[RegisterID.L]);
+                Assert.Equal(0x42, state.Registers[Register.H]);
+                Assert.Equal(0x35, state.Registers[Register.L]);
             }
-            else if (destReg == RegisterID.L)
+            else if (destReg == Register.L)
             {
-                Assert.Equal(0x21, state.Registers[RegisterID.H]);
-                Assert.Equal(0x42, state.Registers[RegisterID.L]);
+                Assert.Equal(0x21, state.Registers[Register.H]);
+                Assert.Equal(0x42, state.Registers[Register.L]);
             }
             else
             {
@@ -129,8 +129,8 @@ namespace JustinCredible.SIEmulator.Tests
                 Assert.Equal(0x42, state.Registers[destReg]);
 
                 // Address registers should remain unmodified.
-                Assert.Equal(0x21, state.Registers[RegisterID.H]);
-                Assert.Equal(0x35, state.Registers[RegisterID.L]);
+                Assert.Equal(0x21, state.Registers[Register.H]);
+                Assert.Equal(0x35, state.Registers[Register.L]);
             }
 
             AssertFlagsFalse(state);

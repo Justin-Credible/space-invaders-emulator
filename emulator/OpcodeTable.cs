@@ -19,7 +19,9 @@ namespace JustinCredible.SIEmulator
         public static Opcode NOP8 = new Opcode(OpcodeBytes.NOP8, 1, "NOP8", 4);
 
         public static Opcode HLT = new Opcode(OpcodeBytes.HLT, 1, "HLT", 7);
-        public static Opcode STA = new Opcode(OpcodeBytes.HLT, 3, "STA adr", 13);
+
+        public static Opcode STA = new Opcode(OpcodeBytes.HLT, 3, "STA adr", 13); // (adr) <- A
+        public static Opcode LDA = new Opcode(OpcodeBytes.LDA, 3, "LDA adr", 13); // A <- (adr)
 
         #region MOV
         public static Opcode MOV_B_B = new Opcode(OpcodeBytes.MOV_B_B, 1, "MOV B,B", 5); // B <- B
@@ -115,6 +117,13 @@ namespace JustinCredible.SIEmulator
         public static Opcode LDAX_D = new Opcode(OpcodeBytes.LDAX_D, 1, "LDAX D", 7); // A <- (DE)
         #endregion
 
+        #region INX
+        public static Opcode INX_B = new Opcode(OpcodeBytes.INX_B, 1, "INX B", 5); // BC <- BC+1
+        public static Opcode INX_D = new Opcode(OpcodeBytes.INX_D, 1, "INX D", 5); // DE <- DE + 1
+        public static Opcode INX_H = new Opcode(OpcodeBytes.INX_H, 1, "INX H", 5); // HL <- HL + 1
+        public static Opcode INX_SP = new Opcode(OpcodeBytes.INX_SP, 1, "INX SP", 5); // SP = SP + 1
+        #endregion
+
         public static Dictionary<byte, Opcode> Lookup = new Dictionary<byte, Opcode>()
         {
             [OpcodeBytes.NOP] = NOP,
@@ -127,7 +136,9 @@ namespace JustinCredible.SIEmulator
             [OpcodeBytes.NOP8] = NOP8,
 
             [OpcodeBytes.HLT] = HLT,
+
             [OpcodeBytes.STA] = STA,
+            [OpcodeBytes.LDA] = LDA,
 
             #region MOV
             [OpcodeBytes.MOV_B_B] = MOV_B_B,
@@ -221,6 +232,13 @@ namespace JustinCredible.SIEmulator
             #region LDAX
             [OpcodeBytes.LDAX_B] = LDAX_B,
             [OpcodeBytes.LDAX_D] = LDAX_D,
+            #endregion
+
+            #region INX
+            [OpcodeBytes.INX_B] = INX_B,
+            [OpcodeBytes.INX_D] = INX_D,
+            [OpcodeBytes.INX_H] = INX_H,
+            [OpcodeBytes.INX_SP] = INX_SP,
             #endregion
         };
     }

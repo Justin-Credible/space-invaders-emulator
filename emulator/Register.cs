@@ -1,7 +1,7 @@
 
 namespace JustinCredible.SIEmulator
 {
-    public enum RegisterID
+    public enum Register
     {
         A,
         B,

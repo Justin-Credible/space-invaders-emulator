@@ -5,10 +5,10 @@ namespace JustinCredible.SIEmulator.Tests
     public class LXITests : BaseTest
     {
         [Theory]
-        [InlineData(RegisterID.B, RegisterID.C)]
-        [InlineData(RegisterID.D, RegisterID.E)]
-        [InlineData(RegisterID.H, RegisterID.L)]
-        public void TestMVI(RegisterID destReg, RegisterID destReg2)
+        [InlineData(Register.B, Register.C)]
+        [InlineData(Register.D, Register.E)]
+        [InlineData(Register.H, Register.L)]
+        public void TestLXI(Register destReg, Register destReg2)
         {
             var rom = AssembleSource($@"
                 org 00h

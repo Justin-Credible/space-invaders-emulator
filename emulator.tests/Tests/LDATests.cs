@@ -2,23 +2,23 @@ using Xunit;
 
 namespace JustinCredible.SIEmulator.Tests
 {
-    public class STATests : BaseTest
+    public class LDATests : BaseTest
     {
         [Fact]
-        public void TestSTA()
+        public void TestLDA()
         {
             var rom = AssembleSource($@"
                 org 00h
-                STA 2477h
+                LDA 2477h
                 HLT
             ");
 
-            var registers = new CPURegisters();
-            registers.A = 0x42;
+            var memory = new byte[16384];
+            memory[0x2477] = 0x42;
 
             var initialState = new InitialCPUState()
             {
-                Registers = registers,
+                Memory = memory,
             };
 
             var state = Execute(rom, initialState);

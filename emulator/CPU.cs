@@ -23,19 +23,32 @@ namespace JustinCredible.SIEmulator
          * 
          * $4000-:       RAM mirror
          */
-        private byte[] _memory;
+        public byte[] Memory { get; set; }
+
+        public CPURegisters _registers;
 
         /** The primary CPU registers. */
-        private Registers _registers;
+        public CPURegisters Registers
+        {
+            get
+            {
+                return _registers;
+            }
+
+            set
+            {
+                _registers = value;
+            }
+        }
 
         /** The encapsulated condition/flags regiser. */
-        private ConditionFlags _flags;
+        public ConditionFlags Flags { get; set; }
 
         /** Program Counter; 16-bits */
-        private UInt16 _programCounter;
+        public UInt16 ProgramCounter { get; set; }
 
         /** Stack Pointer; 16-bits */
-        private UInt16 _stackPointer;
+        public UInt16 StackPointer { get; set; }
 
         public CPU()
         {
@@ -45,15 +58,15 @@ namespace JustinCredible.SIEmulator
         public void Reset()
         {
             // Initialize the regisgters and memory.
-            _memory = new byte[16*1024];
-            _registers = new Registers();
-            _flags = new ConditionFlags();
+            Memory = new byte[16*1024];
+            _registers = new CPURegisters();
+            Flags = new ConditionFlags();
 
             // The ROMs are loaded at the lower 8K of addressable memory.
-            _programCounter = 0x0000;
+            ProgramCounter = 0x0000;
 
             // Initialize the stack pointer.
-            _stackPointer = 0x0000; // TODO: ???
+            StackPointer = 0x0000; // TODO: ???
 
             // Reset the flag that indicates that the ROM has finished executing.
             Finished = false;
@@ -79,34 +92,17 @@ namespace JustinCredible.SIEmulator
             if (memory.Length > 16384)
                 throw new Exception("Memory cannot exceed 16 kilobytes.");
 
-            _memory = memory;
-        }
-
-        public void LoadRegisters(Registers registers)
-        {
-            _registers = registers;
-        }
-
-        public CPUState DumpState()
-        {
-            return new CPUState()
-            {
-                Memory = _memory,
-                Registers = _registers,
-                Flags = _flags,
-                ProgramCounter = _programCounter,
-                StackPointer = _stackPointer,
-            };
+            Memory = memory;
         }
 
         public void PrintDebugSummary()
         {
-            var opcodeByte = _memory[_programCounter];
+            var opcodeByte = Memory[ProgramCounter];
             var opcodeInstruction = OpcodeTable.Lookup[opcodeByte].Instruction;
 
             var opcode = String.Format("0x{0:X2} {1}", opcodeByte, opcodeInstruction);
-            var pc = String.Format("0x{0:X4}", _programCounter);
-            var sp = String.Format("0x{0:X4}", _stackPointer);
+            var pc = String.Format("0x{0:X4}", ProgramCounter);
+            var sp = String.Format("0x{0:X4}", StackPointer);
             var regA = String.Format("0x{0:X2}", _registers.A);
             var regB = String.Format("0x{0:X2}", _registers.B);
             var regC = String.Format("0x{0:X2}", _registers.C);
@@ -119,8 +115,8 @@ namespace JustinCredible.SIEmulator
             Console.WriteLine($"PC: ${pc}\tSP: ${sp}");
             Console.WriteLine($"A: ${regA}\tB: ${regB}\tC: ${regC}\tD: ${regD}");
             Console.WriteLine($"E: ${regE}\tH: ${regH}\tL: ${regL}");
-            Console.WriteLine($"Zero: ${_flags.Zero}\tSign: ${_flags.Sign}\tParity: ${_flags.Parity}");
-            Console.WriteLine($"Carry: ${_flags.Carry}\tAuxillary Carry: ${_flags.AuxCarry}");
+            Console.WriteLine($"Zero: ${Flags.Zero}\tSign: ${Flags.Sign}\tParity: ${Flags.Parity}");
+            Console.WriteLine($"Carry: ${Flags.Carry}\tAuxillary Carry: ${Flags.AuxCarry}");
         }
 
         /** Executes the next instruction and returns the number of cycles it took to execute. */
@@ -131,7 +127,7 @@ namespace JustinCredible.SIEmulator
                 throw new Exception("Program has finished execution; Reset() must be invoked before invoking Step() again.");
 
             // Fetch the next opcode to be executed.
-            var opcodeByte = _memory[_programCounter];
+            var opcodeByte = Memory[ProgramCounter];
             var opcode = OpcodeTable.Lookup[opcodeByte];
 
             // Some instructions have an alternate cycle count depending on the outcome of
@@ -157,10 +153,19 @@ namespace JustinCredible.SIEmulator
 
                 case OpcodeBytes.STA:
                 {
-                    var upper = _memory[_programCounter + 2] << 8;
-                    var lower = _memory[_programCounter + 1];
+                    var upper = Memory[ProgramCounter + 2] << 8;
+                    var lower = Memory[ProgramCounter + 1];
                     var address = upper | lower;
-                    _memory[address] = _registers.A;
+                    Memory[address] = _registers.A;
+                    break;
+                }
+
+                case OpcodeBytes.LDA:
+                {
+                    var upper = Memory[ProgramCounter + 2] << 8;
+                    var lower = Memory[ProgramCounter + 1];
+                    var address = upper | lower;
+                    _registers.A = Memory[address];
                     break;
                 }
 
@@ -321,25 +326,25 @@ namespace JustinCredible.SIEmulator
                 #region MOV X, M (from memory to register)
 
                 case OpcodeBytes.MOV_B_M:
-                    _registers[RegisterID.B] = _memory[GetAddress()];
+                    _registers.B = Memory[GetAddress()];
                     break;
                 case OpcodeBytes.MOV_C_M:
-                    _registers[RegisterID.C] = _memory[GetAddress()];
+                    _registers.C = Memory[GetAddress()];
                     break;
                 case OpcodeBytes.MOV_D_M:
-                    _registers[RegisterID.D] = _memory[GetAddress()];
+                    _registers.D = Memory[GetAddress()];
                     break;
                 case OpcodeBytes.MOV_E_M:
-                    _registers[RegisterID.E] = _memory[GetAddress()];
+                    _registers.E = Memory[GetAddress()];
                     break;
                 case OpcodeBytes.MOV_H_M:
-                    _registers[RegisterID.H] = _memory[GetAddress()];
+                    _registers.H = Memory[GetAddress()];
                     break;
                 case OpcodeBytes.MOV_L_M:
-                    _registers[RegisterID.L] = _memory[GetAddress()];
+                    _registers.L = Memory[GetAddress()];
                     break;
                 case OpcodeBytes.MOV_A_M:
-                    _registers[RegisterID.A] = _memory[GetAddress()];
+                    _registers.A = Memory[GetAddress()];
                     break;
 
                 #endregion
@@ -347,25 +352,25 @@ namespace JustinCredible.SIEmulator
                 #region MOV M, X (from register to memory)
 
                 case OpcodeBytes.MOV_M_B:
-                    ExecuteMOVFromRegisterToMemory(RegisterID.B);
+                    ExecuteMOVFromRegisterToMemory(Register.B);
                     break;
                 case OpcodeBytes.MOV_M_C:
-                    ExecuteMOVFromRegisterToMemory(RegisterID.C);
+                    ExecuteMOVFromRegisterToMemory(Register.C);
                     break;
                 case OpcodeBytes.MOV_M_D:
-                    ExecuteMOVFromRegisterToMemory(RegisterID.D);
+                    ExecuteMOVFromRegisterToMemory(Register.D);
                     break;
                 case OpcodeBytes.MOV_M_E:
-                    ExecuteMOVFromRegisterToMemory(RegisterID.E);
+                    ExecuteMOVFromRegisterToMemory(Register.E);
                     break;
                 case OpcodeBytes.MOV_M_H:
-                    ExecuteMOVFromRegisterToMemory(RegisterID.H);
+                    ExecuteMOVFromRegisterToMemory(Register.H);
                     break;
                 case OpcodeBytes.MOV_M_L:
-                    ExecuteMOVFromRegisterToMemory(RegisterID.L);
+                    ExecuteMOVFromRegisterToMemory(Register.L);
                     break;
                 case OpcodeBytes.MOV_M_A:
-                    ExecuteMOVFromRegisterToMemory(RegisterID.A);
+                    ExecuteMOVFromRegisterToMemory(Register.A);
                     break;
 
                 #endregion
@@ -375,51 +380,51 @@ namespace JustinCredible.SIEmulator
                 #region MVI
 
                 case OpcodeBytes.MVI_B:
-                    _registers.B = _memory[_programCounter + 1];
+                    _registers.B = Memory[ProgramCounter + 1];
                     break;
                 case OpcodeBytes.MVI_C:
-                    _registers.C = _memory[_programCounter + 1];
+                    _registers.C = Memory[ProgramCounter + 1];
                     break;
                 case OpcodeBytes.MVI_D:
-                    _registers.D = _memory[_programCounter + 1];
+                    _registers.D = Memory[ProgramCounter + 1];
                     break;
                 case OpcodeBytes.MVI_E:
-                    _registers.E = _memory[_programCounter + 1];
+                    _registers.E = Memory[ProgramCounter + 1];
                     break;
                 case OpcodeBytes.MVI_H:
-                    _registers.H = _memory[_programCounter + 1];
+                    _registers.H = Memory[ProgramCounter + 1];
                     break;
                 case OpcodeBytes.MVI_L:
-                    _registers.L = _memory[_programCounter + 1];
+                    _registers.L = Memory[ProgramCounter + 1];
                     break;
                 case OpcodeBytes.MVI_M:
-                    ExecuteMOVIToMemory(_memory[_programCounter + 1]);
+                    ExecuteMOVIToMemory(Memory[ProgramCounter + 1]);
                     break;
                 case OpcodeBytes.MVI_A:
-                    _registers.A = _memory[_programCounter + 1];
+                    _registers.A = Memory[ProgramCounter + 1];
                     break;
 
                 #endregion
 
                 #region LXI
                 case OpcodeBytes.LXI_B:
-                    _registers.B = _memory[_programCounter + 2];
-                    _registers.C = _memory[_programCounter + 1];
+                    _registers.B = Memory[ProgramCounter + 2];
+                    _registers.C = Memory[ProgramCounter + 1];
                     break;
                 case OpcodeBytes.LXI_D:
-                    _registers.D = _memory[_programCounter + 2];
-                    _registers.E = _memory[_programCounter + 1];
+                    _registers.D = Memory[ProgramCounter + 2];
+                    _registers.E = Memory[ProgramCounter + 1];
                     break;
                 case OpcodeBytes.LXI_H:
-                    _registers.H = _memory[_programCounter + 2];
-                    _registers.L = _memory[_programCounter + 1];
+                    _registers.H = Memory[ProgramCounter + 2];
+                    _registers.L = Memory[ProgramCounter + 1];
                     break;
                 case OpcodeBytes.LXI_SP:
                 {
-                    var upper = _memory[_programCounter + 2] << 8;
-                    var lower = _memory[_programCounter + 1];
+                    var upper = Memory[ProgramCounter + 2] << 8;
+                    var lower = Memory[ProgramCounter + 1];
                     var address = upper | lower;
-                    _stackPointer = (UInt16)address;
+                    StackPointer = (UInt16)address;
                     break;
                 }
                 #endregion
@@ -427,14 +432,14 @@ namespace JustinCredible.SIEmulator
                 #region STAX
                 case OpcodeBytes.STAX_B:
                 {
-                    var address = GetAddress(RegisterID.B, RegisterID.C);
-                    _memory[address] = _registers.A;
+                    var address = GetAddress(Register.B, Register.C);
+                    Memory[address] = _registers.A;
                     break;
                 }
                 case OpcodeBytes.STAX_D:
                 {
-                    var address = GetAddress(RegisterID.D, RegisterID.E);
-                    _memory[address] = _registers.A;
+                    var address = GetAddress(Register.D, Register.E);
+                    Memory[address] = _registers.A;
                     break;
                 }
                 #endregion
@@ -442,20 +447,56 @@ namespace JustinCredible.SIEmulator
                 #region LDAX
                 case OpcodeBytes.LDAX_B:
                 {
-                    var address = GetAddress(RegisterID.B, RegisterID.C);
-                    _registers.A = _memory[address];
+                    var address = GetAddress(Register.B, Register.C);
+                    _registers.A = Memory[address];
                     break;
                 }
                 case OpcodeBytes.LDAX_D:
                 {
-                    var address = GetAddress(RegisterID.D, RegisterID.E);
-                    _registers.A = _memory[address];
+                    var address = GetAddress(Register.D, Register.E);
+                    _registers.A = Memory[address];
                     break;
                 }
                 #endregion
 
+                #region INX
+                case OpcodeBytes.INX_B:
+                {
+                    var upper = _registers.B << 8;
+                    var lower = _registers.C;
+                    var value = upper | lower;
+                    value++;
+                    _registers.B = (byte)((0xFF00 & value) >> 8);
+                    _registers.C = (byte)(0x00FF & value);
+                    break;
+                }
+                case OpcodeBytes.INX_D:
+                {
+                    var upper = _registers.D << 8;
+                    var lower = _registers.E;
+                    var value = upper | lower;
+                    value++;
+                    _registers.D = (byte)((0xFF00 & value) >> 8);
+                    _registers.E = (byte)(0x00FF & value);
+                    break;
+                }
+                case OpcodeBytes.INX_H:
+                {
+                    var upper = _registers.H << 8;
+                    var lower = _registers.L;
+                    var value = upper | lower;
+                    value++;
+                    _registers.H = (byte)((0xFF00 & value) >> 8);
+                    _registers.L = (byte)(0x00FF & value);
+                    break;
+                }
+                case OpcodeBytes.INX_SP:
+                    StackPointer++;
+                    break;
+                #endregion
+
                 default:
-                    throw new NotImplementedException(String.Format("Attempted to execute unknown opcode 0x{0:X2} at memory address 0x{0:X4}", opcode, _programCounter));
+                    throw new NotImplementedException(String.Format("Attempted to execute unknown opcode 0x{0:X2} at memory address 0x{0:X4}", opcode, ProgramCounter));
             }
 
             // Determine how many cycles the instruction took.
@@ -466,14 +507,14 @@ namespace JustinCredible.SIEmulator
             {
                 // Sanity check; if this fails an opcode definition or implementation is invalid.
                 if (opcode.AlternateCycles == null)
-                    throw new Exception(String.Format("The implementation for opcode 0x{0:X2} at memory address 0x{0:X4} indicated the alternate number of cycles should be used, but was not defined.", opcode, _programCounter));
+                    throw new Exception(String.Format("The implementation for opcode 0x{0:X2} at memory address 0x{0:X4} indicated the alternate number of cycles should be used, but was not defined.", opcode, ProgramCounter));
 
                 elapsedCycles = (UInt16)opcode.AlternateCycles;
             }
 
             // Increment the program counter.
             if (opcode != OpcodeTable.HLT)
-               _programCounter += (UInt16)opcode.Size;
+               ProgramCounter += (UInt16)opcode.Size;
 
             return elapsedCycles;
         }
@@ -482,7 +523,7 @@ namespace JustinCredible.SIEmulator
          * Used to build a memory address from the two given register values.
          * Using registers H and L are the most common for this, so they are the default parameters.
          */
-        private UInt16 GetAddress(RegisterID upperReg = RegisterID.H, RegisterID lowerReg = RegisterID.L)
+        private UInt16 GetAddress(Register upperReg = Register.H, Register lowerReg = Register.L)
         {
             var upper = _registers[upperReg] << 8;
             var lower = _registers[lowerReg];
@@ -490,12 +531,12 @@ namespace JustinCredible.SIEmulator
             return (UInt16)address;
         }
 
-        private void ExecuteMOV(RegisterID dest, RegisterID source)
+        private void ExecuteMOV(Register dest, Register source)
         {
             _registers[dest] = _registers[source];
         }
 
-        private void ExecuteMOVFromRegisterToMemory(RegisterID source)
+        private void ExecuteMOVFromRegisterToMemory(Register source)
         {
             var address = GetAddress();
 
@@ -506,7 +547,7 @@ namespace JustinCredible.SIEmulator
             // $2000-$23ff:  work RAM (1K)
             // $2400-$3fff:  video RAM (7K)
             if (address >= 0x2000 && address <= 0x3FFF)
-                _memory[address] = _registers[source];
+                Memory[address] = _registers[source];
             else
             {
                 var addressFormatted = String.Format("0x{0:X4}", address);
@@ -525,7 +566,7 @@ namespace JustinCredible.SIEmulator
             // $2000-$23ff:  work RAM (1K)
             // $2400-$3fff:  video RAM (7K)
             if (address >= 0x2000 && address <= 0x3FFF)
-                _memory[address] = data;
+                Memory[address] = data;
             else
             {
                 var addressFormatted = String.Format("0x{0:X4}", address);

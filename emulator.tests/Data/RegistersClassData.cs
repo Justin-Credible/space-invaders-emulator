@@ -7,13 +7,13 @@ namespace JustinCredible.SIEmulator.Tests
     {
         public IEnumerator<object[]> GetEnumerator()
         {
-            yield return new object [] { RegisterID.A };
-            yield return new object [] { RegisterID.B };
-            yield return new object [] { RegisterID.C };
-            yield return new object [] { RegisterID.D };
-            yield return new object [] { RegisterID.E };
-            yield return new object [] { RegisterID.H };
-            yield return new object [] { RegisterID.L };
+            yield return new object [] { Register.A };
+            yield return new object [] { Register.B };
+            yield return new object [] { Register.C };
+            yield return new object [] { Register.D };
+            yield return new object [] { Register.E };
+            yield return new object [] { Register.H };
+            yield return new object [] { Register.L };
         }
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();

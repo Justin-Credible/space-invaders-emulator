@@ -5,9 +5,9 @@ namespace JustinCredible.SIEmulator.Tests
     public class LDAXTests : BaseTest
     {
         [Theory]
-        [InlineData(RegisterID.B, RegisterID.C)]
-        [InlineData(RegisterID.D, RegisterID.E)]
-        public void TestLDAX(RegisterID addressReg1, RegisterID addressReg2)
+        [InlineData(Register.B, Register.C)]
+        [InlineData(Register.D, Register.E)]
+        public void TestLDAX(Register addressReg1, Register addressReg2)
         {
             var rom = AssembleSource($@"
                 org 00h
@@ -15,14 +15,14 @@ namespace JustinCredible.SIEmulator.Tests
                 HLT
             ");
 
-            var registers = new Registers();
+            var registers = new CPURegisters();
             registers[addressReg1] = 0x24;
             registers[addressReg2] = 0x77;
 
             var memory = new byte[16384];
             memory[0x2477] = 0x42;
 
-            var initialState = new CPUState()
+            var initialState = new InitialCPUState()
             {
                 Registers = registers,
                 Memory = memory,

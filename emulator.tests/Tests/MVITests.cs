@@ -6,7 +6,7 @@ namespace JustinCredible.SIEmulator.Tests
     {
         [Theory]
         [ClassData(typeof(RegistersClassData))]
-        public void TestMVIToRegister(RegisterID destReg)
+        public void TestMVIToRegister(Register destReg)
         {
             var rom = AssembleSource($@"
                 org 00h
@@ -34,11 +34,11 @@ namespace JustinCredible.SIEmulator.Tests
                 HLT
             ");
 
-            var registers = new Registers();
-            registers[RegisterID.H] = 0x22;
-            registers[RegisterID.L] = 0x33;
+            var registers = new CPURegisters();
+            registers[Register.H] = 0x22;
+            registers[Register.L] = 0x33;
 
-            var initialState = new CPUState()
+            var initialState = new InitialCPUState()
             {
                 Registers = registers,
             };

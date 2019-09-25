@@ -5,9 +5,9 @@ namespace JustinCredible.SIEmulator.Tests
     public class STAXTests : BaseTest
     {
         [Theory]
-        [InlineData(RegisterID.B, RegisterID.C)]
-        [InlineData(RegisterID.D, RegisterID.E)]
-        public void TestSTAX(RegisterID destReg, RegisterID destReg2)
+        [InlineData(Register.B, Register.C)]
+        [InlineData(Register.D, Register.E)]
+        public void TestSTAX(Register destReg, Register destReg2)
         {
             var rom = AssembleSource($@"
                 org 00h
@@ -15,12 +15,12 @@ namespace JustinCredible.SIEmulator.Tests
                 HLT
             ");
 
-            var registers = new Registers();
+            var registers = new CPURegisters();
             registers.A = 0x42;
             registers[destReg] = 0x24;
             registers[destReg2] = 0x77;
 
-            var initialState = new CPUState()
+            var initialState = new InitialCPUState()
             {
                 Registers = registers,
             };

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace JustinCredible.SIEmulator.Tests
 {
-    public class UnitTestCPUState : CPUState
+    public class CPUStats
     {
         /** The number of CPU steps or instructions executed */
         public int Iterations { get; set; }
@@ -14,13 +14,10 @@ namespace JustinCredible.SIEmulator.Tests
         /** The values of the program counter at each CPU step that occurred. */
         public List<UInt16> ProgramCounterAddresses { get; set; }
 
-        public UnitTestCPUState(CPUState state)
-        {
-            this.Memory = state.Memory;
-            this.Registers = state.Registers;
-            this.Flags = state.Flags;
-            this.ProgramCounter = state.ProgramCounter;
-            this.StackPointer = state.StackPointer;
-        }
+        public byte[] Memory { get; set; }
+        public CPURegisters Registers { get; set; }
+        public ConditionFlags Flags { get; set; }
+        public UInt16 ProgramCounter { get; set; }
+        public UInt16 StackPointer { get; set; }
     }
 }

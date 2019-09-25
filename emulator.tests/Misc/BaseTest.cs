@@ -36,10 +36,10 @@ namespace JustinCredible.SIEmulator.Tests
             return File.ReadAllBytes(romFilePath);
         }
 
-        protected UnitTestCPUState Execute(byte[] rom, CPUState cpuState = null)
+        protected CPUStats Execute(byte[] rom, InitialCPUState initialState = null)
         {
-            var emulator = new CPU();
-            emulator.Reset();
+            var cpu = new CPU();
+            cpu.Reset();
 
             // Ensure the ROM data is not larger than we can load.
             if (rom.Length > 8192)
@@ -53,23 +53,33 @@ namespace JustinCredible.SIEmulator.Tests
             Array.Copy(rom, memory, rom.Length);
 
             // Map in the registers and/or RAM if the unit test provided them.
-            if (cpuState != null)
+            if (initialState != null)
             {
-                emulator.LoadRegisters(cpuState.Registers);
-
-                if (cpuState.Memory != null)
+                if (initialState.Memory != null)
                 {
                     if (rom.Length > 16384)
                         throw new Exception("Memory cannot exceed 16 kilobytes.");
 
                     // Copy the RAM portion (upper 8K) into the memory map that already contains
                     // the ROM in the lower 8K.
-                    Array.Copy(cpuState.Memory, 8192, memory, 8192, 8192);
+                    Array.Copy(initialState.Memory, 8192, memory, 8192, 8192);
                 }
+
+                if (initialState.Registers != null)
+                    cpu.Registers = initialState.Registers.Value;
+
+                if (initialState.Flags != null)
+                    cpu.Flags = initialState.Flags.Value;
+
+                if (initialState.StackPointer != null)
+                    cpu.StackPointer = initialState.StackPointer.Value;
+
+                if (initialState.ProgramCounter != null)
+                    cpu.ProgramCounter = initialState.ProgramCounter.Value;
             }
 
             // Finally, set the built memory map into the CPU.
-            emulator.LoadMemory(memory);
+            cpu.LoadMemory(memory);
 
             // Record the number of iterations (instructions), CPU cycles, and the address of teh
             // program counter after each instruction is executed. This allows tests to assert each
@@ -78,40 +88,43 @@ namespace JustinCredible.SIEmulator.Tests
             var cycles = 0;
             var pcAddresses = new List<UInt16>();
 
-            while (!emulator.Finished)
+            while (!cpu.Finished)
             {
                 // Ensure we don't have a run away program.
                 if (iterations > 100)
                     throw new Exception("More than 100 iterations occurred.");
 
-                pcAddresses.Add(emulator.DumpState().ProgramCounter);
+                pcAddresses.Add(cpu.ProgramCounter);
 
-                cycles += emulator.Step();
+                cycles += cpu.Step();
 
                 iterations++;
             }
 
             // Return the state of the CPU so tests can do verification.
 
-            var state = emulator.DumpState();
-
-            var extendedState = new UnitTestCPUState(state)
+            var results = new CPUStats()
             {
                 Iterations = iterations,
                 Cycles = cycles,
                 ProgramCounterAddresses = pcAddresses,
+                Memory = cpu.Memory,
+                Registers = cpu.Registers,
+                Flags = cpu.Flags,
+                ProgramCounter = cpu.ProgramCounter,
+                StackPointer = cpu.StackPointer,
             };
 
-            return extendedState;
+            return results;
         }
 
-        protected void AssertFlagsFalse(CPUState state)
+        protected void AssertFlagsFalse(CPUStats stats)
         {
-            Assert.False(state.Flags.AuxCarry);
-            Assert.False(state.Flags.Carry);
-            Assert.False(state.Flags.Parity);
-            Assert.False(state.Flags.Sign);
-            Assert.False(state.Flags.Zero);
+            Assert.False(stats.Flags.AuxCarry);
+            Assert.False(stats.Flags.Carry);
+            Assert.False(stats.Flags.Parity);
+            Assert.False(stats.Flags.Sign);
+            Assert.False(stats.Flags.Zero);
         }
     }
 }
