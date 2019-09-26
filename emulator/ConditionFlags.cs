@@ -10,7 +10,7 @@ namespace JustinCredible.SIEmulator
      *
      * Bits 5, 3, and 1 are not used and always remain the same.
      */
-    public struct ConditionFlags
+    public class ConditionFlags
     {
         /**
          * Z (zero) set to 1 when the result is equal to zero

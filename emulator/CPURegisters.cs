@@ -6,7 +6,7 @@ namespace JustinCredible.SIEmulator
     /**
      * Represents the collection registers available on the Intel 8080 CPU.
      */
-    public struct CPURegisters
+    public class CPURegisters
     {
         /** Accumulator */
         public byte A;

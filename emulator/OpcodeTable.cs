@@ -132,17 +132,17 @@ namespace JustinCredible.SIEmulator
         #endregion
 
         #region PUSH
-        public static Opcode PUSH_B = new Opcode(OpcodeBytes.PUSH_B, 1, "PUSH B", 10); // (sp-2)<-C; (sp-1)<-B; sp <- sp - 2
-        public static Opcode PUSH_D = new Opcode(OpcodeBytes.PUSH_D, 1, "PUSH D", 10); // (sp-2)<-E; (sp-1)<-D; sp <- sp - 2
-        public static Opcode PUSH_H = new Opcode(OpcodeBytes.PUSH_H, 1, "PUSH H", 10); // (sp-2)<-L; (sp-1)<-H; sp <- sp - 2
-        public static Opcode PUSH_PSW = new Opcode(OpcodeBytes.PUSH_PSW, 1, "PUSH PSW", 10); // (sp-2)<-flags; (sp-1)<-A; sp <- sp - 2
+        public static Opcode PUSH_B = new Opcode(OpcodeBytes.PUSH_B, 1, "PUSH B", 11); // (sp-2)<-C; (sp-1)<-B; sp <- sp - 2
+        public static Opcode PUSH_D = new Opcode(OpcodeBytes.PUSH_D, 1, "PUSH D", 11); // (sp-2)<-E; (sp-1)<-D; sp <- sp - 2
+        public static Opcode PUSH_H = new Opcode(OpcodeBytes.PUSH_H, 1, "PUSH H", 11); // (sp-2)<-L; (sp-1)<-H; sp <- sp - 2
+        public static Opcode PUSH_PSW = new Opcode(OpcodeBytes.PUSH_PSW, 1, "PUSH PSW", 11); // (sp-2)<-flags; (sp-1)<-A; sp <- sp - 2
         #endregion
 
         #region POP
-        public static Opcode POP_B = new Opcode(OpcodeBytes.POP_B, 1, "POP B", 11); // C <- (sp); B <- (sp+1); sp <- sp+2
-        public static Opcode POP_D = new Opcode(OpcodeBytes.POP_D, 1, "POP D", 11); // E <- (sp); D <- (sp+1); sp <- sp+2
-        public static Opcode POP_H = new Opcode(OpcodeBytes.POP_H, 1, "POP H", 11); // L <- (sp); H <- (sp+1); sp <- sp+2
-        public static Opcode POP_PSW = new Opcode(OpcodeBytes.POP_PSW, 1, "POP PSW", 11); // flags <- (sp); A <- (sp+1); sp <- sp+2
+        public static Opcode POP_B = new Opcode(OpcodeBytes.POP_B, 1, "POP B", 10); // C <- (sp); B <- (sp+1); sp <- sp+2
+        public static Opcode POP_D = new Opcode(OpcodeBytes.POP_D, 1, "POP D", 10); // E <- (sp); D <- (sp+1); sp <- sp+2
+        public static Opcode POP_H = new Opcode(OpcodeBytes.POP_H, 1, "POP H", 10); // L <- (sp); H <- (sp+1); sp <- sp+2
+        public static Opcode POP_PSW = new Opcode(OpcodeBytes.POP_PSW, 1, "POP PSW", 10); // flags <- (sp); A <- (sp+1); sp <- sp+2
         #endregion
 
         public static Dictionary<byte, Opcode> Lookup = new Dictionary<byte, Opcode>()

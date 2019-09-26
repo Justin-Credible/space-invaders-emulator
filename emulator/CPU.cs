@@ -25,21 +25,8 @@ namespace JustinCredible.SIEmulator
          */
         public byte[] Memory { get; set; }
 
-        public CPURegisters _registers;
-
         /** The primary CPU registers. */
-        public CPURegisters Registers
-        {
-            get
-            {
-                return _registers;
-            }
-
-            set
-            {
-                _registers = value;
-            }
-        }
+        public CPURegisters Registers { get; set; }
 
         /** The encapsulated condition/flags regiser. */
         public ConditionFlags Flags { get; set; }
@@ -59,7 +46,7 @@ namespace JustinCredible.SIEmulator
         {
             // Initialize the regisgters and memory.
             Memory = new byte[16*1024];
-            _registers = new CPURegisters();
+            Registers = new CPURegisters();
             Flags = new ConditionFlags();
 
             // The ROMs are loaded at the lower 8K of addressable memory.
@@ -103,13 +90,13 @@ namespace JustinCredible.SIEmulator
             var opcode = String.Format("0x{0:X2} {1}", opcodeByte, opcodeInstruction);
             var pc = String.Format("0x{0:X4}", ProgramCounter);
             var sp = String.Format("0x{0:X4}", StackPointer);
-            var regA = String.Format("0x{0:X2}", _registers.A);
-            var regB = String.Format("0x{0:X2}", _registers.B);
-            var regC = String.Format("0x{0:X2}", _registers.C);
-            var regD = String.Format("0x{0:X2}", _registers.D);
-            var regE = String.Format("0x{0:X2}", _registers.E);
-            var regH = String.Format("0x{0:X2}", _registers.H);
-            var regL = String.Format("0x{0:X2}", _registers.L);
+            var regA = String.Format("0x{0:X2}", Registers.A);
+            var regB = String.Format("0x{0:X2}", Registers.B);
+            var regC = String.Format("0x{0:X2}", Registers.C);
+            var regD = String.Format("0x{0:X2}", Registers.D);
+            var regE = String.Format("0x{0:X2}", Registers.E);
+            var regH = String.Format("0x{0:X2}", Registers.H);
+            var regL = String.Format("0x{0:X2}", Registers.L);
 
             Console.WriteLine($"Opcode: ${opcode}");
             Console.WriteLine($"PC: ${pc}\tSP: ${sp}");
@@ -156,7 +143,7 @@ namespace JustinCredible.SIEmulator
                     var upper = Memory[ProgramCounter + 2] << 8;
                     var lower = Memory[ProgramCounter + 1];
                     var address = upper | lower;
-                    Memory[address] = _registers.A;
+                    Memory[address] = Registers.A;
                     break;
                 }
 
@@ -165,7 +152,7 @@ namespace JustinCredible.SIEmulator
                     var upper = Memory[ProgramCounter + 2] << 8;
                     var lower = Memory[ProgramCounter + 1];
                     var address = upper | lower;
-                    _registers.A = Memory[address];
+                    Registers.A = Memory[address];
                     break;
                 }
 
@@ -177,145 +164,145 @@ namespace JustinCredible.SIEmulator
                     // NOP
                     break;
                 case OpcodeBytes.MOV_B_C:
-                    _registers.B = _registers.C;
+                    Registers.B = Registers.C;
                     break;
                 case OpcodeBytes.MOV_B_D:
-                    _registers.B = _registers.D;
+                    Registers.B = Registers.D;
                     break;
                 case OpcodeBytes.MOV_B_E:
-                    _registers.B = _registers.E;
+                    Registers.B = Registers.E;
                     break;
                 case OpcodeBytes.MOV_B_H:
-                    _registers.B = _registers.H;
+                    Registers.B = Registers.H;
                     break;
                 case OpcodeBytes.MOV_B_L:
-                    _registers.B = _registers.L;
+                    Registers.B = Registers.L;
                     break;
                 case OpcodeBytes.MOV_B_A:
-                    _registers.B = _registers.A;
+                    Registers.B = Registers.A;
                     break;
                 case OpcodeBytes.MOV_C_B:
-                    _registers.C = _registers.B;
+                    Registers.C = Registers.B;
                     break;
                 case OpcodeBytes.MOV_C_C:
                     // NOP
                     break;
                 case OpcodeBytes.MOV_C_D:
-                    _registers.C = _registers.D;
+                    Registers.C = Registers.D;
                     break;
                 case OpcodeBytes.MOV_C_E:
-                    _registers.C = _registers.E;
+                    Registers.C = Registers.E;
                     break;
                 case OpcodeBytes.MOV_C_H:
-                    _registers.C = _registers.H;
+                    Registers.C = Registers.H;
                     break;
                 case OpcodeBytes.MOV_C_L:
-                    _registers.C = _registers.L;
+                    Registers.C = Registers.L;
                     break;
                 case OpcodeBytes.MOV_C_A:
-                    _registers.C = _registers.A;
+                    Registers.C = Registers.A;
                     break;
                 case OpcodeBytes.MOV_D_B:
-                    _registers.D = _registers.B;
+                    Registers.D = Registers.B;
                     break;
                 case OpcodeBytes.MOV_D_C:
-                    _registers.D = _registers.C;
+                    Registers.D = Registers.C;
                     break;
                 case OpcodeBytes.MOV_D_D:
                     // NOP
                     break;
                 case OpcodeBytes.MOV_D_E:
-                    _registers.D = _registers.E;
+                    Registers.D = Registers.E;
                     break;
                 case OpcodeBytes.MOV_D_H:
-                    _registers.D = _registers.H;
+                    Registers.D = Registers.H;
                     break;
                 case OpcodeBytes.MOV_D_L:
-                    _registers.D = _registers.L;
+                    Registers.D = Registers.L;
                     break;
                 case OpcodeBytes.MOV_D_A:
-                    _registers.D = _registers.A;
+                    Registers.D = Registers.A;
                     break;
                 case OpcodeBytes.MOV_E_B:
-                    _registers.E = _registers.B;
+                    Registers.E = Registers.B;
                     break;
                 case OpcodeBytes.MOV_E_C:
-                    _registers.E = _registers.C;
+                    Registers.E = Registers.C;
                     break;
                 case OpcodeBytes.MOV_E_D:
-                    _registers.E = _registers.D;
+                    Registers.E = Registers.D;
                     break;
                 case OpcodeBytes.MOV_E_E:
                     // NOP
                     break;
                 case OpcodeBytes.MOV_E_H:
-                    _registers.E = _registers.H;
+                    Registers.E = Registers.H;
                     break;
                 case OpcodeBytes.MOV_E_L:
-                    _registers.E = _registers.L;
+                    Registers.E = Registers.L;
                     break;
                 case OpcodeBytes.MOV_E_A:
-                    _registers.E = _registers.A;
+                    Registers.E = Registers.A;
                     break;
                 case OpcodeBytes.MOV_H_B:
-                    _registers.H = _registers.B;
+                    Registers.H = Registers.B;
                     break;
                 case OpcodeBytes.MOV_H_C:
-                    _registers.H = _registers.C;
+                    Registers.H = Registers.C;
                     break;
                 case OpcodeBytes.MOV_H_D:
-                    _registers.H = _registers.D;
+                    Registers.H = Registers.D;
                     break;
                 case OpcodeBytes.MOV_H_E:
-                    _registers.H = _registers.E;
+                    Registers.H = Registers.E;
                     break;
                 case OpcodeBytes.MOV_H_H:
                     // NOP
                     break;
                 case OpcodeBytes.MOV_H_L:
-                    _registers.H = _registers.L;
+                    Registers.H = Registers.L;
                     break;
                 case OpcodeBytes.MOV_H_A:
-                    _registers.H = _registers.A;
+                    Registers.H = Registers.A;
                     break;
                 case OpcodeBytes.MOV_L_B:
-                    _registers.L = _registers.B;
+                    Registers.L = Registers.B;
                     break;
                 case OpcodeBytes.MOV_L_C:
-                    _registers.L = _registers.C;
+                    Registers.L = Registers.C;
                     break;
                 case OpcodeBytes.MOV_L_D:
-                    _registers.L = _registers.D;
+                    Registers.L = Registers.D;
                     break;
                 case OpcodeBytes.MOV_L_E:
-                    _registers.L = _registers.E;
+                    Registers.L = Registers.E;
                     break;
                 case OpcodeBytes.MOV_L_H:
-                    _registers.L = _registers.H;
+                    Registers.L = Registers.H;
                     break;
                 case OpcodeBytes.MOV_L_L:
                     // NOP
                     break;
                 case OpcodeBytes.MOV_L_A:
-                    _registers.L = _registers.A;
+                    Registers.L = Registers.A;
                     break;
                 case OpcodeBytes.MOV_A_B:
-                    _registers.A = _registers.B;
+                    Registers.A = Registers.B;
                     break;
                 case OpcodeBytes.MOV_A_C:
-                    _registers.A = _registers.C;
+                    Registers.A = Registers.C;
                     break;
                 case OpcodeBytes.MOV_A_D:
-                    _registers.A = _registers.D;
+                    Registers.A = Registers.D;
                     break;
                 case OpcodeBytes.MOV_A_E:
-                    _registers.A = _registers.E;
+                    Registers.A = Registers.E;
                     break;
                 case OpcodeBytes.MOV_A_H:
-                    _registers.A = _registers.H;
+                    Registers.A = Registers.H;
                     break;
                 case OpcodeBytes.MOV_A_L:
-                    _registers.A = _registers.L;
+                    Registers.A = Registers.L;
                     break;
                 case OpcodeBytes.MOV_A_A:
                     // NOP
@@ -326,25 +313,25 @@ namespace JustinCredible.SIEmulator
                 #region MOV X, M (from memory to register)
 
                 case OpcodeBytes.MOV_B_M:
-                    _registers.B = Memory[GetAddress()];
+                    Registers.B = Memory[GetAddress()];
                     break;
                 case OpcodeBytes.MOV_C_M:
-                    _registers.C = Memory[GetAddress()];
+                    Registers.C = Memory[GetAddress()];
                     break;
                 case OpcodeBytes.MOV_D_M:
-                    _registers.D = Memory[GetAddress()];
+                    Registers.D = Memory[GetAddress()];
                     break;
                 case OpcodeBytes.MOV_E_M:
-                    _registers.E = Memory[GetAddress()];
+                    Registers.E = Memory[GetAddress()];
                     break;
                 case OpcodeBytes.MOV_H_M:
-                    _registers.H = Memory[GetAddress()];
+                    Registers.H = Memory[GetAddress()];
                     break;
                 case OpcodeBytes.MOV_L_M:
-                    _registers.L = Memory[GetAddress()];
+                    Registers.L = Memory[GetAddress()];
                     break;
                 case OpcodeBytes.MOV_A_M:
-                    _registers.A = Memory[GetAddress()];
+                    Registers.A = Memory[GetAddress()];
                     break;
 
                 #endregion
@@ -380,44 +367,44 @@ namespace JustinCredible.SIEmulator
                 #region MVI
 
                 case OpcodeBytes.MVI_B:
-                    _registers.B = Memory[ProgramCounter + 1];
+                    Registers.B = Memory[ProgramCounter + 1];
                     break;
                 case OpcodeBytes.MVI_C:
-                    _registers.C = Memory[ProgramCounter + 1];
+                    Registers.C = Memory[ProgramCounter + 1];
                     break;
                 case OpcodeBytes.MVI_D:
-                    _registers.D = Memory[ProgramCounter + 1];
+                    Registers.D = Memory[ProgramCounter + 1];
                     break;
                 case OpcodeBytes.MVI_E:
-                    _registers.E = Memory[ProgramCounter + 1];
+                    Registers.E = Memory[ProgramCounter + 1];
                     break;
                 case OpcodeBytes.MVI_H:
-                    _registers.H = Memory[ProgramCounter + 1];
+                    Registers.H = Memory[ProgramCounter + 1];
                     break;
                 case OpcodeBytes.MVI_L:
-                    _registers.L = Memory[ProgramCounter + 1];
+                    Registers.L = Memory[ProgramCounter + 1];
                     break;
                 case OpcodeBytes.MVI_M:
                     ExecuteMOVIToMemory(Memory[ProgramCounter + 1]);
                     break;
                 case OpcodeBytes.MVI_A:
-                    _registers.A = Memory[ProgramCounter + 1];
+                    Registers.A = Memory[ProgramCounter + 1];
                     break;
 
                 #endregion
 
                 #region LXI
                 case OpcodeBytes.LXI_B:
-                    _registers.B = Memory[ProgramCounter + 2];
-                    _registers.C = Memory[ProgramCounter + 1];
+                    Registers.B = Memory[ProgramCounter + 2];
+                    Registers.C = Memory[ProgramCounter + 1];
                     break;
                 case OpcodeBytes.LXI_D:
-                    _registers.D = Memory[ProgramCounter + 2];
-                    _registers.E = Memory[ProgramCounter + 1];
+                    Registers.D = Memory[ProgramCounter + 2];
+                    Registers.E = Memory[ProgramCounter + 1];
                     break;
                 case OpcodeBytes.LXI_H:
-                    _registers.H = Memory[ProgramCounter + 2];
-                    _registers.L = Memory[ProgramCounter + 1];
+                    Registers.H = Memory[ProgramCounter + 2];
+                    Registers.L = Memory[ProgramCounter + 1];
                     break;
                 case OpcodeBytes.LXI_SP:
                 {
@@ -433,13 +420,13 @@ namespace JustinCredible.SIEmulator
                 case OpcodeBytes.STAX_B:
                 {
                     var address = GetAddress(Register.B, Register.C);
-                    Memory[address] = _registers.A;
+                    Memory[address] = Registers.A;
                     break;
                 }
                 case OpcodeBytes.STAX_D:
                 {
                     var address = GetAddress(Register.D, Register.E);
-                    Memory[address] = _registers.A;
+                    Memory[address] = Registers.A;
                     break;
                 }
                 #endregion
@@ -448,13 +435,13 @@ namespace JustinCredible.SIEmulator
                 case OpcodeBytes.LDAX_B:
                 {
                     var address = GetAddress(Register.B, Register.C);
-                    _registers.A = Memory[address];
+                    Registers.A = Memory[address];
                     break;
                 }
                 case OpcodeBytes.LDAX_D:
                 {
                     var address = GetAddress(Register.D, Register.E);
-                    _registers.A = Memory[address];
+                    Registers.A = Memory[address];
                     break;
                 }
                 #endregion
@@ -462,32 +449,32 @@ namespace JustinCredible.SIEmulator
                 #region INX
                 case OpcodeBytes.INX_B:
                 {
-                    var upper = _registers.B << 8;
-                    var lower = _registers.C;
+                    var upper = Registers.B << 8;
+                    var lower = Registers.C;
                     var value = upper | lower;
                     value++;
-                    _registers.B = (byte)((0xFF00 & value) >> 8);
-                    _registers.C = (byte)(0x00FF & value);
+                    Registers.B = (byte)((0xFF00 & value) >> 8);
+                    Registers.C = (byte)(0x00FF & value);
                     break;
                 }
                 case OpcodeBytes.INX_D:
                 {
-                    var upper = _registers.D << 8;
-                    var lower = _registers.E;
+                    var upper = Registers.D << 8;
+                    var lower = Registers.E;
                     var value = upper | lower;
                     value++;
-                    _registers.D = (byte)((0xFF00 & value) >> 8);
-                    _registers.E = (byte)(0x00FF & value);
+                    Registers.D = (byte)((0xFF00 & value) >> 8);
+                    Registers.E = (byte)(0x00FF & value);
                     break;
                 }
                 case OpcodeBytes.INX_H:
                 {
-                    var upper = _registers.H << 8;
-                    var lower = _registers.L;
+                    var upper = Registers.H << 8;
+                    var lower = Registers.L;
                     var value = upper | lower;
                     value++;
-                    _registers.H = (byte)((0xFF00 & value) >> 8);
-                    _registers.L = (byte)(0x00FF & value);
+                    Registers.H = (byte)((0xFF00 & value) >> 8);
+                    Registers.L = (byte)(0x00FF & value);
                     break;
                 }
                 case OpcodeBytes.INX_SP:
@@ -498,32 +485,32 @@ namespace JustinCredible.SIEmulator
                 #region DCX
                 case OpcodeBytes.DCX_B:
                 {
-                    var upper = _registers.B << 8;
-                    var lower = _registers.C;
+                    var upper = Registers.B << 8;
+                    var lower = Registers.C;
                     var value = upper | lower;
                     value--;
-                    _registers.B = (byte)((0xFF00 & value) >> 8);
-                    _registers.C = (byte)(0x00FF & value);
+                    Registers.B = (byte)((0xFF00 & value) >> 8);
+                    Registers.C = (byte)(0x00FF & value);
                     break;
                 }
                 case OpcodeBytes.DCX_D:
                 {
-                    var upper = _registers.D << 8;
-                    var lower = _registers.E;
+                    var upper = Registers.D << 8;
+                    var lower = Registers.E;
                     var value = upper | lower;
                     value--;
-                    _registers.D = (byte)((0xFF00 & value) >> 8);
-                    _registers.E = (byte)(0x00FF & value);
+                    Registers.D = (byte)((0xFF00 & value) >> 8);
+                    Registers.E = (byte)(0x00FF & value);
                     break;
                 }
                 case OpcodeBytes.DCX_H:
                 {
-                    var upper = _registers.H << 8;
-                    var lower = _registers.L;
+                    var upper = Registers.H << 8;
+                    var lower = Registers.L;
                     var value = upper | lower;
                     value--;
-                    _registers.H = (byte)((0xFF00 & value) >> 8);
-                    _registers.L = (byte)(0x00FF & value);
+                    Registers.H = (byte)((0xFF00 & value) >> 8);
+                    Registers.L = (byte)(0x00FF & value);
                     break;
                 }
                 case OpcodeBytes.DCX_SP:
@@ -533,22 +520,22 @@ namespace JustinCredible.SIEmulator
 
                 #region PUSH
                 case OpcodeBytes.PUSH_B:
-                    Memory[StackPointer - 1] = _registers.B;
-                    Memory[StackPointer - 2] = _registers.C;
+                    Memory[StackPointer - 1] = Registers.B;
+                    Memory[StackPointer - 2] = Registers.C;
                     StackPointer = (UInt16)(StackPointer - 2);
                     break;
                 case OpcodeBytes.PUSH_D:
-                    Memory[StackPointer - 1] = _registers.D;
-                    Memory[StackPointer - 2] = _registers.E;
+                    Memory[StackPointer - 1] = Registers.D;
+                    Memory[StackPointer - 2] = Registers.E;
                     StackPointer = (UInt16)(StackPointer - 2);
                     break;
                 case OpcodeBytes.PUSH_H:
-                    Memory[StackPointer - 1] = _registers.H;
-                    Memory[StackPointer - 2] = _registers.L;
+                    Memory[StackPointer - 1] = Registers.H;
+                    Memory[StackPointer - 2] = Registers.L;
                     StackPointer = (UInt16)(StackPointer - 2);
                     break;
                 case OpcodeBytes.PUSH_PSW:
-                    Memory[StackPointer - 1] = _registers.A;
+                    Memory[StackPointer - 1] = Registers.A;
                     Memory[StackPointer - 2] = Flags.ToByte();
                     StackPointer = (UInt16)(StackPointer - 2);
                     break;
@@ -556,24 +543,24 @@ namespace JustinCredible.SIEmulator
 
                 #region POP
                 case OpcodeBytes.POP_B:
-                    _registers.B = Memory[StackPointer + 1];
-                    _registers.C = Memory[StackPointer];
-                    StackPointer = (UInt16)(StackPointer - 2);
+                    Registers.B = Memory[StackPointer + 1];
+                    Registers.C = Memory[StackPointer];
+                    StackPointer = (UInt16)(StackPointer + 2);
                     break;
                 case OpcodeBytes.POP_D:
-                    _registers.D = Memory[StackPointer + 1];
-                    _registers.E = Memory[StackPointer];
-                    StackPointer = (UInt16)(StackPointer - 2);
+                    Registers.D = Memory[StackPointer + 1];
+                    Registers.E = Memory[StackPointer];
+                    StackPointer = (UInt16)(StackPointer + 2);
                     break;
                 case OpcodeBytes.POP_H:
-                    _registers.H = Memory[StackPointer + 1];
-                    _registers.L = Memory[StackPointer];
-                    StackPointer = (UInt16)(StackPointer - 2);
+                    Registers.H = Memory[StackPointer + 1];
+                    Registers.L = Memory[StackPointer];
+                    StackPointer = (UInt16)(StackPointer + 2);
                     break;
                 case OpcodeBytes.POP_PSW:
-                    _registers.A = Memory[StackPointer + 1];
+                    Registers.A = Memory[StackPointer + 1];
                     Flags.SetFromByte(Memory[StackPointer]);
-                    StackPointer = (UInt16)(StackPointer - 2);
+                    StackPointer = (UInt16)(StackPointer + 2);
                     break;
                 #endregion
 
@@ -607,15 +594,15 @@ namespace JustinCredible.SIEmulator
          */
         private UInt16 GetAddress(Register upperReg = Register.H, Register lowerReg = Register.L)
         {
-            var upper = _registers[upperReg] << 8;
-            var lower = _registers[lowerReg];
+            var upper = Registers[upperReg] << 8;
+            var lower = Registers[lowerReg];
             var address = upper | lower;
             return (UInt16)address;
         }
 
         private void ExecuteMOV(Register dest, Register source)
         {
-            _registers[dest] = _registers[source];
+            Registers[dest] = Registers[source];
         }
 
         private void ExecuteMOVFromRegisterToMemory(Register source)
@@ -629,7 +616,7 @@ namespace JustinCredible.SIEmulator
             // $2000-$23ff:  work RAM (1K)
             // $2400-$3fff:  video RAM (7K)
             if (address >= 0x2000 && address <= 0x3FFF)
-                Memory[address] = _registers[source];
+                Memory[address] = Registers[source];
             else
             {
                 var addressFormatted = String.Format("0x{0:X4}", address);

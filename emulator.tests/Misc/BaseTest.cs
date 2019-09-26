@@ -66,10 +66,10 @@ namespace JustinCredible.SIEmulator.Tests
                 }
 
                 if (initialState.Registers != null)
-                    cpu.Registers = initialState.Registers.Value;
+                    cpu.Registers = initialState.Registers;
 
                 if (initialState.Flags != null)
-                    cpu.Flags = initialState.Flags.Value;
+                    cpu.Flags = initialState.Flags;
 
                 if (initialState.StackPointer != null)
                     cpu.StackPointer = initialState.StackPointer.Value;
