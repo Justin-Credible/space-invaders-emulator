@@ -564,6 +564,36 @@ namespace JustinCredible.SIEmulator
                     break;
                 #endregion
 
+                #region ADD
+                case OpcodeBytes.ADD_B:
+                    ExecuteADD(Registers.B);
+                    break;
+                case OpcodeBytes.ADD_C:
+                    ExecuteADD(Registers.C);
+                    break;
+                case OpcodeBytes.ADD_D:
+                    ExecuteADD(Registers.D);
+                    break;
+                case OpcodeBytes.ADD_E:
+                    ExecuteADD(Registers.E);
+                    break;
+                case OpcodeBytes.ADD_H:
+                    ExecuteADD(Registers.H);
+                    break;
+                case OpcodeBytes.ADD_L:
+                    ExecuteADD(Registers.L);
+                    break;
+                case OpcodeBytes.ADD_M:
+                {
+                    var value = Memory[GetAddress()];
+                    ExecuteADD(value);
+                    break;
+                }
+                case OpcodeBytes.ADD_A:
+                    ExecuteADD(Registers.A);
+                    break;
+                #endregion
+
                 default:
                     throw new NotImplementedException(String.Format("Attempted to execute unknown opcode 0x{0:X2} at memory address 0x{0:X4}", opcode, ProgramCounter));
             }
@@ -641,6 +671,39 @@ namespace JustinCredible.SIEmulator
                 var addressFormatted = String.Format("0x{0:X4}", address);
                 throw new Exception($"Illegal memory address ({addressFormatted}) specified for 'MVI M, d8' operation; expected address to be between 0x2000 and 0x3FFF inclusive.");
             }
+        }
+
+        private void ExecuteADD(byte value)
+        {
+            var result = Registers.A + value;
+
+            var carryOccurred = result > 255;
+
+            if (carryOccurred)
+                result = result - 256;
+
+            Flags.Carry = carryOccurred;
+            Flags.Zero = result == 0;
+            Flags.Sign = (result & 0b10000000) == 0b10000000;
+            Flags.Parity = CalculateParityBit((byte)result);
+
+            Registers.A = (byte)result;
+        }
+
+        private bool CalculateParityBit(byte value)
+        {
+            var setBits = 0;
+
+            for (var i = 0; i < 8; i++)
+            {
+                if ((value & 0x01) == 1)
+                    setBits++;
+
+                value = (byte)(value >> 1);
+            }
+
+            // Parity bit is set if number of bits is even.
+            return setBits == 0 || setBits % 2 == 0;
         }
     }
 }

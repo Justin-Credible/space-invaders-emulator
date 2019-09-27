@@ -142,5 +142,16 @@ namespace JustinCredible.SIEmulator
         public const byte POP_H = 0xe1;
         public const byte POP_PSW = 0xf1;
         #endregion
+
+        #region ADD
+        public const byte ADD_B = 0x80;
+        public const byte ADD_C = 0x81;
+        public const byte ADD_D = 0x82;
+        public const byte ADD_E = 0x83;
+        public const byte ADD_H = 0x84;
+        public const byte ADD_L = 0x85;
+        public const byte ADD_M = 0x86;
+        public const byte ADD_A = 0x87;
+        #endregion
     }
 }

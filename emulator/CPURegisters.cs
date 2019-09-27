@@ -18,6 +18,19 @@ namespace JustinCredible.SIEmulator
         public byte H;
         public byte L;
 
+        // Convenience Pair Setter
+        public UInt16 HL
+        {
+            set
+            {
+                var upper = (value & 0xFF00) >> 8;
+                var lower = (byte)value;
+                this.H = (byte)upper;
+                this.L = (byte)lower;
+            }
+        }
+
+        // Convenience Indexer
         public byte this[Register registerID]
         {
             get

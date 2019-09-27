@@ -145,6 +145,17 @@ namespace JustinCredible.SIEmulator
         public static Opcode POP_PSW = new Opcode(OpcodeBytes.POP_PSW, 1, "POP PSW", 10); // flags <- (sp); A <- (sp+1); sp <- sp+2
         #endregion
 
+        #region ADD
+        public static Opcode ADD_B = new Opcode(OpcodeBytes.ADD_B, 1, "ADD B", 4); // A <- A + B
+        public static Opcode ADD_C = new Opcode(OpcodeBytes.ADD_C, 1, "ADD C", 4); // A <- A + C
+        public static Opcode ADD_D = new Opcode(OpcodeBytes.ADD_D, 1, "ADD D", 4); // A <- A + D
+        public static Opcode ADD_E = new Opcode(OpcodeBytes.ADD_E, 1, "ADD E", 4); // A <- A + E
+        public static Opcode ADD_H = new Opcode(OpcodeBytes.ADD_H, 1, "ADD H", 4); // A <- A + H
+        public static Opcode ADD_L = new Opcode(OpcodeBytes.ADD_L, 1, "ADD L", 4); // A <- A + L
+        public static Opcode ADD_M = new Opcode(OpcodeBytes.ADD_M, 1, "ADD M", 7); // A <- A + (HL)
+        public static Opcode ADD_A = new Opcode(OpcodeBytes.ADD_A, 1, "ADD A", 4); // A <- A + A
+        #endregion
+
         public static Dictionary<byte, Opcode> Lookup = new Dictionary<byte, Opcode>()
         {
             [OpcodeBytes.NOP] = NOP,
@@ -281,6 +292,17 @@ namespace JustinCredible.SIEmulator
             [OpcodeBytes.POP_D] = POP_D,
             [OpcodeBytes.POP_H] = POP_H,
             [OpcodeBytes.POP_PSW] = POP_PSW,
+            #endregion
+
+            #region ADD
+            [OpcodeBytes.ADD_B] = ADD_B,
+            [OpcodeBytes.ADD_C] = ADD_C,
+            [OpcodeBytes.ADD_D] = ADD_D,
+            [OpcodeBytes.ADD_E] = ADD_E,
+            [OpcodeBytes.ADD_H] = ADD_H,
+            [OpcodeBytes.ADD_L] = ADD_L,
+            [OpcodeBytes.ADD_M] = ADD_M,
+            [OpcodeBytes.ADD_A] = ADD_A,
             #endregion
         };
     }

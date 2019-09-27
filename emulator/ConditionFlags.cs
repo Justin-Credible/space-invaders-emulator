@@ -23,7 +23,7 @@ namespace JustinCredible.SIEmulator
         public bool Sign;
 
         /**
-         * P (parity) is set when the answer has even parity, clear when odd parity
+         * P (parity) is  set if the number of 1 bits in the result is even.
          */
         public bool Parity;
 
