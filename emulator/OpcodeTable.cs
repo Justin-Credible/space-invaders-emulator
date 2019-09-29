@@ -167,6 +167,17 @@ namespace JustinCredible.SIEmulator
         public static Opcode SUB_A = new Opcode(OpcodeBytes.SUB_A, 1, "SUB A", 4); // A <- A - A
         #endregion
 
+        #region ANA
+        public static Opcode ANA_B = new Opcode(OpcodeBytes.ANA_B, 1, "ANA B", 4); // A <- A & B
+        public static Opcode ANA_C = new Opcode(OpcodeBytes.ANA_C, 1, "ANA C", 4); // A <- A & C
+        public static Opcode ANA_D = new Opcode(OpcodeBytes.ANA_D, 1, "ANA D", 4); // A <- A & D
+        public static Opcode ANA_E = new Opcode(OpcodeBytes.ANA_E, 1, "ANA E", 4); // A <- A & E
+        public static Opcode ANA_H = new Opcode(OpcodeBytes.ANA_H, 1, "ANA H", 4); // A <- A & H
+        public static Opcode ANA_L = new Opcode(OpcodeBytes.ANA_L, 1, "ANA L", 4); // A <- A & L
+        public static Opcode ANA_M = new Opcode(OpcodeBytes.ANA_M, 1, "ANA M", 4); // A <- A & (HL)
+        public static Opcode ANA_A = new Opcode(OpcodeBytes.ANA_A, 1, "ANA A", 4); // A <- A & A
+        #endregion
+
         public static Dictionary<byte, Opcode> Lookup = new Dictionary<byte, Opcode>()
         {
             [OpcodeBytes.NOP] = NOP,
@@ -325,6 +336,17 @@ namespace JustinCredible.SIEmulator
             [OpcodeBytes.SUB_L] = SUB_L,
             [OpcodeBytes.SUB_M] = SUB_M,
             [OpcodeBytes.SUB_A] = SUB_A,
+            #endregion
+
+            #region ANA
+            [OpcodeBytes.ANA_B] = ANA_B,
+            [OpcodeBytes.ANA_C] = ANA_C,
+            [OpcodeBytes.ANA_D] = ANA_D,
+            [OpcodeBytes.ANA_E] = ANA_E,
+            [OpcodeBytes.ANA_H] = ANA_H,
+            [OpcodeBytes.ANA_L] = ANA_L,
+            [OpcodeBytes.ANA_M] = ANA_M,
+            [OpcodeBytes.ANA_A] = ANA_A,
             #endregion
         };
     }

@@ -164,5 +164,16 @@ namespace JustinCredible.SIEmulator
         public const byte SUB_M = 0x96;
         public const byte SUB_A = 0x97;
         #endregion
+
+        #region ANA
+        public const byte ANA_B = 0xa0;
+        public const byte ANA_C = 0xa1;
+        public const byte ANA_D = 0xa2;
+        public const byte ANA_E = 0xa3;
+        public const byte ANA_H = 0xa4;
+        public const byte ANA_L = 0xa5;
+        public const byte ANA_M = 0xa6;
+        public const byte ANA_A = 0xa7;
+        #endregion
     }
 }
