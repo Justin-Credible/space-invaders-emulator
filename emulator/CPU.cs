@@ -594,6 +594,36 @@ namespace JustinCredible.SIEmulator
                     break;
                 #endregion
 
+                #region SUB
+                case OpcodeBytes.SUB_B:
+                    ExecuteSUB(Registers.B);
+                    break;
+                case OpcodeBytes.SUB_C:
+                    ExecuteSUB(Registers.C);
+                    break;
+                case OpcodeBytes.SUB_D:
+                    ExecuteSUB(Registers.D);
+                    break;
+                case OpcodeBytes.SUB_E:
+                    ExecuteSUB(Registers.E);
+                    break;
+                case OpcodeBytes.SUB_H:
+                    ExecuteSUB(Registers.H);
+                    break;
+                case OpcodeBytes.SUB_L:
+                    ExecuteSUB(Registers.L);
+                    break;
+                case OpcodeBytes.SUB_M:
+                {
+                    var value = Memory[GetAddress()];
+                    ExecuteSUB(value);
+                    break;
+                }
+                case OpcodeBytes.SUB_A:
+                    ExecuteSUB(Registers.A);
+                    break;
+                #endregion
+
                 default:
                     throw new NotImplementedException(String.Format("Attempted to execute unknown opcode 0x{0:X2} at memory address 0x{0:X4}", opcode, ProgramCounter));
             }
@@ -682,12 +712,32 @@ namespace JustinCredible.SIEmulator
             if (carryOccurred)
                 result = result - 256;
 
-            Flags.Carry = carryOccurred;
+            SetFlags(carryOccurred, (byte)result);
+
+            Registers.A = (byte)result;
+        }
+
+        private void ExecuteSUB(byte value)
+        {
+            var borrowOccurred = value > Registers.A;
+
+            var result = Registers.A - value;
+
+            if (borrowOccurred)
+                result = 256 + result;
+
+            SetFlags(borrowOccurred, (byte)result);
+
+            Registers.A = (byte)result;
+        }
+
+        private void SetFlags(bool carry, byte result)
+        {
+            Flags.Carry = carry;
             Flags.Zero = result == 0;
             Flags.Sign = (result & 0b10000000) == 0b10000000;
             Flags.Parity = CalculateParityBit((byte)result);
-
-            Registers.A = (byte)result;
+            // Flags.AuxCarry = // TODO
         }
 
         private bool CalculateParityBit(byte value)

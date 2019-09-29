@@ -153,5 +153,16 @@ namespace JustinCredible.SIEmulator
         public const byte ADD_M = 0x86;
         public const byte ADD_A = 0x87;
         #endregion
+
+        #region SUB
+        public const byte SUB_B = 0x90;
+        public const byte SUB_C = 0x91;
+        public const byte SUB_D = 0x92;
+        public const byte SUB_E = 0x93;
+        public const byte SUB_H = 0x94;
+        public const byte SUB_L = 0x95;
+        public const byte SUB_M = 0x96;
+        public const byte SUB_A = 0x97;
+        #endregion
     }
 }

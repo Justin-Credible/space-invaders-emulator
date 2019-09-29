@@ -156,6 +156,17 @@ namespace JustinCredible.SIEmulator
         public static Opcode ADD_A = new Opcode(OpcodeBytes.ADD_A, 1, "ADD A", 4); // A <- A + A
         #endregion
 
+        #region SUB
+        public static Opcode SUB_B = new Opcode(OpcodeBytes.SUB_B, 1, "SUB B", 4); // A <- A - B
+        public static Opcode SUB_C = new Opcode(OpcodeBytes.SUB_C, 1, "SUB C", 4); // A <- A - C
+        public static Opcode SUB_D = new Opcode(OpcodeBytes.SUB_D, 1, "SUB D", 4); // A <- A - D
+        public static Opcode SUB_E = new Opcode(OpcodeBytes.SUB_E, 1, "SUB E", 4); // A <- A - E
+        public static Opcode SUB_H = new Opcode(OpcodeBytes.SUB_H, 1, "SUB H", 4); // A <- A - H
+        public static Opcode SUB_L = new Opcode(OpcodeBytes.SUB_L, 1, "SUB L", 4); // A <- A - L
+        public static Opcode SUB_M = new Opcode(OpcodeBytes.SUB_M, 1, "SUB M", 7); // A <- A - (HL)
+        public static Opcode SUB_A = new Opcode(OpcodeBytes.SUB_A, 1, "SUB A", 4); // A <- A - A
+        #endregion
+
         public static Dictionary<byte, Opcode> Lookup = new Dictionary<byte, Opcode>()
         {
             [OpcodeBytes.NOP] = NOP,
@@ -303,6 +314,17 @@ namespace JustinCredible.SIEmulator
             [OpcodeBytes.ADD_L] = ADD_L,
             [OpcodeBytes.ADD_M] = ADD_M,
             [OpcodeBytes.ADD_A] = ADD_A,
+            #endregion
+
+            #region SUB
+            [OpcodeBytes.SUB_B] = SUB_B,
+            [OpcodeBytes.SUB_C] = SUB_C,
+            [OpcodeBytes.SUB_D] = SUB_D,
+            [OpcodeBytes.SUB_E] = SUB_E,
+            [OpcodeBytes.SUB_H] = SUB_H,
+            [OpcodeBytes.SUB_L] = SUB_L,
+            [OpcodeBytes.SUB_M] = SUB_M,
+            [OpcodeBytes.SUB_A] = SUB_A,
             #endregion
         };
     }
