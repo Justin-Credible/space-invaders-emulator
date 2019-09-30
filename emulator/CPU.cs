@@ -659,6 +659,41 @@ namespace JustinCredible.SIEmulator
                     break;
                 #endregion
 
+                #region ORA
+                case OpcodeBytes.ORA_B:
+                    Registers.A = (byte)(Registers.A | Registers.B);
+                    SetFlags(false, Registers.A);
+                    break;
+                case OpcodeBytes.ORA_C:
+                    Registers.A = (byte)(Registers.A | Registers.C);
+                    SetFlags(false, Registers.A);
+                    break;
+                case OpcodeBytes.ORA_D:
+                    Registers.A = (byte)(Registers.A | Registers.D);
+                    SetFlags(false, Registers.A);
+                    break;
+                case OpcodeBytes.ORA_E:
+                    Registers.A = (byte)(Registers.A | Registers.E);
+                    SetFlags(false, Registers.A);
+                    break;
+                case OpcodeBytes.ORA_H:
+                    Registers.A = (byte)(Registers.A | Registers.H);
+                    SetFlags(false, Registers.A);
+                    break;
+                case OpcodeBytes.ORA_L:
+                    Registers.A = (byte)(Registers.A | Registers.L);
+                    SetFlags(false, Registers.A);
+                    break;
+                case OpcodeBytes.ORA_M:
+                    Registers.A = (byte)(Registers.A | Memory[GetAddress()]);
+                    SetFlags(false, Registers.A);
+                    break;
+                case OpcodeBytes.ORA_A:
+                    Registers.A = (byte)(Registers.A | Registers.A);
+                    SetFlags(false, Registers.A);
+                    break;
+                #endregion
+
                 default:
                     throw new NotImplementedException(String.Format("Attempted to execute unknown opcode 0x{0:X2} at memory address 0x{0:X4}", opcode, ProgramCounter));
             }

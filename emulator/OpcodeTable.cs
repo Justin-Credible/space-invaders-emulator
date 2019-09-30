@@ -174,8 +174,19 @@ namespace JustinCredible.SIEmulator
         public static Opcode ANA_E = new Opcode(OpcodeBytes.ANA_E, 1, "ANA E", 4); // A <- A & E
         public static Opcode ANA_H = new Opcode(OpcodeBytes.ANA_H, 1, "ANA H", 4); // A <- A & H
         public static Opcode ANA_L = new Opcode(OpcodeBytes.ANA_L, 1, "ANA L", 4); // A <- A & L
-        public static Opcode ANA_M = new Opcode(OpcodeBytes.ANA_M, 1, "ANA M", 4); // A <- A & (HL)
+        public static Opcode ANA_M = new Opcode(OpcodeBytes.ANA_M, 1, "ANA M", 7); // A <- A & (HL)
         public static Opcode ANA_A = new Opcode(OpcodeBytes.ANA_A, 1, "ANA A", 4); // A <- A & A
+        #endregion
+
+        #region ORA
+        public static Opcode ORA_B = new Opcode(OpcodeBytes.ORA_B, 1, "ORA B", 4); // A <- A | B
+        public static Opcode ORA_C = new Opcode(OpcodeBytes.ORA_C, 1, "ORA C", 4); // A <- A | C
+        public static Opcode ORA_D = new Opcode(OpcodeBytes.ORA_D, 1, "ORA D", 4); // A <- A | D
+        public static Opcode ORA_E = new Opcode(OpcodeBytes.ORA_E, 1, "ORA E", 4); // A <- A | E
+        public static Opcode ORA_H = new Opcode(OpcodeBytes.ORA_H, 1, "ORA H", 4); // A <- A | H
+        public static Opcode ORA_L = new Opcode(OpcodeBytes.ORA_L, 1, "ORA L", 4); // A <- A | L
+        public static Opcode ORA_M = new Opcode(OpcodeBytes.ORA_M, 1, "ORA M", 7); // A <- A | (HL)
+        public static Opcode ORA_A = new Opcode(OpcodeBytes.ORA_A, 1, "ORA A", 4); // A <- A | A
         #endregion
 
         public static Dictionary<byte, Opcode> Lookup = new Dictionary<byte, Opcode>()
@@ -347,6 +358,17 @@ namespace JustinCredible.SIEmulator
             [OpcodeBytes.ANA_L] = ANA_L,
             [OpcodeBytes.ANA_M] = ANA_M,
             [OpcodeBytes.ANA_A] = ANA_A,
+            #endregion
+
+            #region ORA
+            [OpcodeBytes.ORA_B] = ORA_B,
+            [OpcodeBytes.ORA_C] = ORA_C,
+            [OpcodeBytes.ORA_D] = ORA_D,
+            [OpcodeBytes.ORA_E] = ORA_E,
+            [OpcodeBytes.ORA_H] = ORA_H,
+            [OpcodeBytes.ORA_L] = ORA_L,
+            [OpcodeBytes.ORA_M] = ORA_M,
+            [OpcodeBytes.ORA_A] = ORA_A,
             #endregion
         };
     }
