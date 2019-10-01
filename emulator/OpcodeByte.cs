@@ -208,5 +208,16 @@ namespace JustinCredible.SIEmulator
         public const byte SBB_M = 0x9e;
         public const byte SBB_A = 0x9f;
         #endregion
+
+        #region XRA
+        public const byte XRA_B = 0xa8;
+        public const byte XRA_C = 0xa9;
+        public const byte XRA_D = 0xaa;
+        public const byte XRA_E = 0xab;
+        public const byte XRA_H = 0xac;
+        public const byte XRA_L = 0xad;
+        public const byte XRA_M = 0xae;
+        public const byte XRA_A = 0xaf;
+        #endregion
     }
 }

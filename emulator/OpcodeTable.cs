@@ -211,6 +211,17 @@ namespace JustinCredible.SIEmulator
         public static Opcode SBB_A = new Opcode(OpcodeBytes.SBB_A, 1, "SBB A", 4); // A <- A - A - CY
         #endregion
 
+        #region XRA
+        public static Opcode XRA_B = new Opcode(OpcodeBytes.XRA_B, 1, "XRA B", 4); // A <- A ^ B
+        public static Opcode XRA_C = new Opcode(OpcodeBytes.XRA_C, 1, "XRA C", 4); // A <- A ^ C
+        public static Opcode XRA_D = new Opcode(OpcodeBytes.XRA_D, 1, "XRA D", 4); // A <- A ^ D
+        public static Opcode XRA_E = new Opcode(OpcodeBytes.XRA_E, 1, "XRA E", 4); // A <- A ^ E
+        public static Opcode XRA_H = new Opcode(OpcodeBytes.XRA_H, 1, "XRA H", 4); // A <- A ^ H
+        public static Opcode XRA_L = new Opcode(OpcodeBytes.XRA_L, 1, "XRA L", 4); // A <- A ^ L
+        public static Opcode XRA_M = new Opcode(OpcodeBytes.XRA_M, 1, "XRA M", 7); // A <- A ^ (HL)
+        public static Opcode XRA_A = new Opcode(OpcodeBytes.XRA_A, 1, "XRA A", 4); // A <- A ^ A
+        #endregion
+
         public static Dictionary<byte, Opcode> Lookup = new Dictionary<byte, Opcode>()
         {
             [OpcodeBytes.NOP] = NOP,
@@ -413,6 +424,17 @@ namespace JustinCredible.SIEmulator
             [OpcodeBytes.SBB_L] = SBB_L,
             [OpcodeBytes.SBB_M] = SBB_M,
             [OpcodeBytes.SBB_A] = SBB_A,
+            #endregion
+
+            #region XRA
+            [OpcodeBytes.XRA_B] = XRA_B,
+            [OpcodeBytes.XRA_C] = XRA_C,
+            [OpcodeBytes.XRA_D] = XRA_D,
+            [OpcodeBytes.XRA_E] = XRA_E,
+            [OpcodeBytes.XRA_H] = XRA_H,
+            [OpcodeBytes.XRA_L] = XRA_L,
+            [OpcodeBytes.XRA_M] = XRA_M,
+            [OpcodeBytes.XRA_A] = XRA_A,
             #endregion
         };
     }
