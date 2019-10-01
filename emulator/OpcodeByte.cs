@@ -186,5 +186,16 @@ namespace JustinCredible.SIEmulator
         public const byte ORA_M = 0xb6;
         public const byte ORA_A = 0xb7;
         #endregion
+
+        #region ADC
+        public const byte ADC_B = 0x88;
+        public const byte ADC_C = 0x89;
+        public const byte ADC_D = 0x8a;
+        public const byte ADC_E = 0x8b;
+        public const byte ADC_H = 0x8c;
+        public const byte ADC_L = 0x8d;
+        public const byte ADC_M = 0x8e;
+        public const byte ADC_A = 0x8f;
+        #endregion
     }
 }

@@ -189,6 +189,17 @@ namespace JustinCredible.SIEmulator
         public static Opcode ORA_A = new Opcode(OpcodeBytes.ORA_A, 1, "ORA A", 4); // A <- A | A
         #endregion
 
+        #region ADC
+        public static Opcode ADC_B = new Opcode(OpcodeBytes.ADC_B, 1, "ADC B", 4); // A <- A + B + CY
+        public static Opcode ADC_C = new Opcode(OpcodeBytes.ADC_C, 1, "ADC C", 4); // A <- A + C + CY
+        public static Opcode ADC_D = new Opcode(OpcodeBytes.ADC_D, 1, "ADC D", 4); // A <- A + D + CY
+        public static Opcode ADC_E = new Opcode(OpcodeBytes.ADC_E, 1, "ADC E", 4); // A <- A + E + CY
+        public static Opcode ADC_H = new Opcode(OpcodeBytes.ADC_H, 1, "ADC H", 4); // A <- A + H + CY
+        public static Opcode ADC_L = new Opcode(OpcodeBytes.ADC_L, 1, "ADC L", 4); // A <- A + L + CY
+        public static Opcode ADC_M = new Opcode(OpcodeBytes.ADC_M, 1, "ADC M", 7); // A <- A + (HL) + CY
+        public static Opcode ADC_A = new Opcode(OpcodeBytes.ADC_A, 1, "ADC A", 4); // A <- A + A + CY
+        #endregion
+
         public static Dictionary<byte, Opcode> Lookup = new Dictionary<byte, Opcode>()
         {
             [OpcodeBytes.NOP] = NOP,
@@ -369,6 +380,17 @@ namespace JustinCredible.SIEmulator
             [OpcodeBytes.ORA_L] = ORA_L,
             [OpcodeBytes.ORA_M] = ORA_M,
             [OpcodeBytes.ORA_A] = ORA_A,
+            #endregion
+
+            #region ADC
+            [OpcodeBytes.ADC_B] = ADC_B,
+            [OpcodeBytes.ADC_C] = ADC_C,
+            [OpcodeBytes.ADC_D] = ADC_D,
+            [OpcodeBytes.ADC_E] = ADC_E,
+            [OpcodeBytes.ADC_H] = ADC_H,
+            [OpcodeBytes.ADC_L] = ADC_L,
+            [OpcodeBytes.ADC_M] = ADC_M,
+            [OpcodeBytes.ADC_A] = ADC_A,
             #endregion
         };
     }

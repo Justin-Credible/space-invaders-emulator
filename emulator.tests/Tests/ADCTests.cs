@@ -2,7 +2,7 @@ using Xunit;
 
 namespace JustinCredible.SIEmulator.Tests
 {
-    public class ADDTests : BaseTest
+    public class ADCTests : BaseTest
     {
         [Theory]
         [InlineData(Register.B)]
@@ -11,27 +11,33 @@ namespace JustinCredible.SIEmulator.Tests
         [InlineData(Register.E)]
         [InlineData(Register.H)]
         [InlineData(Register.L)]
-        public void TestADD_NoFlags(Register sourceReg)
+        public void TestADC_NoFlags(Register sourceReg)
         {
             var rom = AssembleSource($@"
                 org 00h
-                ADD {sourceReg}
+                ADC {sourceReg}
                 HLT
             ");
 
             var registers = new CPURegisters();
             registers.A = 0x42;
-            registers[sourceReg] = 0x16;
+            registers[sourceReg] = 0x15;
+
+            var flags = new ConditionFlags()
+            {
+                Carry = true,
+            };
 
             var initialState = new InitialCPUState()
             {
                 Registers = registers,
+                Flags = flags,
             };
 
             var state = Execute(rom, initialState);
 
             Assert.Equal(0x58, state.Registers.A);
-            Assert.Equal(0x16, state.Registers[sourceReg]);
+            Assert.Equal(0x15, state.Registers[sourceReg]);
 
             Assert.False(state.Flags.Zero);
             Assert.False(state.Flags.Sign);
@@ -50,27 +56,33 @@ namespace JustinCredible.SIEmulator.Tests
         [InlineData(Register.E)]
         [InlineData(Register.H)]
         [InlineData(Register.L)]
-        public void TestADD_CarryFlag(Register sourceReg)
+        public void TestADC_CarryFlag(Register sourceReg)
         {
             var rom = AssembleSource($@"
                 org 00h
-                ADD {sourceReg}
+                ADC {sourceReg}
                 HLT
             ");
 
             var registers = new CPURegisters();
             registers.A = 0xFE;
-            registers[sourceReg] = 0x04;
+            registers[sourceReg] = 0x03;
+
+            var flags = new ConditionFlags()
+            {
+                Carry = true,
+            };
 
             var initialState = new InitialCPUState()
             {
                 Registers = registers,
+                Flags = flags,
             };
 
             var state = Execute(rom, initialState);
 
             Assert.Equal(0x02, state.Registers.A);
-            Assert.Equal(0x04, state.Registers[sourceReg]);
+            Assert.Equal(0x03, state.Registers[sourceReg]);
 
             Assert.False(state.Flags.Zero);
             Assert.False(state.Flags.Sign);
@@ -89,27 +101,33 @@ namespace JustinCredible.SIEmulator.Tests
         [InlineData(Register.E)]
         [InlineData(Register.H)]
         [InlineData(Register.L)]
-        public void TestADD_ZeroFlag(Register sourceReg)
+        public void TestADC_ZeroFlag(Register sourceReg)
         {
             var rom = AssembleSource($@"
                 org 00h
-                ADD {sourceReg}
+                ADC {sourceReg}
                 HLT
             ");
 
             var registers = new CPURegisters();
             registers.A = 0xFE;
-            registers[sourceReg] = 0x02;
+            registers[sourceReg] = 0x01;
+
+            var flags = new ConditionFlags()
+            {
+                Carry = true,
+            };
 
             var initialState = new InitialCPUState()
             {
                 Registers = registers,
+                Flags = flags,
             };
 
             var state = Execute(rom, initialState);
 
             Assert.Equal(0x00, state.Registers.A);
-            Assert.Equal(0x02, state.Registers[sourceReg]);
+            Assert.Equal(0x01, state.Registers[sourceReg]);
 
             Assert.True(state.Flags.Zero);
             Assert.False(state.Flags.Sign);
@@ -128,27 +146,33 @@ namespace JustinCredible.SIEmulator.Tests
         [InlineData(Register.E)]
         [InlineData(Register.H)]
         [InlineData(Register.L)]
-        public void TestADD_ParityFlag(Register sourceReg)
+        public void TestADC_ParityFlag(Register sourceReg)
         {
             var rom = AssembleSource($@"
                 org 00h
-                ADD {sourceReg}
+                ADC {sourceReg}
                 HLT
             ");
 
             var registers = new CPURegisters();
             registers.A = 0x44;
-            registers[sourceReg] = 0x33;
+            registers[sourceReg] = 0x32;
+
+            var flags = new ConditionFlags()
+            {
+                Carry = true,
+            };
 
             var initialState = new InitialCPUState()
             {
                 Registers = registers,
+                Flags = flags,
             };
 
             var state = Execute(rom, initialState);
 
             Assert.Equal(0x77, state.Registers.A);
-            Assert.Equal(0x33, state.Registers[sourceReg]);
+            Assert.Equal(0x32, state.Registers[sourceReg]);
 
             Assert.False(state.Flags.Zero);
             Assert.False(state.Flags.Sign);
@@ -167,27 +191,33 @@ namespace JustinCredible.SIEmulator.Tests
         [InlineData(Register.E)]
         [InlineData(Register.H)]
         [InlineData(Register.L)]
-        public void TestADD_SignFlag(Register sourceReg)
+        public void TestADC_SignFlag(Register sourceReg)
         {
             var rom = AssembleSource($@"
                 org 00h
-                ADD {sourceReg}
+                ADC {sourceReg}
                 HLT
             ");
 
             var registers = new CPURegisters();
             registers.A = 0x4D;
-            registers[sourceReg] = 0x3A;
+            registers[sourceReg] = 0x39;
+
+            var flags = new ConditionFlags()
+            {
+                Carry = true,
+            };
 
             var initialState = new InitialCPUState()
             {
                 Registers = registers,
+                Flags = flags,
             };
 
             var state = Execute(rom, initialState);
 
             Assert.Equal(0x87, state.Registers.A);
-            Assert.Equal(0x3A, state.Registers[sourceReg]);
+            Assert.Equal(0x39, state.Registers[sourceReg]);
 
             Assert.False(state.Flags.Zero);
             Assert.True(state.Flags.Sign);
@@ -200,25 +230,31 @@ namespace JustinCredible.SIEmulator.Tests
         }
 
         [Fact]
-        public void TestADD_A_NoFlags()
+        public void TestADC_A_NoFlags()
         {
             var rom = AssembleSource($@"
                 org 00h
-                ADD A
+                ADC A
                 HLT
             ");
 
             var registers = new CPURegisters();
-            registers.A = 0x02;
+            registers.A = 0x03;
+
+            var flags = new ConditionFlags()
+            {
+                Carry = true,
+            };
 
             var initialState = new InitialCPUState()
             {
                 Registers = registers,
+                Flags = flags,
             };
 
             var state = Execute(rom, initialState);
 
-            Assert.Equal(0x04, state.Registers.A);
+            Assert.Equal(0x07, state.Registers.A);
 
             Assert.False(state.Flags.Zero);
             Assert.False(state.Flags.Sign);
@@ -231,29 +267,35 @@ namespace JustinCredible.SIEmulator.Tests
         }
 
         [Fact]
-        public void TestADD_A_ZeroAndCarryFlags()
+        public void TestADC_A_CarryFlag()
         {
             var rom = AssembleSource($@"
                 org 00h
-                ADD A
+                ADC A
                 HLT
             ");
 
             var registers = new CPURegisters();
             registers.A = 0x80;
 
+            var flags = new ConditionFlags()
+            {
+                Carry = true,
+            };
+
             var initialState = new InitialCPUState()
             {
                 Registers = registers,
+                Flags = flags,
             };
 
             var state = Execute(rom, initialState);
 
-            Assert.Equal(0x00, state.Registers.A);
+            Assert.Equal(0x01, state.Registers.A);
 
-            Assert.True(state.Flags.Zero);
+            Assert.False(state.Flags.Zero);
             Assert.False(state.Flags.Sign);
-            Assert.True(state.Flags.Parity);
+            Assert.False(state.Flags.Parity);
             Assert.True(state.Flags.Carry);
 
             Assert.Equal(2, state.Iterations);
@@ -262,29 +304,34 @@ namespace JustinCredible.SIEmulator.Tests
         }
 
         [Fact]
-        public void TestADD_A_SignAndParityFlags()
+        public void TestADC_A_SignFlag()
         {
             var rom = AssembleSource($@"
                 org 00h
-                ADD A
+                ADC A
                 HLT
             ");
 
             var registers = new CPURegisters();
             registers.A = 0x44;
 
+            var flags = new ConditionFlags()
+            {
+                Carry = true,
+            };
+
             var initialState = new InitialCPUState()
             {
                 Registers = registers,
+                Flags = flags,
             };
-
             var state = Execute(rom, initialState);
 
-            Assert.Equal(0x88, state.Registers.A);
+            Assert.Equal(0x89, state.Registers.A);
 
             Assert.False(state.Flags.Zero);
             Assert.True(state.Flags.Sign);
-            Assert.True(state.Flags.Parity);
+            Assert.False(state.Flags.Parity);
             Assert.False(state.Flags.Carry);
 
             Assert.Equal(2, state.Iterations);
@@ -293,11 +340,11 @@ namespace JustinCredible.SIEmulator.Tests
         }
 
         [Fact]
-        public void TestADD_M_NoFlags()
+        public void TestADC_M_NoFlags()
         {
             var rom = AssembleSource($@"
                 org 00h
-                ADD M
+                ADC M
                 HLT
             ");
 
@@ -306,18 +353,24 @@ namespace JustinCredible.SIEmulator.Tests
             registers.HL = 0x2477;
 
             var memory = new byte[16384];
-            memory[0x2477] = 0x16;
+            memory[0x2477] = 0x15;
+
+            var flags = new ConditionFlags()
+            {
+                Carry = true,
+            };
 
             var initialState = new InitialCPUState()
             {
                 Registers = registers,
+                Flags = flags,
                 Memory = memory,
             };
 
             var state = Execute(rom, initialState);
 
             Assert.Equal(0x58, state.Registers.A);
-            Assert.Equal(0x16, state.Memory[0x2477]);
+            Assert.Equal(0x15, state.Memory[0x2477]);
 
             Assert.False(state.Flags.Zero);
             Assert.False(state.Flags.Sign);
@@ -330,11 +383,11 @@ namespace JustinCredible.SIEmulator.Tests
         }
 
         [Fact]
-        public void TestADD_M_ZeroAndCarryFlags()
+        public void TestADC_M_ZeroAndCarryFlags()
         {
             var rom = AssembleSource($@"
                 org 00h
-                ADD M
+                ADC M
                 HLT
             ");
 
@@ -343,18 +396,24 @@ namespace JustinCredible.SIEmulator.Tests
             registers.HL = 0x2477;
 
             var memory = new byte[16384];
-            memory[0x2477] = 0x40;
+            memory[0x2477] = 0x3F;
+
+            var flags = new ConditionFlags()
+            {
+                Carry = true,
+            };
 
             var initialState = new InitialCPUState()
             {
                 Registers = registers,
+                Flags = flags,
                 Memory = memory,
             };
 
             var state = Execute(rom, initialState);
 
             Assert.Equal(0x00, state.Registers.A);
-            Assert.Equal(0x40, state.Memory[0x2477]);
+            Assert.Equal(0x3F, state.Memory[0x2477]);
 
             Assert.True(state.Flags.Zero);
             Assert.False(state.Flags.Sign);
@@ -367,11 +426,11 @@ namespace JustinCredible.SIEmulator.Tests
         }
 
         [Fact]
-        public void TestADD_M_SignAndParityFlags()
+        public void TestADC_M_SignAndParityFlags()
         {
             var rom = AssembleSource($@"
                 org 00h
-                ADD M
+                ADC M
                 HLT
             ");
 
@@ -380,18 +439,24 @@ namespace JustinCredible.SIEmulator.Tests
             registers.HL = 0x2477;
 
             var memory = new byte[16384];
-            memory[0x2477] = 0x44;
+            memory[0x2477] = 0x43;
+
+            var flags = new ConditionFlags()
+            {
+                Carry = true,
+            };
 
             var initialState = new InitialCPUState()
             {
                 Registers = registers,
+                Flags = flags,
                 Memory = memory,
             };
 
             var state = Execute(rom, initialState);
 
             Assert.Equal(0x8B, state.Registers.A);
-            Assert.Equal(0x44, state.Memory[0x2477]);
+            Assert.Equal(0x43, state.Memory[0x2477]);
 
             Assert.False(state.Flags.Zero);
             Assert.True(state.Flags.Sign);

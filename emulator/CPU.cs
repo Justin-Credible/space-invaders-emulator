@@ -694,6 +694,36 @@ namespace JustinCredible.SIEmulator
                     break;
                 #endregion
 
+                #region ADC
+                case OpcodeBytes.ADC_B:
+                    ExecuteADD(Registers.B, true);
+                    break;
+                case OpcodeBytes.ADC_C:
+                    ExecuteADD(Registers.C, true);
+                    break;
+                case OpcodeBytes.ADC_D:
+                    ExecuteADD(Registers.D, true);
+                    break;
+                case OpcodeBytes.ADC_E:
+                    ExecuteADD(Registers.E, true);
+                    break;
+                case OpcodeBytes.ADC_H:
+                    ExecuteADD(Registers.H, true);
+                    break;
+                case OpcodeBytes.ADC_L:
+                    ExecuteADD(Registers.L, true);
+                    break;
+                case OpcodeBytes.ADC_M:
+                {
+                    var value = Memory[GetAddress()];
+                    ExecuteADD(value, true);
+                    break;
+                }
+                case OpcodeBytes.ADC_A:
+                    ExecuteADD(Registers.A, true);
+                    break;
+                #endregion
+
                 default:
                     throw new NotImplementedException(String.Format("Attempted to execute unknown opcode 0x{0:X2} at memory address 0x{0:X4}", opcode, ProgramCounter));
             }
@@ -773,9 +803,12 @@ namespace JustinCredible.SIEmulator
             }
         }
 
-        private void ExecuteADD(byte value)
+        private void ExecuteADD(byte value, bool addCarryFlag = false)
         {
             var result = Registers.A + value;
+
+            if (addCarryFlag && Flags.Carry)
+                result += 1;
 
             var carryOccurred = result > 255;
 
