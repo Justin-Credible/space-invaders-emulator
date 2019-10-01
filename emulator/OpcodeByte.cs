@@ -219,5 +219,16 @@ namespace JustinCredible.SIEmulator
         public const byte XRA_M = 0xae;
         public const byte XRA_A = 0xaf;
         #endregion
+
+        #region CMP
+        public const byte CMP_B = 0xb8;
+        public const byte CMP_C = 0xb9;
+        public const byte CMP_D = 0xba;
+        public const byte CMP_E = 0xbb;
+        public const byte CMP_H = 0xbc;
+        public const byte CMP_L = 0xbd;
+        public const byte CMP_M = 0xbe;
+        public const byte CMP_A = 0xbf;
+        #endregion
     }
 }

@@ -789,6 +789,36 @@ namespace JustinCredible.SIEmulator
                     break;
                 #endregion
 
+                #region CMP
+                case OpcodeBytes.CMP_B:
+                    ExecuteSUB(Registers.B, false, false);
+                    break;
+                case OpcodeBytes.CMP_C:
+                    ExecuteSUB(Registers.C, false, false);
+                    break;
+                case OpcodeBytes.CMP_D:
+                    ExecuteSUB(Registers.D, false, false);
+                    break;
+                case OpcodeBytes.CMP_E:
+                    ExecuteSUB(Registers.E, false, false);
+                    break;
+                case OpcodeBytes.CMP_H:
+                    ExecuteSUB(Registers.H, false, false);
+                    break;
+                case OpcodeBytes.CMP_L:
+                    ExecuteSUB(Registers.L, false, false);
+                    break;
+                case OpcodeBytes.CMP_M:
+                {
+                    var value = Memory[GetAddress()];
+                    ExecuteSUB(value, false, false);
+                    break;
+                }
+                case OpcodeBytes.CMP_A:
+                    ExecuteSUB(Registers.A, false, false);
+                    break;
+                #endregion
+
                 default:
                     throw new NotImplementedException(String.Format("Attempted to execute unknown opcode 0x{0:X2} at memory address 0x{0:X4}", opcode, ProgramCounter));
             }
@@ -885,7 +915,7 @@ namespace JustinCredible.SIEmulator
             Registers.A = (byte)result;
         }
 
-        private void ExecuteSUB(byte value, bool subtractCarryFlag = false)
+        private void ExecuteSUB(byte value, bool subtractCarryFlag = false, bool updateAccumulator = true)
         {
             var borrowOccurred = (subtractCarryFlag && Flags.Carry)
                 ? value >= Registers.A // Account for the extra minus one from the carry flag subtraction.
@@ -901,7 +931,8 @@ namespace JustinCredible.SIEmulator
 
             SetFlags(borrowOccurred, (byte)result);
 
-            Registers.A = (byte)result;
+            if (updateAccumulator)
+                Registers.A = (byte)result;
         }
 
         private void SetFlags(bool carry, byte result)

@@ -222,6 +222,17 @@ namespace JustinCredible.SIEmulator
         public static Opcode XRA_A = new Opcode(OpcodeBytes.XRA_A, 1, "XRA A", 4); // A <- A ^ A
         #endregion
 
+        #region CMP
+        public static Opcode CMP_B = new Opcode(OpcodeBytes.CMP_B, 1, "CMP B", 4); // A - B
+        public static Opcode CMP_C = new Opcode(OpcodeBytes.CMP_C, 1, "CMP C", 4); // A - C
+        public static Opcode CMP_D = new Opcode(OpcodeBytes.CMP_D, 1, "CMP D", 4); // A - D
+        public static Opcode CMP_E = new Opcode(OpcodeBytes.CMP_E, 1, "CMP E", 4); // A - E
+        public static Opcode CMP_H = new Opcode(OpcodeBytes.CMP_H, 1, "CMP H", 4); // A - H
+        public static Opcode CMP_L = new Opcode(OpcodeBytes.CMP_L, 1, "CMP L", 4); // A - L
+        public static Opcode CMP_M = new Opcode(OpcodeBytes.CMP_M, 1, "CMP M", 7); // A - (HL)
+        public static Opcode CMP_A = new Opcode(OpcodeBytes.CMP_A, 1, "CMP A", 4); // A - A
+        #endregion
+
         public static Dictionary<byte, Opcode> Lookup = new Dictionary<byte, Opcode>()
         {
             [OpcodeBytes.NOP] = NOP,
@@ -435,6 +446,17 @@ namespace JustinCredible.SIEmulator
             [OpcodeBytes.XRA_L] = XRA_L,
             [OpcodeBytes.XRA_M] = XRA_M,
             [OpcodeBytes.XRA_A] = XRA_A,
+            #endregion
+
+            #region CMP
+            [OpcodeBytes.CMP_B] = CMP_B,
+            [OpcodeBytes.CMP_C] = CMP_C,
+            [OpcodeBytes.CMP_D] = CMP_D,
+            [OpcodeBytes.CMP_E] = CMP_E,
+            [OpcodeBytes.CMP_H] = CMP_H,
+            [OpcodeBytes.CMP_L] = CMP_L,
+            [OpcodeBytes.CMP_M] = CMP_M,
+            [OpcodeBytes.CMP_A] = CMP_A,
             #endregion
         };
     }
