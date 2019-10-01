@@ -200,6 +200,17 @@ namespace JustinCredible.SIEmulator
         public static Opcode ADC_A = new Opcode(OpcodeBytes.ADC_A, 1, "ADC A", 4); // A <- A + A + CY
         #endregion
 
+        #region SBB
+        public static Opcode SBB_B = new Opcode(OpcodeBytes.SBB_B, 1, "SBB B", 4); // A <- A - B - CY
+        public static Opcode SBB_C = new Opcode(OpcodeBytes.SBB_C, 1, "SBB C", 4); // A <- A - C - CY
+        public static Opcode SBB_D = new Opcode(OpcodeBytes.SBB_D, 1, "SBB D", 4); // A <- A - D - CY
+        public static Opcode SBB_E = new Opcode(OpcodeBytes.SBB_E, 1, "SBB E", 4); // A <- A - E - CY
+        public static Opcode SBB_H = new Opcode(OpcodeBytes.SBB_H, 1, "SBB H", 4); // A <- A - H - CY
+        public static Opcode SBB_L = new Opcode(OpcodeBytes.SBB_L, 1, "SBB L", 4); // A <- A - L - CY
+        public static Opcode SBB_M = new Opcode(OpcodeBytes.SBB_M, 1, "SBB M", 7); // A <- A - (HL) - CY
+        public static Opcode SBB_A = new Opcode(OpcodeBytes.SBB_A, 1, "SBB A", 4); // A <- A - A - CY
+        #endregion
+
         public static Dictionary<byte, Opcode> Lookup = new Dictionary<byte, Opcode>()
         {
             [OpcodeBytes.NOP] = NOP,
@@ -391,6 +402,17 @@ namespace JustinCredible.SIEmulator
             [OpcodeBytes.ADC_L] = ADC_L,
             [OpcodeBytes.ADC_M] = ADC_M,
             [OpcodeBytes.ADC_A] = ADC_A,
+            #endregion
+
+            #region SBB
+            [OpcodeBytes.SBB_B] = SBB_B,
+            [OpcodeBytes.SBB_C] = SBB_C,
+            [OpcodeBytes.SBB_D] = SBB_D,
+            [OpcodeBytes.SBB_E] = SBB_E,
+            [OpcodeBytes.SBB_H] = SBB_H,
+            [OpcodeBytes.SBB_L] = SBB_L,
+            [OpcodeBytes.SBB_M] = SBB_M,
+            [OpcodeBytes.SBB_A] = SBB_A,
             #endregion
         };
     }

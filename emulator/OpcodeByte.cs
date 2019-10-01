@@ -197,5 +197,16 @@ namespace JustinCredible.SIEmulator
         public const byte ADC_M = 0x8e;
         public const byte ADC_A = 0x8f;
         #endregion
+
+        #region SBB
+        public const byte SBB_B = 0x98;
+        public const byte SBB_C = 0x99;
+        public const byte SBB_D = 0x9a;
+        public const byte SBB_E = 0x9b;
+        public const byte SBB_H = 0x9c;
+        public const byte SBB_L = 0x9d;
+        public const byte SBB_M = 0x9e;
+        public const byte SBB_A = 0x9f;
+        #endregion
     }
 }

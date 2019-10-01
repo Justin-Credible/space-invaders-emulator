@@ -2,7 +2,7 @@ using Xunit;
 
 namespace JustinCredible.SIEmulator.Tests
 {
-    public class SUBTests : BaseTest
+    public class SBBTests : BaseTest
     {
         [Theory]
         [InlineData(Register.B)]
@@ -11,27 +11,33 @@ namespace JustinCredible.SIEmulator.Tests
         [InlineData(Register.E)]
         [InlineData(Register.H)]
         [InlineData(Register.L)]
-        public void TestSUB_NoFlags(Register sourceReg)
+        public void TestSBB_NoFlags(Register sourceReg)
         {
             var rom = AssembleSource($@"
                 org 00h
-                SUB {sourceReg}
+                SBB {sourceReg}
                 HLT
             ");
 
             var registers = new CPURegisters();
             registers.A = 0x42;
-            registers[sourceReg] = 0x16;
+            registers[sourceReg] = 0x15;
+
+            var flags = new ConditionFlags()
+            {
+                Carry = true,
+            };
 
             var initialState = new InitialCPUState()
             {
                 Registers = registers,
+                Flags = flags,
             };
 
             var state = Execute(rom, initialState);
 
             Assert.Equal(0x2C, state.Registers.A);
-            Assert.Equal(0x16, state.Registers[sourceReg]);
+            Assert.Equal(0x15, state.Registers[sourceReg]);
 
             Assert.False(state.Flags.Zero);
             Assert.False(state.Flags.Sign);
@@ -50,27 +56,33 @@ namespace JustinCredible.SIEmulator.Tests
         [InlineData(Register.E)]
         [InlineData(Register.H)]
         [InlineData(Register.L)]
-        public void TestSUB_CarryFlag(Register sourceReg)
+        public void TestSBB_CarryFlag(Register sourceReg)
         {
             var rom = AssembleSource($@"
                 org 00h
-                SUB {sourceReg}
+                SBB {sourceReg}
                 HLT
             ");
 
             var registers = new CPURegisters();
             registers.A = 0x02;
-            registers[sourceReg] = 0x04;
+            registers[sourceReg] = 0x03;
+
+            var flags = new ConditionFlags()
+            {
+                Carry = true,
+            };
 
             var initialState = new InitialCPUState()
             {
                 Registers = registers,
+                Flags = flags,
             };
 
             var state = Execute(rom, initialState);
 
             Assert.Equal(0xFE, state.Registers.A);
-            Assert.Equal(0x04, state.Registers[sourceReg]);
+            Assert.Equal(0x03, state.Registers[sourceReg]);
 
             Assert.False(state.Flags.Zero);
             Assert.True(state.Flags.Sign);
@@ -89,11 +101,11 @@ namespace JustinCredible.SIEmulator.Tests
         [InlineData(Register.E)]
         [InlineData(Register.H)]
         [InlineData(Register.L)]
-        public void TestSUB_ZeroFlag(Register sourceReg)
+        public void TestSBB_CarryFlag_CausedByExtraMinusOneFromFlag(Register sourceReg)
         {
             var rom = AssembleSource($@"
                 org 00h
-                SUB {sourceReg}
+                SBB {sourceReg}
                 HLT
             ");
 
@@ -101,15 +113,66 @@ namespace JustinCredible.SIEmulator.Tests
             registers.A = 0x02;
             registers[sourceReg] = 0x02;
 
+            var flags = new ConditionFlags()
+            {
+                Carry = true,
+            };
+
             var initialState = new InitialCPUState()
             {
                 Registers = registers,
+                Flags = flags,
+            };
+
+            var state = Execute(rom, initialState);
+
+            Assert.Equal(0xFF, state.Registers.A);
+            Assert.Equal(0x02, state.Registers[sourceReg]);
+
+            Assert.False(state.Flags.Zero);
+            Assert.True(state.Flags.Sign);
+            Assert.True(state.Flags.Parity);
+            Assert.True(state.Flags.Carry);
+
+            Assert.Equal(2, state.Iterations);
+            Assert.Equal(7 + 4, state.Cycles);
+            Assert.Equal(0x01, state.ProgramCounter);
+        }
+
+        [Theory]
+        [InlineData(Register.B)]
+        [InlineData(Register.C)]
+        [InlineData(Register.D)]
+        [InlineData(Register.E)]
+        [InlineData(Register.H)]
+        [InlineData(Register.L)]
+        public void TestSBB_ZeroFlag(Register sourceReg)
+        {
+            var rom = AssembleSource($@"
+                org 00h
+                SBB {sourceReg}
+                HLT
+            ");
+
+            var registers = new CPURegisters();
+            registers.A = 0x02;
+            registers[sourceReg] = 0x01;
+
+            var flags = new ConditionFlags()
+            {
+                Carry = true,
+            };
+
+            var initialState = new InitialCPUState()
+            {
+                Registers = registers,
+                Flags = flags,
             };
 
             var state = Execute(rom, initialState);
 
             Assert.Equal(0x00, state.Registers.A);
-            Assert.Equal(0x02, state.Registers[sourceReg]);
+            Assert.Equal(0x01, state.Registers[sourceReg]);
 
             Assert.True(state.Flags.Zero);
             Assert.False(state.Flags.Sign);
@@ -128,27 +191,33 @@ namespace JustinCredible.SIEmulator.Tests
         [InlineData(Register.E)]
         [InlineData(Register.H)]
         [InlineData(Register.L)]
-        public void TestSUB_ParityFlag(Register sourceReg)
+        public void TestSBB_ParityFlag(Register sourceReg)
         {
             var rom = AssembleSource($@"
                 org 00h
-                SUB {sourceReg}
+                SBB {sourceReg}
                 HLT
             ");
 
             var registers = new CPURegisters();
             registers.A = 0x44;
-            registers[sourceReg] = 0x33;
+            registers[sourceReg] = 0x32;
+
+            var flags = new ConditionFlags()
+            {
+                Carry = true,
+            };
 
             var initialState = new InitialCPUState()
             {
                 Registers = registers,
+                Flags = flags,
             };
 
             var state = Execute(rom, initialState);
 
             Assert.Equal(0x11, state.Registers.A);
-            Assert.Equal(0x33, state.Registers[sourceReg]);
+            Assert.Equal(0x32, state.Registers[sourceReg]);
 
             Assert.False(state.Flags.Zero);
             Assert.False(state.Flags.Sign);
@@ -167,27 +236,33 @@ namespace JustinCredible.SIEmulator.Tests
         [InlineData(Register.E)]
         [InlineData(Register.H)]
         [InlineData(Register.L)]
-        public void TestSUB_SignFlag(Register sourceReg)
+        public void TestSBB_SignFlag(Register sourceReg)
         {
             var rom = AssembleSource($@"
                 org 00h
-                SUB {sourceReg}
+                SBB {sourceReg}
                 HLT
             ");
 
             var registers = new CPURegisters();
             registers.A = 0x8D;
-            registers[sourceReg] = 0x0A;
+            registers[sourceReg] = 0x09;
+
+            var flags = new ConditionFlags()
+            {
+                Carry = true,
+            };
 
             var initialState = new InitialCPUState()
             {
                 Registers = registers,
+                Flags = flags,
             };
 
             var state = Execute(rom, initialState);
 
             Assert.Equal(0x83, state.Registers.A);
-            Assert.Equal(0x0A, state.Registers[sourceReg]);
+            Assert.Equal(0x09, state.Registers[sourceReg]);
 
             Assert.False(state.Flags.Zero);
             Assert.True(state.Flags.Sign);
@@ -200,30 +275,36 @@ namespace JustinCredible.SIEmulator.Tests
         }
 
         [Fact]
-        public void TestSUB_A_ZeroAndParityFlag()
+        public void TestSBB_A_SignParityCarryFlags()
         {
             var rom = AssembleSource($@"
                 org 00h
-                SUB A
+                SBB A
                 HLT
             ");
 
             var registers = new CPURegisters();
             registers.A = 0x80;
 
+            var flags = new ConditionFlags()
+            {
+                Carry = true,
+            };
+
             var initialState = new InitialCPUState()
             {
                 Registers = registers,
+                Flags = flags,
             };
 
             var state = Execute(rom, initialState);
 
-            Assert.Equal(0x00, state.Registers.A);
+            Assert.Equal(0xFF, state.Registers.A);
 
-            Assert.True(state.Flags.Zero);
-            Assert.False(state.Flags.Sign);
+            Assert.False(state.Flags.Zero);
+            Assert.True(state.Flags.Sign);
             Assert.True(state.Flags.Parity);
-            Assert.False(state.Flags.Carry);
+            Assert.True(state.Flags.Carry);
 
             Assert.Equal(2, state.Iterations);
             Assert.Equal(7 + 4, state.Cycles);
@@ -231,11 +312,11 @@ namespace JustinCredible.SIEmulator.Tests
         }
 
         [Fact]
-        public void TestSUB_M_NoFlags()
+        public void TestSBB_M_NoFlags()
         {
             var rom = AssembleSource($@"
                 org 00h
-                SUB M
+                SBB M
                 HLT
             ");
 
@@ -243,19 +324,25 @@ namespace JustinCredible.SIEmulator.Tests
             registers.A = 0x42;
             registers.HL = 0x2477;
 
+            var flags = new ConditionFlags()
+            {
+                Carry = true,
+            };
+
             var memory = new byte[16384];
-            memory[0x2477] = 0x16;
+            memory[0x2477] = 0x15;
 
             var initialState = new InitialCPUState()
             {
                 Registers = registers,
+                Flags = flags,
                 Memory = memory,
             };
 
             var state = Execute(rom, initialState);
 
             Assert.Equal(0x2C, state.Registers.A);
-            Assert.Equal(0x16, state.Memory[0x2477]);
+            Assert.Equal(0x15, state.Memory[0x2477]);
 
             Assert.False(state.Flags.Zero);
             Assert.False(state.Flags.Sign);
@@ -268,11 +355,11 @@ namespace JustinCredible.SIEmulator.Tests
         }
 
         [Fact]
-        public void TestSUB_M_ZeroFlag()
+        public void TestSBB_M_ZeroFlag()
         {
             var rom = AssembleSource($@"
                 org 00h
-                SUB M
+                SBB M
                 HLT
             ");
 
@@ -280,19 +367,25 @@ namespace JustinCredible.SIEmulator.Tests
             registers.A = 0x40;
             registers.HL = 0x2477;
 
+            var flags = new ConditionFlags()
+            {
+                Carry = true,
+            };
+
             var memory = new byte[16384];
-            memory[0x2477] = 0x40;
+            memory[0x2477] = 0x3F;
 
             var initialState = new InitialCPUState()
             {
                 Registers = registers,
+                Flags = flags,
                 Memory = memory,
             };
 
             var state = Execute(rom, initialState);
 
             Assert.Equal(0x00, state.Registers.A);
-            Assert.Equal(0x40, state.Memory[0x2477]);
+            Assert.Equal(0x3F, state.Memory[0x2477]);
 
             Assert.True(state.Flags.Zero);
             Assert.False(state.Flags.Sign);
@@ -305,11 +398,11 @@ namespace JustinCredible.SIEmulator.Tests
         }
 
         [Fact]
-        public void TestSUB_M_CarryAndSignFlags()
+        public void TestSBB_M_CarryAndSignFlags()
         {
             var rom = AssembleSource($@"
                 org 00h
-                SUB M
+                SBB M
                 HLT
             ");
 
@@ -317,19 +410,25 @@ namespace JustinCredible.SIEmulator.Tests
             registers.A = 0x02;
             registers.HL = 0x2477;
 
+            var flags = new ConditionFlags()
+            {
+                Carry = true,
+            };
+
             var memory = new byte[16384];
-            memory[0x2477] = 0x04;
+            memory[0x2477] = 0x03;
 
             var initialState = new InitialCPUState()
             {
                 Registers = registers,
+                Flags = flags,
                 Memory = memory,
             };
 
             var state = Execute(rom, initialState);
 
             Assert.Equal(0xFE, state.Registers.A);
-            Assert.Equal(0x04, state.Memory[0x2477]);
+            Assert.Equal(0x03, state.Memory[0x2477]);
 
             Assert.False(state.Flags.Zero);
             Assert.True(state.Flags.Sign);

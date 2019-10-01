@@ -724,6 +724,36 @@ namespace JustinCredible.SIEmulator
                     break;
                 #endregion
 
+                #region SBB
+                case OpcodeBytes.SBB_B:
+                    ExecuteSUB(Registers.B, true);
+                    break;
+                case OpcodeBytes.SBB_C:
+                    ExecuteSUB(Registers.C, true);
+                    break;
+                case OpcodeBytes.SBB_D:
+                    ExecuteSUB(Registers.D, true);
+                    break;
+                case OpcodeBytes.SBB_E:
+                    ExecuteSUB(Registers.E, true);
+                    break;
+                case OpcodeBytes.SBB_H:
+                    ExecuteSUB(Registers.H, true);
+                    break;
+                case OpcodeBytes.SBB_L:
+                    ExecuteSUB(Registers.L, true);
+                    break;
+                case OpcodeBytes.SBB_M:
+                {
+                    var value = Memory[GetAddress()];
+                    ExecuteSUB(value, true);
+                    break;
+                }
+                case OpcodeBytes.SBB_A:
+                    ExecuteSUB(Registers.A, true);
+                    break;
+                #endregion
+
                 default:
                     throw new NotImplementedException(String.Format("Attempted to execute unknown opcode 0x{0:X2} at memory address 0x{0:X4}", opcode, ProgramCounter));
             }
@@ -820,11 +850,16 @@ namespace JustinCredible.SIEmulator
             Registers.A = (byte)result;
         }
 
-        private void ExecuteSUB(byte value)
+        private void ExecuteSUB(byte value, bool subtractCarryFlag = false)
         {
-            var borrowOccurred = value > Registers.A;
+            var borrowOccurred = (subtractCarryFlag && Flags.Carry)
+                ? value >= Registers.A // Account for the extra minus one from the carry flag subtraction.
+                : value > Registers.A;
 
             var result = Registers.A - value;
+
+            if (subtractCarryFlag && Flags.Carry)
+                result -= 1;
 
             if (borrowOccurred)
                 result = 256 + result;
