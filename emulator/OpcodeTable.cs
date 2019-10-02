@@ -233,6 +233,13 @@ namespace JustinCredible.SIEmulator
         public static Opcode CMP_A = new Opcode(OpcodeBytes.CMP_A, 1, "CMP A", 4); // A - A
         #endregion
 
+        #region DAD
+        public static Opcode DAD_B = new Opcode(OpcodeBytes.DAD_B, 1, "DAD B", 10); // HL = HL + BC
+        public static Opcode DAD_D = new Opcode(OpcodeBytes.DAD_D, 1, "DAD D", 10); // HL = HL + DE
+        public static Opcode DAD_H = new Opcode(OpcodeBytes.DAD_H, 1, "DAD H", 10); // HL = HL + HL
+        public static Opcode DAD_SP = new Opcode(OpcodeBytes.DAD_SP, 1, "DAD SP", 10); // HL = HL + SP
+        #endregion
+
         public static Dictionary<byte, Opcode> Lookup = new Dictionary<byte, Opcode>()
         {
             [OpcodeBytes.NOP] = NOP,
@@ -457,6 +464,13 @@ namespace JustinCredible.SIEmulator
             [OpcodeBytes.CMP_L] = CMP_L,
             [OpcodeBytes.CMP_M] = CMP_M,
             [OpcodeBytes.CMP_A] = CMP_A,
+            #endregion
+
+            #region DAD
+            [OpcodeBytes.DAD_B] = DAD_B,
+            [OpcodeBytes.DAD_D] = DAD_D,
+            [OpcodeBytes.DAD_H] = DAD_H,
+            [OpcodeBytes.DAD_SP] = DAD_SP,
             #endregion
         };
     }

@@ -230,5 +230,12 @@ namespace JustinCredible.SIEmulator
         public const byte CMP_M = 0xbe;
         public const byte CMP_A = 0xbf;
         #endregion
+
+        #region DAD
+        public const byte DAD_B = 0x09;
+        public const byte DAD_D = 0x19;
+        public const byte DAD_H = 0x29;
+        public const byte DAD_SP = 0x39;
+        #endregion
     }
 }

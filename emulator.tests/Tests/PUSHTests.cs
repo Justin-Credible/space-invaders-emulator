@@ -5,20 +5,21 @@ namespace JustinCredible.SIEmulator.Tests
     public class PushTests : BaseTest
     {
         [Theory]
-        [InlineData(Register.B, Register.C)]
-        [InlineData(Register.D, Register.E)]
-        [InlineData(Register.H, Register.L)]
-        public void TestPUSH(Register sourceReg, Register sourceReg2)
+        [InlineData(RegisterPair.BC)]
+        [InlineData(RegisterPair.DE)]
+        [InlineData(RegisterPair.HL)]
+        public void TestPUSH(RegisterPair pair)
         {
             var rom = AssembleSource($@"
                 org 00h
-                PUSH {sourceReg}
+                PUSH {pair.GetUpperRegister()}
                 HLT
             ");
 
-            var registers = new CPURegisters();
-            registers[sourceReg] = 0x24;
-            registers[sourceReg2] = 0x77;
+            var registers = new CPURegisters()
+            {
+                [pair] = 0x2477,
+            };
 
             var initialState = new InitialCPUState()
             {
@@ -28,8 +29,7 @@ namespace JustinCredible.SIEmulator.Tests
 
             var state = Execute(rom, initialState);
 
-            Assert.Equal(0x24, state.Registers[sourceReg]);
-            Assert.Equal(0x77, state.Registers[sourceReg2]);
+            Assert.Equal(0x2477, state.Registers[pair]);
             Assert.Equal(0x00, state.Memory[0x3000]);
             Assert.Equal(0x24, state.Memory[0x2FFF]);
             Assert.Equal(0x77, state.Memory[0x2FFE]);

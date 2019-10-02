@@ -18,9 +18,53 @@ namespace JustinCredible.SIEmulator
         public byte H;
         public byte L;
 
-        // Convenience Pair Setter
+        #region Register Pair Getter/Setters
+
+        public UInt16 BC
+        {
+            get
+            {
+                var upper = this.B << 8;
+                var lower = this.C;
+                var address = upper | lower;
+                return (UInt16)address;
+            }
+            set
+            {
+                var upper = (value & 0xFF00) >> 8;
+                var lower = (byte)value;
+                this.B = (byte)upper;
+                this.C = (byte)lower;
+            }
+        }
+
+        public UInt16 DE
+        {
+            get
+            {
+                var upper = this.D << 8;
+                var lower = this.E;
+                var address = upper | lower;
+                return (UInt16)address;
+            }
+            set
+            {
+                var upper = (value & 0xFF00) >> 8;
+                var lower = (byte)value;
+                this.D = (byte)upper;
+                this.E = (byte)lower;
+            }
+        }
+
         public UInt16 HL
         {
+            get
+            {
+                var upper = this.H << 8;
+                var lower = this.L;
+                var address = upper | lower;
+                return (UInt16)address;
+            }
             set
             {
                 var upper = (value & 0xFF00) >> 8;
@@ -30,7 +74,49 @@ namespace JustinCredible.SIEmulator
             }
         }
 
-        // Convenience Indexer
+        #endregion
+
+        #region Register Pair Indexer
+
+        public UInt16 this[RegisterPair pair]
+        {
+            get
+            {
+                switch (pair)
+                {
+                    case RegisterPair.BC:
+                        return this.BC;
+                    case RegisterPair.DE:
+                        return this.DE;
+                    case RegisterPair.HL:
+                        return this.HL;
+                    default:
+                        throw new System.NotImplementedException("Unhandled register pair: " + pair);
+                }
+            }
+            set
+            {
+                switch (pair)
+                {
+                    case RegisterPair.BC:
+                        this.BC = value;
+                        break;
+                    case RegisterPair.DE:
+                        this.DE = value;
+                        break;
+                    case RegisterPair.HL:
+                        this.HL = value;
+                        break;
+                    default:
+                        throw new System.NotImplementedException("Unhandled register pair: " + pair);
+                }
+            }
+        }
+
+        #endregion
+
+        #region Individual Register Indexer
+
         public byte this[Register registerID]
         {
             get
@@ -52,7 +138,7 @@ namespace JustinCredible.SIEmulator
                     case Register.L:
                         return L;
                     default:
-                        throw new NotImplementedException("Unandled register ID.");
+                        throw new NotImplementedException("Unandled register: " + registerID);
                 }
             }
             set
@@ -81,9 +167,11 @@ namespace JustinCredible.SIEmulator
                         L = value;
                         break;
                     default:
-                        throw new NotImplementedException("Unandled register ID.");
+                        throw new NotImplementedException("Unandled register: " + registerID);
                 }
             }
         }
+
+        #endregion
     }
 }

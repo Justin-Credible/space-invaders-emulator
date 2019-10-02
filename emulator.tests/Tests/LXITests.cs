@@ -5,21 +5,20 @@ namespace JustinCredible.SIEmulator.Tests
     public class LXITests : BaseTest
     {
         [Theory]
-        [InlineData(Register.B, Register.C)]
-        [InlineData(Register.D, Register.E)]
-        [InlineData(Register.H, Register.L)]
-        public void TestLXI(Register destReg, Register destReg2)
+        [InlineData(RegisterPair.BC)]
+        [InlineData(RegisterPair.DE)]
+        [InlineData(RegisterPair.HL)]
+        public void TestLXI(RegisterPair pair)
         {
             var rom = AssembleSource($@"
                 org 00h
-                LXI {destReg}, 4277h
+                LXI {pair.GetUpperRegister()}, 4277h
                 HLT
             ");
 
             var state = Execute(rom);
 
-            Assert.Equal(0x42, state.Registers[destReg]);
-            Assert.Equal(0x77, state.Registers[destReg2]);
+            Assert.Equal(0x4277, state.Registers[pair]);
 
             AssertFlagsFalse(state);
 

@@ -5,22 +5,23 @@ namespace JustinCredible.SIEmulator.Tests
     public class INXTests : BaseTest
     {
         [Theory]
-        [InlineData(Register.B, Register.C)]
-        [InlineData(Register.D, Register.E)]
-        [InlineData(Register.H, Register.L)]
-        public void TestINX(Register reg1, Register reg2)
+        [InlineData(RegisterPair.BC)]
+        [InlineData(RegisterPair.DE)]
+        [InlineData(RegisterPair.HL)]
+        public void TestINX(RegisterPair pair)
         {
             var rom = AssembleSource($@"
                 org 00h
-                INX {reg1}
-                INX {reg1}
-                INX {reg1}
+                INX {pair.GetUpperRegister()}
+                INX {pair.GetUpperRegister()}
+                INX {pair.GetUpperRegister()}
                 HLT
             ");
 
-            var registers = new CPURegisters();
-            registers[reg1] = 0x38;
-            registers[reg2] = 0xFF;
+            var registers = new CPURegisters()
+            {
+                [pair] = 0x38FF,
+            };
 
             var initialState = new InitialCPUState()
             {
@@ -29,8 +30,7 @@ namespace JustinCredible.SIEmulator.Tests
 
             var state = Execute(rom, initialState);
 
-            Assert.Equal(0x39, state.Registers[reg1]);
-            Assert.Equal(0x02, state.Registers[reg2]);
+            Assert.Equal(0x3902, state.Registers[pair]);
 
             AssertFlagsFalse(state);
 

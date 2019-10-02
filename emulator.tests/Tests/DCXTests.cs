@@ -5,22 +5,23 @@ namespace JustinCredible.SIEmulator.Tests
     public class DCXTests : BaseTest
     {
         [Theory]
-        [InlineData(Register.B, Register.C)]
-        [InlineData(Register.D, Register.E)]
-        [InlineData(Register.H, Register.L)]
-        public void TestDCX(Register reg1, Register reg2)
+        [InlineData(RegisterPair.BC)]
+        [InlineData(RegisterPair.DE)]
+        [InlineData(RegisterPair.HL)]
+        public void TestDCX(RegisterPair pair)
         {
             var rom = AssembleSource($@"
                 org 00h
-                DCX {reg1}
-                DCX {reg1}
-                DCX {reg1}
+                DCX {pair.GetUpperRegister()}
+                DCX {pair.GetUpperRegister()}
+                DCX {pair.GetUpperRegister()}
                 HLT
             ");
 
-            var registers = new CPURegisters();
-            registers[reg1] = 0x39;
-            registers[reg2] = 0x02;
+            var registers = new CPURegisters()
+            {
+                [pair] = 0x3902,
+            };
 
             var initialState = new InitialCPUState()
             {
@@ -29,8 +30,7 @@ namespace JustinCredible.SIEmulator.Tests
 
             var state = Execute(rom, initialState);
 
-            Assert.Equal(0x38, state.Registers[reg1]);
-            Assert.Equal(0xFF, state.Registers[reg2]);
+            Assert.Equal(0x38FF, state.Registers[pair]);
 
             AssertFlagsFalse(state);
 

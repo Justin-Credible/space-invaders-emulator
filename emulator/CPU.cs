@@ -313,25 +313,25 @@ namespace JustinCredible.SIEmulator
                 #region MOV X, M (from memory to register)
 
                 case OpcodeBytes.MOV_B_M:
-                    Registers.B = Memory[GetAddress()];
+                    Registers.B = Memory[Registers.HL];
                     break;
                 case OpcodeBytes.MOV_C_M:
-                    Registers.C = Memory[GetAddress()];
+                    Registers.C = Memory[Registers.HL];
                     break;
                 case OpcodeBytes.MOV_D_M:
-                    Registers.D = Memory[GetAddress()];
+                    Registers.D = Memory[Registers.HL];
                     break;
                 case OpcodeBytes.MOV_E_M:
-                    Registers.E = Memory[GetAddress()];
+                    Registers.E = Memory[Registers.HL];
                     break;
                 case OpcodeBytes.MOV_H_M:
-                    Registers.H = Memory[GetAddress()];
+                    Registers.H = Memory[Registers.HL];
                     break;
                 case OpcodeBytes.MOV_L_M:
-                    Registers.L = Memory[GetAddress()];
+                    Registers.L = Memory[Registers.HL];
                     break;
                 case OpcodeBytes.MOV_A_M:
-                    Registers.A = Memory[GetAddress()];
+                    Registers.A = Memory[Registers.HL];
                     break;
 
                 #endregion
@@ -418,65 +418,32 @@ namespace JustinCredible.SIEmulator
 
                 #region STAX
                 case OpcodeBytes.STAX_B:
-                {
-                    var address = GetAddress(Register.B, Register.C);
-                    Memory[address] = Registers.A;
+                    Memory[Registers.BC] = Registers.A;
                     break;
-                }
                 case OpcodeBytes.STAX_D:
-                {
-                    var address = GetAddress(Register.D, Register.E);
-                    Memory[address] = Registers.A;
+                    Memory[Registers.DE] = Registers.A;
                     break;
-                }
                 #endregion
 
                 #region LDAX
                 case OpcodeBytes.LDAX_B:
-                {
-                    var address = GetAddress(Register.B, Register.C);
-                    Registers.A = Memory[address];
+                    Registers.A = Memory[Registers.BC];
                     break;
-                }
                 case OpcodeBytes.LDAX_D:
-                {
-                    var address = GetAddress(Register.D, Register.E);
-                    Registers.A = Memory[address];
+                    Registers.A = Memory[Registers.DE];
                     break;
-                }
                 #endregion
 
                 #region INX
                 case OpcodeBytes.INX_B:
-                {
-                    var upper = Registers.B << 8;
-                    var lower = Registers.C;
-                    var value = upper | lower;
-                    value++;
-                    Registers.B = (byte)((0xFF00 & value) >> 8);
-                    Registers.C = (byte)(0x00FF & value);
+                    Registers.BC++;
                     break;
-                }
                 case OpcodeBytes.INX_D:
-                {
-                    var upper = Registers.D << 8;
-                    var lower = Registers.E;
-                    var value = upper | lower;
-                    value++;
-                    Registers.D = (byte)((0xFF00 & value) >> 8);
-                    Registers.E = (byte)(0x00FF & value);
+                    Registers.DE++;
                     break;
-                }
                 case OpcodeBytes.INX_H:
-                {
-                    var upper = Registers.H << 8;
-                    var lower = Registers.L;
-                    var value = upper | lower;
-                    value++;
-                    Registers.H = (byte)((0xFF00 & value) >> 8);
-                    Registers.L = (byte)(0x00FF & value);
+                    Registers.HL++;
                     break;
-                }
                 case OpcodeBytes.INX_SP:
                     StackPointer++;
                     break;
@@ -484,35 +451,14 @@ namespace JustinCredible.SIEmulator
 
                 #region DCX
                 case OpcodeBytes.DCX_B:
-                {
-                    var upper = Registers.B << 8;
-                    var lower = Registers.C;
-                    var value = upper | lower;
-                    value--;
-                    Registers.B = (byte)((0xFF00 & value) >> 8);
-                    Registers.C = (byte)(0x00FF & value);
+                    Registers.BC--;
                     break;
-                }
                 case OpcodeBytes.DCX_D:
-                {
-                    var upper = Registers.D << 8;
-                    var lower = Registers.E;
-                    var value = upper | lower;
-                    value--;
-                    Registers.D = (byte)((0xFF00 & value) >> 8);
-                    Registers.E = (byte)(0x00FF & value);
+                    Registers.DE--;
                     break;
-                }
                 case OpcodeBytes.DCX_H:
-                {
-                    var upper = Registers.H << 8;
-                    var lower = Registers.L;
-                    var value = upper | lower;
-                    value--;
-                    Registers.H = (byte)((0xFF00 & value) >> 8);
-                    Registers.L = (byte)(0x00FF & value);
+                    Registers.HL--;
                     break;
-                }
                 case OpcodeBytes.DCX_SP:
                     StackPointer--;
                     break;
@@ -584,11 +530,8 @@ namespace JustinCredible.SIEmulator
                     ExecuteADD(Registers.L);
                     break;
                 case OpcodeBytes.ADD_M:
-                {
-                    var value = Memory[GetAddress()];
-                    ExecuteADD(value);
+                    ExecuteADD(Memory[Registers.HL]);
                     break;
-                }
                 case OpcodeBytes.ADD_A:
                     ExecuteADD(Registers.A);
                     break;
@@ -614,11 +557,8 @@ namespace JustinCredible.SIEmulator
                     ExecuteSUB(Registers.L);
                     break;
                 case OpcodeBytes.SUB_M:
-                {
-                    var value = Memory[GetAddress()];
-                    ExecuteSUB(value);
+                    ExecuteSUB(Memory[Registers.HL]);
                     break;
-                }
                 case OpcodeBytes.SUB_A:
                     ExecuteSUB(Registers.A);
                     break;
@@ -650,7 +590,7 @@ namespace JustinCredible.SIEmulator
                     SetFlags(false, Registers.A);
                     break;
                 case OpcodeBytes.ANA_M:
-                    Registers.A = (byte)(Registers.A & Memory[GetAddress()]);
+                    Registers.A = (byte)(Registers.A & Memory[Registers.HL]);
                     SetFlags(false, Registers.A);
                     break;
                 case OpcodeBytes.ANA_A:
@@ -685,7 +625,7 @@ namespace JustinCredible.SIEmulator
                     SetFlags(false, Registers.A);
                     break;
                 case OpcodeBytes.ORA_M:
-                    Registers.A = (byte)(Registers.A | Memory[GetAddress()]);
+                    Registers.A = (byte)(Registers.A | Memory[Registers.HL]);
                     SetFlags(false, Registers.A);
                     break;
                 case OpcodeBytes.ORA_A:
@@ -714,11 +654,8 @@ namespace JustinCredible.SIEmulator
                     ExecuteADD(Registers.L, true);
                     break;
                 case OpcodeBytes.ADC_M:
-                {
-                    var value = Memory[GetAddress()];
-                    ExecuteADD(value, true);
+                    ExecuteADD(Memory[Registers.HL], true);
                     break;
-                }
                 case OpcodeBytes.ADC_A:
                     ExecuteADD(Registers.A, true);
                     break;
@@ -744,11 +681,8 @@ namespace JustinCredible.SIEmulator
                     ExecuteSUB(Registers.L, true);
                     break;
                 case OpcodeBytes.SBB_M:
-                {
-                    var value = Memory[GetAddress()];
-                    ExecuteSUB(value, true);
+                    ExecuteSUB(Memory[Registers.HL], true);
                     break;
-                }
                 case OpcodeBytes.SBB_A:
                     ExecuteSUB(Registers.A, true);
                     break;
@@ -780,7 +714,7 @@ namespace JustinCredible.SIEmulator
                     SetFlags(false, Registers.A);
                     break;
                 case OpcodeBytes.XRA_M:
-                    Registers.A = (byte)(Registers.A ^ Memory[GetAddress()]);
+                    Registers.A = (byte)(Registers.A ^ Memory[Registers.HL]);
                     SetFlags(false, Registers.A);
                     break;
                 case OpcodeBytes.XRA_A:
@@ -809,13 +743,25 @@ namespace JustinCredible.SIEmulator
                     ExecuteSUB(Registers.L, false, false);
                     break;
                 case OpcodeBytes.CMP_M:
-                {
-                    var value = Memory[GetAddress()];
-                    ExecuteSUB(value, false, false);
+                    ExecuteSUB(Memory[Registers.HL], false, false);
                     break;
-                }
                 case OpcodeBytes.CMP_A:
                     ExecuteSUB(Registers.A, false, false);
+                    break;
+                #endregion
+
+                #region DAD
+                case OpcodeBytes.DAD_B:
+                    ExecuteDAD(Registers.BC);
+                    break;
+                case OpcodeBytes.DAD_D:
+                    ExecuteDAD(Registers.DE);
+                    break;
+                case OpcodeBytes.DAD_H:
+                    ExecuteDAD(Registers.HL);
+                    break;
+                case OpcodeBytes.DAD_SP:
+                    ExecuteDAD(StackPointer);
                     break;
                 #endregion
 
@@ -843,18 +789,6 @@ namespace JustinCredible.SIEmulator
             return elapsedCycles;
         }
 
-        /**
-         * Used to build a memory address from the two given register values.
-         * Using registers H and L are the most common for this, so they are the default parameters.
-         */
-        private UInt16 GetAddress(Register upperReg = Register.H, Register lowerReg = Register.L)
-        {
-            var upper = Registers[upperReg] << 8;
-            var lower = Registers[lowerReg];
-            var address = upper | lower;
-            return (UInt16)address;
-        }
-
         private void ExecuteMOV(Register dest, Register source)
         {
             Registers[dest] = Registers[source];
@@ -862,7 +796,7 @@ namespace JustinCredible.SIEmulator
 
         private void ExecuteMOVFromRegisterToMemory(Register source)
         {
-            var address = GetAddress();
+            var address = Registers.HL;
 
             // TODO: Should allow write to memory mirror area?
             // TODO: Should not panic on ROM area write?
@@ -881,7 +815,7 @@ namespace JustinCredible.SIEmulator
 
         private void ExecuteMOVIToMemory(byte data)
         {
-            var address = GetAddress();
+            var address = Registers.HL;
 
             // TODO: Should allow write to memory mirror area?
             // TODO: Should not panic on ROM area write?
@@ -933,6 +867,20 @@ namespace JustinCredible.SIEmulator
 
             if (updateAccumulator)
                 Registers.A = (byte)result;
+        }
+
+        private void ExecuteDAD(UInt16 value)
+        {
+            var result = Registers.HL + value;
+
+            var carryOccurred = result > 65535;
+
+            if (carryOccurred)
+                result = result - 65536;
+
+            Registers.HL = (UInt16)result;
+
+            Flags.Carry = carryOccurred;
         }
 
         private void SetFlags(bool carry, byte result)
