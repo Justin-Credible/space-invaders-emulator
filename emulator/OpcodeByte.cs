@@ -237,5 +237,16 @@ namespace JustinCredible.SIEmulator
         public const byte DAD_H = 0x29;
         public const byte DAD_SP = 0x39;
         #endregion
+
+        #region INR
+        public const byte INR_B = 0x04;
+        public const byte INR_C = 0x0c;
+        public const byte INR_D = 0x14;
+        public const byte INR_E = 0x1c;
+        public const byte INR_H = 0x24;
+        public const byte INR_L = 0x2c;
+        public const byte INR_M = 0x34;
+        public const byte INR_A = 0x3c;
+        #endregion
     }
 }
