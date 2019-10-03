@@ -178,6 +178,16 @@ namespace JustinCredible.SIEmulator
                     break;
                 }
 
+                case OpcodeBytes.LHLD:
+                {
+                    var upper = Memory[ProgramCounter + 2] << 8;
+                    var lower = Memory[ProgramCounter + 1];
+                    var address = upper | lower;
+                    Registers.L = Memory[address];
+                    Registers.H = Memory[address + 1];
+                    break;
+                }
+
                 #region MOV
 
                 #region MOV X, X (from register to register)

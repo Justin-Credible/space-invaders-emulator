@@ -28,6 +28,7 @@ namespace JustinCredible.SIEmulator
         public static Opcode CMC = new Opcode(OpcodeBytes.CMC, 1, "CMC", 4); // CY=!CY
 
         public static Opcode SHLD = new Opcode(OpcodeBytes.SHLD, 3, "SHLD adr", 16); // (adr) <-L; (adr+1)<-H
+        public static Opcode LHLD = new Opcode(OpcodeBytes.LHLD, 3, "LHLD adr", 16); // L <- (adr); H<-(adr+1)
 
         #region MOV
         public static Opcode MOV_B_B = new Opcode(OpcodeBytes.MOV_B_B, 1, "MOV B,B", 5); // B <- B
@@ -289,6 +290,7 @@ namespace JustinCredible.SIEmulator
             [OpcodeBytes.CMC] = CMC,
 
             [OpcodeBytes.SHLD] = SHLD,
+            [OpcodeBytes.LHLD] = LHLD,
 
             #region MOV
             [OpcodeBytes.MOV_B_B] = MOV_B_B,
