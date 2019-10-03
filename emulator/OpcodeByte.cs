@@ -248,5 +248,16 @@ namespace JustinCredible.SIEmulator
         public const byte INR_M = 0x34;
         public const byte INR_A = 0x3c;
         #endregion
+
+        #region DCR
+        public const byte DCR_B = 0x05;
+        public const byte DCR_C = 0x0d;
+        public const byte DCR_D = 0x15;
+        public const byte DCR_E = 0x1d;
+        public const byte DCR_H = 0x25;
+        public const byte DCR_L = 0x2d;
+        public const byte DCR_M = 0x35;
+        public const byte DCR_A = 0x3d;
+        #endregion
     }
 }

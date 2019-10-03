@@ -800,6 +800,41 @@ namespace JustinCredible.SIEmulator
                     break;
                 #endregion
 
+                #region DCR
+                case OpcodeBytes.DCR_B:
+                    Registers.B--;
+                    SetFlags(false, Registers.B);
+                    break;
+                case OpcodeBytes.DCR_C:
+                    Registers.C--;
+                    SetFlags(false, Registers.C);
+                    break;
+                case OpcodeBytes.DCR_D:
+                    Registers.D--;
+                    SetFlags(false, Registers.D);
+                    break;
+                case OpcodeBytes.DCR_E:
+                    Registers.E--;
+                    SetFlags(false, Registers.E);
+                    break;
+                case OpcodeBytes.DCR_H:
+                    Registers.H--;
+                    SetFlags(false, Registers.H);
+                    break;
+                case OpcodeBytes.DCR_L:
+                    Registers.L--;
+                    SetFlags(false, Registers.L);
+                    break;
+                case OpcodeBytes.DCR_M:
+                    Memory[Registers.HL]--;
+                    SetFlags(false, Memory[Registers.HL]);
+                    break;
+                case OpcodeBytes.DCR_A:
+                    Registers.A--;
+                    SetFlags(false, Registers.A);
+                    break;
+                #endregion
+
                 default:
                     throw new NotImplementedException(String.Format("Attempted to execute unknown opcode 0x{0:X2} at memory address 0x{0:X4}", opcode, ProgramCounter));
             }

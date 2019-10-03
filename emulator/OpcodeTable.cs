@@ -251,6 +251,17 @@ namespace JustinCredible.SIEmulator
         public static Opcode INR_A = new Opcode(OpcodeBytes.INR_A, 1, "INR A", 5); // A <- A+1
         #endregion
 
+        #region DCR
+        public static Opcode DCR_B = new Opcode(OpcodeBytes.DCR_B, 1, "DCR B", 5); // B <- B-1
+        public static Opcode DCR_C = new Opcode(OpcodeBytes.DCR_C, 1, "DCR C", 5); // C <-C-1
+        public static Opcode DCR_D = new Opcode(OpcodeBytes.DCR_D, 1, "DCR D", 5); // D <- D-1
+        public static Opcode DCR_E = new Opcode(OpcodeBytes.DCR_E, 1, "DCR E", 5); // E <- E-1
+        public static Opcode DCR_H = new Opcode(OpcodeBytes.DCR_H, 1, "DCR H", 5); // H <- H-1
+        public static Opcode DCR_L = new Opcode(OpcodeBytes.DCR_L, 1, "DCR L", 5); // L <- L-1
+        public static Opcode DCR_M = new Opcode(OpcodeBytes.DCR_M, 1, "DCR M", 10); // (HL) <- (HL)-1
+        public static Opcode DCR_A = new Opcode(OpcodeBytes.DCR_A, 1, "DCR A", 5); // A <- A-1
+        #endregion
+
         public static Dictionary<byte, Opcode> Lookup = new Dictionary<byte, Opcode>()
         {
             [OpcodeBytes.NOP] = NOP,
@@ -493,6 +504,17 @@ namespace JustinCredible.SIEmulator
             [OpcodeBytes.INR_L] = INR_L,
             [OpcodeBytes.INR_M] = INR_M,
             [OpcodeBytes.INR_A] = INR_A,
+            #endregion
+
+            #region DCR
+            [OpcodeBytes.DCR_B] = DCR_B,
+            [OpcodeBytes.DCR_C] = DCR_C,
+            [OpcodeBytes.DCR_D] = DCR_D,
+            [OpcodeBytes.DCR_E] = DCR_E,
+            [OpcodeBytes.DCR_H] = DCR_H,
+            [OpcodeBytes.DCR_L] = DCR_L,
+            [OpcodeBytes.DCR_M] = DCR_M,
+            [OpcodeBytes.DCR_A] = DCR_A,
             #endregion
         };
     }
