@@ -41,12 +41,12 @@ namespace JustinCredible.SIEmulator.Tests
             Assert.Equal(0x4646, state.Registers.HL);
 
             // Ensure these flags remain unchanged.
-            Assert.Equal(true, state.Flags.Zero);
-            Assert.Equal(true, state.Flags.Sign);
-            Assert.Equal(true, state.Flags.Parity);
+            Assert.True(state.Flags.Zero);
+            Assert.True(state.Flags.Sign);
+            Assert.True(state.Flags.Parity);
 
             // No carry in this case.
-            Assert.Equal(false, state.Flags.Carry);
+            Assert.False(state.Flags.Carry);
 
             Assert.Equal(2, state.Iterations);
             Assert.Equal(7 + 10, state.Cycles);
@@ -86,12 +86,12 @@ namespace JustinCredible.SIEmulator.Tests
             Assert.Equal(0x2424, state.Registers.HL);
 
             // Ensure these flags remain unchanged.
-            Assert.Equal(true, state.Flags.Zero);
-            Assert.Equal(true, state.Flags.Sign);
-            Assert.Equal(true, state.Flags.Parity);
+            Assert.True(state.Flags.Zero);
+            Assert.True(state.Flags.Sign);
+            Assert.True(state.Flags.Parity);
 
             // No carry in this case.
-            Assert.Equal(false, state.Flags.Carry);
+            Assert.False(state.Flags.Carry);
 
             Assert.Equal(2, state.Iterations);
             Assert.Equal(7 + 10, state.Cycles);
@@ -133,12 +133,12 @@ namespace JustinCredible.SIEmulator.Tests
             Assert.Equal(0x4646, state.Registers.HL);
 
             // Ensure these flags remain unchanged.
-            Assert.Equal(true, state.Flags.Zero);
-            Assert.Equal(true, state.Flags.Sign);
-            Assert.Equal(true, state.Flags.Parity);
+            Assert.True(state.Flags.Zero);
+            Assert.True(state.Flags.Sign);
+            Assert.True(state.Flags.Parity);
 
             // No carry in this case.
-            Assert.Equal(false, state.Flags.Carry);
+            Assert.False(state.Flags.Carry);
 
             Assert.Equal(2, state.Iterations);
             Assert.Equal(7 + 10, state.Cycles);
@@ -172,10 +172,10 @@ namespace JustinCredible.SIEmulator.Tests
             Assert.Equal(0x0005, state.Registers[pair]);
             Assert.Equal(0x0003, state.Registers.HL);
 
-            Assert.Equal(false, state.Flags.Zero);
-            Assert.Equal(false, state.Flags.Sign);
-            Assert.Equal(false, state.Flags.Parity);
-            Assert.Equal(true, state.Flags.Carry);
+            Assert.False(state.Flags.Zero);
+            Assert.False(state.Flags.Sign);
+            Assert.False(state.Flags.Parity);
+            Assert.True(state.Flags.Carry);
 
             Assert.Equal(2, state.Iterations);
             Assert.Equal(7 + 10, state.Cycles);
@@ -205,10 +205,10 @@ namespace JustinCredible.SIEmulator.Tests
 
             Assert.Equal(0xFFE0, state.Registers.HL);
 
-            Assert.Equal(false, state.Flags.Zero);
-            Assert.Equal(false, state.Flags.Sign);
-            Assert.Equal(false, state.Flags.Parity);
-            Assert.Equal(true, state.Flags.Carry);
+            Assert.False(state.Flags.Zero);
+            Assert.False(state.Flags.Sign);
+            Assert.False(state.Flags.Parity);
+            Assert.True(state.Flags.Carry);
 
             Assert.Equal(2, state.Iterations);
             Assert.Equal(7 + 10, state.Cycles);
@@ -240,10 +240,10 @@ namespace JustinCredible.SIEmulator.Tests
             Assert.Equal(0x0005, state.StackPointer);
             Assert.Equal(0x0003, state.Registers.HL);
 
-            Assert.Equal(false, state.Flags.Zero);
-            Assert.Equal(false, state.Flags.Sign);
-            Assert.Equal(false, state.Flags.Parity);
-            Assert.Equal(true, state.Flags.Carry);
+            Assert.False(state.Flags.Zero);
+            Assert.False(state.Flags.Sign);
+            Assert.False(state.Flags.Parity);
+            Assert.True(state.Flags.Carry);
 
             Assert.Equal(2, state.Iterations);
             Assert.Equal(7 + 10, state.Cycles);
