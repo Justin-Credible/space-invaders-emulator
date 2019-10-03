@@ -147,6 +147,19 @@ namespace JustinCredible.SIEmulator
                     break;
                 }
 
+                case OpcodeBytes.LDA:
+                {
+                    var upper = Memory[ProgramCounter + 2] << 8;
+                    var lower = Memory[ProgramCounter + 1];
+                    var address = upper | lower;
+                    Registers.A = Memory[address];
+                    break;
+                }
+
+                case OpcodeBytes.CMA:
+                    Registers.A = (byte)~Registers.A;
+                    break;
+
                 case OpcodeBytes.STC:
                     Flags.Carry = true;
                     break;
@@ -155,16 +168,13 @@ namespace JustinCredible.SIEmulator
                     Flags.Carry = !Flags.Carry;
                     break;
 
-                case OpcodeBytes.CMA:
-                    Registers.A = (byte)~Registers.A;
-                    break;
-
-                case OpcodeBytes.LDA:
+                case OpcodeBytes.SHLD:
                 {
                     var upper = Memory[ProgramCounter + 2] << 8;
                     var lower = Memory[ProgramCounter + 1];
                     var address = upper | lower;
-                    Registers.A = Memory[address];
+                    Memory[address] = Registers.L;
+                    Memory[address + 1] = Registers.H;
                     break;
                 }
 

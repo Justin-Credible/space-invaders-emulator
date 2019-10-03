@@ -21,11 +21,13 @@ namespace JustinCredible.SIEmulator
         public static Opcode HLT = new Opcode(OpcodeBytes.HLT, 1, "HLT", 7);
 
         public static Opcode STA = new Opcode(OpcodeBytes.HLT, 3, "STA adr", 13); // (adr) <- A
-        public static Opcode STC = new Opcode(OpcodeBytes.HLT, 1, "STC", 4); // CY = 1
-        public static Opcode CMC = new Opcode(OpcodeBytes.CMC, 1, "CMC", 4); // CY=!CY
+        public static Opcode LDA = new Opcode(OpcodeBytes.LDA, 3, "LDA adr", 13); // A <- (adr)
         public static Opcode CMA = new Opcode(OpcodeBytes.CMC, 1, "CMA", 4); // A <- !A
 
-        public static Opcode LDA = new Opcode(OpcodeBytes.LDA, 3, "LDA adr", 13); // A <- (adr)
+        public static Opcode STC = new Opcode(OpcodeBytes.HLT, 1, "STC", 4); // CY = 1
+        public static Opcode CMC = new Opcode(OpcodeBytes.CMC, 1, "CMC", 4); // CY=!CY
+
+        public static Opcode SHLD = new Opcode(OpcodeBytes.SHLD, 3, "SHLD adr", 16); // (adr) <-L; (adr+1)<-H
 
         #region MOV
         public static Opcode MOV_B_B = new Opcode(OpcodeBytes.MOV_B_B, 1, "MOV B,B", 5); // B <- B
@@ -280,11 +282,13 @@ namespace JustinCredible.SIEmulator
             [OpcodeBytes.HLT] = HLT,
 
             [OpcodeBytes.STA] = STA,
-            [OpcodeBytes.STC] = STC,
-            [OpcodeBytes.CMC] = CMC,
+            [OpcodeBytes.LDA] = LDA,
             [OpcodeBytes.CMA] = CMA,
 
-            [OpcodeBytes.LDA] = LDA,
+            [OpcodeBytes.STC] = STC,
+            [OpcodeBytes.CMC] = CMC,
+
+            [OpcodeBytes.SHLD] = SHLD,
 
             #region MOV
             [OpcodeBytes.MOV_B_B] = MOV_B_B,

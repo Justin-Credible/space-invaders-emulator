@@ -19,11 +19,13 @@ namespace JustinCredible.SIEmulator
         public const byte HLT = 0x76;
 
         public const byte STA = 0x32;
+        public const byte LDA = 0x3a;
+
         public const byte STC = 0x37;
         public const byte CMC = 0x3f;
         public const byte CMA = 0x2f;
 
-        public const byte LDA = 0x3a;
+        public const byte SHLD = 0x22;
 
         #region MOV
         public const byte MOV_B_B = 0x40;
