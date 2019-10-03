@@ -147,6 +147,18 @@ namespace JustinCredible.SIEmulator
                     break;
                 }
 
+                case OpcodeBytes.STC:
+                    Flags.Carry = true;
+                    break;
+
+                case OpcodeBytes.CMC:
+                    Flags.Carry = !Flags.Carry;
+                    break;
+
+                case OpcodeBytes.CMA:
+                    Registers.A = (byte)~Registers.A;
+                    break;
+
                 case OpcodeBytes.LDA:
                 {
                     var upper = Memory[ProgramCounter + 2] << 8;
