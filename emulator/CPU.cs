@@ -117,6 +117,10 @@ namespace JustinCredible.SIEmulator
             var opcodeByte = Memory[ProgramCounter];
             var opcode = OpcodeTable.Lookup[opcodeByte];
 
+            // Indicates if we should increment the program counter after executing the instruction.
+            // This is almost always the case, but there are a few cases where we don't want to.
+            var incrementProgramCounter = true;
+
             // Some instructions have an alternate cycle count depending on the outcome of
             // the operation. This indicates how we should increment the program counter.
             var useAlternateCycleCount = false;
@@ -136,6 +140,30 @@ namespace JustinCredible.SIEmulator
 
                 case OpcodeBytes.HLT:
                     Finished = true;
+                    incrementProgramCounter = false;
+                    break;
+
+                case OpcodeBytes.CALL:
+                case OpcodeBytes.CALL2:
+                case OpcodeBytes.CALL3:
+                case OpcodeBytes.CALL4:
+                {
+                    var upper = Memory[ProgramCounter + 2] << 8;
+                    var lower = Memory[ProgramCounter + 1];
+                    var address = (UInt16)(upper | lower);
+
+                    ExecuteCALL(address);
+
+                    // Don't increment the program counter because we just updated it to
+                    // the given address.
+                    incrementProgramCounter = false;
+
+                    break;
+                }
+
+                case OpcodeBytes.RET:
+                case OpcodeBytes.RET2:
+                    ExecuteRET();
                     break;
 
                 case OpcodeBytes.STA:
@@ -906,10 +934,41 @@ namespace JustinCredible.SIEmulator
             }
 
             // Increment the program counter.
-            if (opcode != OpcodeTable.HLT)
+            if (incrementProgramCounter)
                ProgramCounter += (UInt16)opcode.Size;
 
             return elapsedCycles;
+        }
+
+        private void ExecuteCALL(UInt16 address)
+        {
+            // The return address will be the current location of the program counter.
+            // We need to break this into two bytes so we can push it onto the stack.
+            var returnAddress = ProgramCounter;
+            var returnAddressUpper = (byte)((ProgramCounter & 0xFF00) >> 8);
+            var returnAddressLower = (byte)(ProgramCounter & 0x00FF);
+
+            // Push the return address onto the stack.
+            Memory[StackPointer - 1] = returnAddressUpper;
+            Memory[StackPointer - 2] = returnAddressLower;
+            StackPointer--;
+            StackPointer--;
+
+            // Jump to the given address.
+            ProgramCounter = address;
+        }
+
+        private void ExecuteRET()
+        {
+            // Pop the return address off of the stack.
+            var returnAddressUpper = Memory[StackPointer + 1] << 8;
+            var returnAddressLower = Memory[StackPointer];
+            var returnAddress = (UInt16)(returnAddressUpper | returnAddressLower);
+            StackPointer++;
+            StackPointer++;
+
+            // Jump back to the original location.
+            ProgramCounter = returnAddress;
         }
 
         private void ExecuteMOV(Register dest, Register source)

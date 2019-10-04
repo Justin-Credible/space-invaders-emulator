@@ -20,6 +20,14 @@ namespace JustinCredible.SIEmulator
 
         public static Opcode HLT = new Opcode(OpcodeBytes.HLT, 1, "HLT", 7);
 
+        public static Opcode CALL = new Opcode(OpcodeBytes.CALL, 3, "CALL adr", 17); // (SP-1)<-PC.hi;(SP-2)<-PC.lo;SP<-SP-2;PC=adr
+        public static Opcode CALL2 = new Opcode(OpcodeBytes.CALL2, 3, "CALL adr", 17); // (SP-1)<-PC.hi;(SP-2)<-PC.lo;SP<-SP-2;PC=adr
+        public static Opcode CALL3 = new Opcode(OpcodeBytes.CALL3, 3, "CALL adr", 17); // (SP-1)<-PC.hi;(SP-2)<-PC.lo;SP<-SP-2;PC=adr
+        public static Opcode CALL4 = new Opcode(OpcodeBytes.CALL4, 3, "CALL adr", 17); // (SP-1)<-PC.hi;(SP-2)<-PC.lo;SP<-SP-2;PC=adr
+
+        public static Opcode RET = new Opcode(OpcodeBytes.RET, 1, "RET", 10); // PC.lo <- (sp); PC.hi<-(sp+1); SP <- SP+2
+        public static Opcode RET2 = new Opcode(OpcodeBytes.RET2, 1, "RET2", 10); // PC.lo <- (sp); PC.hi<-(sp+1); SP <- SP+2
+
         public static Opcode STA = new Opcode(OpcodeBytes.HLT, 3, "STA adr", 13); // (adr) <- A
         public static Opcode LDA = new Opcode(OpcodeBytes.LDA, 3, "LDA adr", 13); // A <- (adr)
         public static Opcode CMA = new Opcode(OpcodeBytes.CMC, 1, "CMA", 4); // A <- !A
@@ -286,6 +294,14 @@ namespace JustinCredible.SIEmulator
             [OpcodeBytes.NOP8] = NOP8,
 
             [OpcodeBytes.HLT] = HLT,
+
+            [OpcodeBytes.CALL] = CALL,
+            [OpcodeBytes.CALL2] = CALL2,
+            [OpcodeBytes.CALL3] = CALL3,
+            [OpcodeBytes.CALL4] = CALL4,
+
+            [OpcodeBytes.RET] = RET,
+            [OpcodeBytes.RET2] = RET2,
 
             [OpcodeBytes.STA] = STA,
             [OpcodeBytes.LDA] = LDA,

@@ -18,6 +18,14 @@ namespace JustinCredible.SIEmulator
 
         public const byte HLT = 0x76;
 
+        public const byte CALL = 0xcd;
+        public const byte CALL2 = 0xdd;
+        public const byte CALL3 = 0xed;
+        public const byte CALL4 = 0xfd;
+
+        public const byte RET = 0xc9;
+        public const byte RET2 = 0xd9;
+
         public const byte STA = 0x32;
         public const byte LDA = 0x3a;
 
