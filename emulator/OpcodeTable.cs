@@ -30,6 +30,11 @@ namespace JustinCredible.SIEmulator
         public static Opcode SHLD = new Opcode(OpcodeBytes.SHLD, 3, "SHLD adr", 16); // (adr) <-L; (adr+1)<-H
         public static Opcode LHLD = new Opcode(OpcodeBytes.LHLD, 3, "LHLD adr", 16); // L <- (adr); H<-(adr+1)
 
+        public static Opcode RLC = new Opcode(OpcodeBytes.RLC, 1, "RLC", 4); // A = A << 1; bit 0 = prev bit 7; CY = prev bit 7
+        public static Opcode RRC = new Opcode(OpcodeBytes.RRC, 1, "RRC", 4); // A = A >> 1; bit 7 = prev bit 0; CY = prev bit 0
+        public static Opcode RAL = new Opcode(OpcodeBytes.RAL, 1, "RAL", 4); // A = A << 1; bit 0 = prev CY; CY = prev bit 7
+        public static Opcode RAR = new Opcode(OpcodeBytes.RAR, 1, "RAR", 4); // A = A >> 1; bit 7 = prev bit 7; CY = prev bit 0
+
         #region MOV
         public static Opcode MOV_B_B = new Opcode(OpcodeBytes.MOV_B_B, 1, "MOV B,B", 5); // B <- B
         public static Opcode MOV_B_C = new Opcode(OpcodeBytes.MOV_B_C, 1, "MOV B,C", 5); // B <- C
@@ -291,6 +296,11 @@ namespace JustinCredible.SIEmulator
 
             [OpcodeBytes.SHLD] = SHLD,
             [OpcodeBytes.LHLD] = LHLD,
+
+            [OpcodeBytes.RLC] = RLC,
+            [OpcodeBytes.RRC] = RRC,
+            [OpcodeBytes.RAL] = RAL,
+            [OpcodeBytes.RAR] = RAR,
 
             #region MOV
             [OpcodeBytes.MOV_B_B] = MOV_B_B,

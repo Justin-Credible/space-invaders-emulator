@@ -188,6 +188,27 @@ namespace JustinCredible.SIEmulator
                     break;
                 }
 
+                // A = A << 1; bit 0 = prev bit 7; CY = prev bit 7
+                case OpcodeBytes.RLC:
+                    ExecuteRotateAccumulator(left: true);
+                    break;
+
+                // A = A >> 1; bit 7 = prev bit 0; CY = prev bit 0
+                case OpcodeBytes.RRC:
+                    ExecuteRotateAccumulator(left: false);
+                    break;
+
+                // A = A << 1; bit 0 = prev CY; CY = prev bit 7
+                case OpcodeBytes.RAL:
+                    ExecuteRotateAccumulator(left: true, rotateThroughCarry: true);
+                    break;
+
+                // A = A >> 1; bit 7 = prev CY; CY = prev bit 0
+                case OpcodeBytes.RAR:
+                    ExecuteRotateAccumulator(left: false, rotateThroughCarry: true);
+                    break;
+
+
                 #region MOV
 
                 #region MOV X, X (from register to register)
@@ -983,6 +1004,61 @@ namespace JustinCredible.SIEmulator
             Registers.HL = (UInt16)result;
 
             Flags.Carry = carryOccurred;
+        }
+
+        /**
+         * Encapsulates the rotate accumulator left/right (RRC and RLC) and the rotate
+         * accumulator left/right though carry (RAL and RAR) instruction behavior. The Intel
+         * 8080 programmers manual has excellent examples and diagrams of each instruction.
+         */
+        private void ExecuteRotateAccumulator(bool left, bool rotateThroughCarry = false)
+        {
+            var previousHighOrderBitSet = (Registers.A & 0x80) == 0x80;
+            var previousLowOrderBitSet = (Registers.A & 0x01) == 0x01;
+            var previousCarryFlagSet = Flags.Carry;
+
+            int result = Registers.A;
+
+            if (left)
+            {
+                result = result << 1;
+
+                if (rotateThroughCarry)
+                {
+                    if (previousCarryFlagSet)
+                        result = result | 0x01;
+
+                    Flags.Carry = previousHighOrderBitSet;
+                }
+                else
+                {
+                    if (previousHighOrderBitSet)
+                        result = result | 0x01;
+
+                    Flags.Carry = previousHighOrderBitSet;
+                }
+            }
+            else
+            {
+                result = result >> 1;
+
+                if (rotateThroughCarry)
+                {
+                    if (previousCarryFlagSet)
+                        result = result | 0x80;
+
+                    Flags.Carry = previousLowOrderBitSet;
+                }
+                else
+                {
+                    if (previousLowOrderBitSet)
+                        result = result | 0x80;
+
+                    Flags.Carry = previousLowOrderBitSet;
+                }
+            }
+
+            Registers.A = (byte)result;
         }
 
         private void SetFlags(bool carry, byte result)

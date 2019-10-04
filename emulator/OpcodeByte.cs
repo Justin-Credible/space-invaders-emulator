@@ -28,6 +28,11 @@ namespace JustinCredible.SIEmulator
         public const byte SHLD = 0x22;
         public const byte LHLD = 0x2a;
 
+        public const byte RLC = 0x07;
+        public const byte RRC = 0x0f;
+        public const byte RAL = 0x17;
+        public const byte RAR = 0x1f;
+
         #region MOV
         public const byte MOV_B_B = 0x40;
         public const byte MOV_B_C = 0x41;
