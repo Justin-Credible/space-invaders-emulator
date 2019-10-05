@@ -143,16 +143,24 @@ namespace JustinCredible.SIEmulator
                     incrementProgramCounter = false;
                     break;
 
+                case OpcodeBytes.JMP:
+                case OpcodeBytes.JMP2:
+                {
+                    ExecuteJMP();
+
+                    // Don't increment the program counter because we just updated it to
+                    // the given address.
+                    incrementProgramCounter = false;
+
+                    break;
+                }
+
                 case OpcodeBytes.CALL:
                 case OpcodeBytes.CALL2:
                 case OpcodeBytes.CALL3:
                 case OpcodeBytes.CALL4:
                 {
-                    var upper = Memory[ProgramCounter + 2] << 8;
-                    var lower = Memory[ProgramCounter + 1];
-                    var address = (UInt16)(upper | lower);
-
-                    ExecuteCALL(address);
+                    ExecuteCALL();
 
                     // Don't increment the program counter because we just updated it to
                     // the given address.
@@ -938,6 +946,29 @@ namespace JustinCredible.SIEmulator
                ProgramCounter += (UInt16)opcode.Size;
 
             return elapsedCycles;
+        }
+
+        private void ExecuteJMP()
+        {
+            var upper = Memory[ProgramCounter + 2] << 8;
+            var lower = Memory[ProgramCounter + 1];
+            var address = (UInt16)(upper | lower);
+
+            ExecuteJMP(address);
+        }
+
+        private void ExecuteJMP(UInt16 address)
+        {
+            ProgramCounter = address;
+        }
+
+        private void ExecuteCALL()
+        {
+            var upper = Memory[ProgramCounter + 2] << 8;
+            var lower = Memory[ProgramCounter + 1];
+            var address = (UInt16)(upper | lower);
+
+            ExecuteCALL(address);
         }
 
         private void ExecuteCALL(UInt16 address)

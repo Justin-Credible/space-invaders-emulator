@@ -20,6 +20,9 @@ namespace JustinCredible.SIEmulator
 
         public static Opcode HLT = new Opcode(OpcodeBytes.HLT, 1, "HLT", 7);
 
+        public static Opcode JMP = new Opcode(OpcodeBytes.JMP, 3, "JMP adr", 10); // PC <= adr
+        public static Opcode JMP2 = new Opcode(OpcodeBytes.JMP2, 3, "JMP adr", 10); // PC <= adr
+
         public static Opcode CALL = new Opcode(OpcodeBytes.CALL, 3, "CALL adr", 17); // (SP-1)<-PC.hi;(SP-2)<-PC.lo;SP<-SP-2;PC=adr
         public static Opcode CALL2 = new Opcode(OpcodeBytes.CALL2, 3, "CALL adr", 17); // (SP-1)<-PC.hi;(SP-2)<-PC.lo;SP<-SP-2;PC=adr
         public static Opcode CALL3 = new Opcode(OpcodeBytes.CALL3, 3, "CALL adr", 17); // (SP-1)<-PC.hi;(SP-2)<-PC.lo;SP<-SP-2;PC=adr
@@ -294,6 +297,8 @@ namespace JustinCredible.SIEmulator
             [OpcodeBytes.NOP8] = NOP8,
 
             [OpcodeBytes.HLT] = HLT,
+
+            [OpcodeBytes.JMP] = JMP,
 
             [OpcodeBytes.CALL] = CALL,
             [OpcodeBytes.CALL2] = CALL2,
