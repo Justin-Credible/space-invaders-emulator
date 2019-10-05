@@ -20,13 +20,31 @@ namespace JustinCredible.SIEmulator
 
         public static Opcode HLT = new Opcode(OpcodeBytes.HLT, 1, "HLT", 7);
 
+        #region JUMP
+
         public static Opcode JMP = new Opcode(OpcodeBytes.JMP, 3, "JMP adr", 10); // PC <= adr
         public static Opcode JMP2 = new Opcode(OpcodeBytes.JMP2, 3, "JMP adr", 10); // PC <= adr
+
+        public static Opcode PCHL = new Opcode(OpcodeBytes.PCHL, 1, "PCHL", 5); // PC.hi <- H; PC.lo <- L
+        public static Opcode JPO = new Opcode(OpcodeBytes.JPO, 3, "JPO adr", 10); // if PO, PC <- adr
+        public static Opcode JPE = new Opcode(OpcodeBytes.JPE, 3, "JPE adr", 10); // if PE, PC <- adr
+        public static Opcode JP = new Opcode(OpcodeBytes.JP, 3, "JP adr", 10); // if P=1 PC <- adr
+        public static Opcode JZ = new Opcode(OpcodeBytes.JZ, 3, "JZ adr", 10); // if Z, PC <- adr
+        public static Opcode JNZ = new Opcode(OpcodeBytes.JNZ, 3, "JNZ adr", 10); // if NZ, PC <- adr
+        public static Opcode JNC = new Opcode(OpcodeBytes.JNC, 3, "JNC adr", 10); // if NCY, PC<-adr
+        public static Opcode JC = new Opcode(OpcodeBytes.JC, 3, "JC adr", 10); // if CY, PC<-adr
+        public static Opcode JM = new Opcode(OpcodeBytes.JM, 3, "JM adr", 10); // if M, PC <- adr
+
+        #endregion
+
+        #region CALL
 
         public static Opcode CALL = new Opcode(OpcodeBytes.CALL, 3, "CALL adr", 17); // (SP-1)<-PC.hi;(SP-2)<-PC.lo;SP<-SP-2;PC=adr
         public static Opcode CALL2 = new Opcode(OpcodeBytes.CALL2, 3, "CALL adr", 17); // (SP-1)<-PC.hi;(SP-2)<-PC.lo;SP<-SP-2;PC=adr
         public static Opcode CALL3 = new Opcode(OpcodeBytes.CALL3, 3, "CALL adr", 17); // (SP-1)<-PC.hi;(SP-2)<-PC.lo;SP<-SP-2;PC=adr
         public static Opcode CALL4 = new Opcode(OpcodeBytes.CALL4, 3, "CALL adr", 17); // (SP-1)<-PC.hi;(SP-2)<-PC.lo;SP<-SP-2;PC=adr
+
+        #endregion
 
         public static Opcode RET = new Opcode(OpcodeBytes.RET, 1, "RET", 10); // PC.lo <- (sp); PC.hi<-(sp+1); SP <- SP+2
         public static Opcode RET2 = new Opcode(OpcodeBytes.RET2, 1, "RET2", 10); // PC.lo <- (sp); PC.hi<-(sp+1); SP <- SP+2
@@ -298,12 +316,31 @@ namespace JustinCredible.SIEmulator
 
             [OpcodeBytes.HLT] = HLT,
 
+            #region JUMP
+
             [OpcodeBytes.JMP] = JMP,
+            [OpcodeBytes.JMP2] = JMP2,
+
+            [OpcodeBytes.PCHL] = PCHL,
+            [OpcodeBytes.JPO] = JPO,
+            [OpcodeBytes.JPE] = JPE,
+            [OpcodeBytes.JP] = JP,
+            [OpcodeBytes.JZ] = JZ,
+            [OpcodeBytes.JNZ] = JNZ,
+            [OpcodeBytes.JNC] = JNC,
+            [OpcodeBytes.JC] = JC,
+            [OpcodeBytes.JM] = JM,
+
+            #endregion
+
+            #region CALL
 
             [OpcodeBytes.CALL] = CALL,
             [OpcodeBytes.CALL2] = CALL2,
             [OpcodeBytes.CALL3] = CALL3,
             [OpcodeBytes.CALL4] = CALL4,
+
+            #endregion
 
             [OpcodeBytes.RET] = RET,
             [OpcodeBytes.RET2] = RET2,

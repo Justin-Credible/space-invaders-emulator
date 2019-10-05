@@ -143,6 +143,8 @@ namespace JustinCredible.SIEmulator
                     incrementProgramCounter = false;
                     break;
 
+                #region JUMP
+
                 case OpcodeBytes.JMP:
                 case OpcodeBytes.JMP2:
                 {
@@ -154,6 +156,95 @@ namespace JustinCredible.SIEmulator
 
                     break;
                 }
+
+                case OpcodeBytes.PCHL:
+                    ExecuteJMP(Registers.HL);
+                    incrementProgramCounter = false;
+                    break;
+
+                case OpcodeBytes.JPO:
+                {
+                    if (!Flags.Parity)
+                    {
+                        ExecuteJMP();
+                        incrementProgramCounter = false;
+                    }
+                    break;
+                }
+
+                case OpcodeBytes.JPE:
+                {
+                    if (Flags.Parity)
+                    {
+                        ExecuteJMP();
+                        incrementProgramCounter = false;
+                    }
+                    break;
+                }
+
+                case OpcodeBytes.JP:
+                {
+                    if (!Flags.Sign)
+                    {
+                        ExecuteJMP();
+                        incrementProgramCounter = false;
+                    }
+                    break;
+                }
+
+                case OpcodeBytes.JZ:
+                {
+                    if (Flags.Zero)
+                    {
+                        ExecuteJMP();
+                        incrementProgramCounter = false;
+                    }
+                    break;
+                }
+
+                case OpcodeBytes.JNZ:
+                {
+                    if (!Flags.Zero)
+                    {
+                        ExecuteJMP();
+                        incrementProgramCounter = false;
+                    }
+                    break;
+                }
+
+                case OpcodeBytes.JNC:
+                {
+                    if (!Flags.Carry)
+                    {
+                        ExecuteJMP();
+                        incrementProgramCounter = false;
+                    }
+                    break;
+                }
+
+                case OpcodeBytes.JC:
+                {
+                    if (Flags.Carry)
+                    {
+                        ExecuteJMP();
+                        incrementProgramCounter = false;
+                    }
+                    break;
+                }
+
+                case OpcodeBytes.JM:
+                {
+                    if (Flags.Sign)
+                    {
+                        ExecuteJMP();
+                        incrementProgramCounter = false;
+                    }
+                    break;
+                }
+
+                #endregion
+
+                #region CALL
 
                 case OpcodeBytes.CALL:
                 case OpcodeBytes.CALL2:
@@ -168,6 +259,8 @@ namespace JustinCredible.SIEmulator
 
                     break;
                 }
+
+                #endregion
 
                 case OpcodeBytes.RET:
                 case OpcodeBytes.RET2:

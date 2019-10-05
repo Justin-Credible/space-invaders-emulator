@@ -18,13 +18,31 @@ namespace JustinCredible.SIEmulator
 
         public const byte HLT = 0x76;
 
+        #region JUMP
+
         public const byte JMP = 0xc3;
         public const byte JMP2 = 0xcb;
+
+        public const byte PCHL = 0xe9;
+        public const byte JPO = 0xe2;
+        public const byte JPE = 0xea;
+        public const byte JP = 0xf2;
+        public const byte JZ = 0xca;
+        public const byte JNZ = 0xc2;
+        public const byte JNC = 0xd2;
+        public const byte JC = 0xda;
+        public const byte JM = 0xfa;
+
+        #endregion
+
+        #region CALL
 
         public const byte CALL = 0xcd;
         public const byte CALL2 = 0xdd;
         public const byte CALL3 = 0xed;
         public const byte CALL4 = 0xfd;
+
+        #endregion
 
         public const byte RET = 0xc9;
         public const byte RET2 = 0xd9;
