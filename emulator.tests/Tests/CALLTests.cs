@@ -83,6 +83,13 @@ namespace JustinCredible.SIEmulator.Tests
 
             var state = Execute(rom, initialState);
 
+            Assert.Equal(0x42, state.Registers.A);
+            Assert.Equal(0x66, state.Registers.B);
+            Assert.Equal(0x77, state.Registers.C);
+            Assert.Equal(0x88, state.Registers.D);
+            Assert.Equal(0x00, state.Registers.E);
+            Assert.Equal(0x00, state.Registers.H);
+
             Assert.Equal(0x2720, state.StackPointer);
             Assert.Equal(0xFF, state.Memory[0x2720]);
             Assert.Equal(0x00, state.Memory[0x271F]);
