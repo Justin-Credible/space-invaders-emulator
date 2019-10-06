@@ -44,6 +44,15 @@ namespace JustinCredible.SIEmulator
         public static Opcode CALL3 = new Opcode(OpcodeBytes.CALL3, 3, "CALL adr", 17); // (SP-1)<-PC.hi;(SP-2)<-PC.lo;SP<-SP-2;PC=adr
         public static Opcode CALL4 = new Opcode(OpcodeBytes.CALL4, 3, "CALL adr", 17); // (SP-1)<-PC.hi;(SP-2)<-PC.lo;SP<-SP-2;PC=adr
 
+        public static Opcode CM = new Opcode(OpcodeBytes.CM, 3, "CM adr", 17, 11); // if M, CALL adr
+        public static Opcode CPE = new Opcode(OpcodeBytes.CPE, 3, "CPE adr", 17, 11); // if PE, CALL adr
+        public static Opcode CC = new Opcode(OpcodeBytes.CC, 3, "CC adr", 17, 11); // if CY, CALL adr
+        public static Opcode CZ = new Opcode(OpcodeBytes.CZ, 3, "CZ adr", 17, 11); // if Z, CALL adr
+        public static Opcode CP = new Opcode(OpcodeBytes.CP, 3, "CP adr", 17, 11); // if P, PC <- adr
+        public static Opcode CPO = new Opcode(OpcodeBytes.CPO, 3, "CPO adr", 17, 11); // if PO, CALL adr
+        public static Opcode CNC = new Opcode(OpcodeBytes.CNC, 3, "CNC adr", 17, 11); // if NCY, CALL adr
+        public static Opcode CNZ = new Opcode(OpcodeBytes.CNZ, 3, "CNZ adr", 17, 11); // if NZ, CALL adr
+
         #endregion
 
         public static Opcode RET = new Opcode(OpcodeBytes.RET, 1, "RET", 10); // PC.lo <- (sp); PC.hi<-(sp+1); SP <- SP+2
@@ -339,6 +348,15 @@ namespace JustinCredible.SIEmulator
             [OpcodeBytes.CALL2] = CALL2,
             [OpcodeBytes.CALL3] = CALL3,
             [OpcodeBytes.CALL4] = CALL4,
+
+            [OpcodeBytes.CM] = CM,
+            [OpcodeBytes.CPE] = CPE,
+            [OpcodeBytes.CC] = CC,
+            [OpcodeBytes.CZ] = CZ,
+            [OpcodeBytes.CP] = CP,
+            [OpcodeBytes.CPO] = CPO,
+            [OpcodeBytes.CNC] = CNC,
+            [OpcodeBytes.CNZ] = CNZ,
 
             #endregion
 

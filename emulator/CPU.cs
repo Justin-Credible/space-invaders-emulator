@@ -260,6 +260,111 @@ namespace JustinCredible.SIEmulator
                     break;
                 }
 
+                case OpcodeBytes.CM:
+                {
+                    if (Flags.Sign)
+                    {
+                        ExecuteCALL();
+                        incrementProgramCounter = false;
+                    }
+                    else
+                        useAlternateCycleCount = true;
+
+                    break;
+                }
+
+                case OpcodeBytes.CPE:
+                {
+                    if (Flags.Parity)
+                    {
+                        ExecuteCALL();
+                        incrementProgramCounter = false;
+                    }
+                    else
+                        useAlternateCycleCount = true;
+
+                    break;
+                }
+
+                case OpcodeBytes.CC:
+                {
+                    if (Flags.Carry)
+                    {
+                        ExecuteCALL();
+                        incrementProgramCounter = false;
+                    }
+                    else
+                        useAlternateCycleCount = true;
+
+                    break;
+                }
+
+                case OpcodeBytes.CZ:
+                {
+                    if (Flags.Zero)
+                    {
+                        ExecuteCALL();
+                        incrementProgramCounter = false;
+                    }
+                    else
+                        useAlternateCycleCount = true;
+
+                    break;
+                }
+
+                case OpcodeBytes.CP:
+                {
+                    if (!Flags.Sign)
+                    {
+                        ExecuteCALL();
+                        incrementProgramCounter = false;
+                    }
+                    else
+                        useAlternateCycleCount = true;
+
+                    break;
+                }
+
+                case OpcodeBytes.CPO:
+                {
+                    if (!Flags.Parity)
+                    {
+                        ExecuteCALL();
+                        incrementProgramCounter = false;
+                    }
+                    else
+                        useAlternateCycleCount = true;
+
+                    break;
+                }
+
+                case OpcodeBytes.CNC:
+                {
+                    if (!Flags.Carry)
+                    {
+                        ExecuteCALL();
+                        incrementProgramCounter = false;
+                    }
+                    else
+                        useAlternateCycleCount = true;
+
+                    break;
+                }
+
+                case OpcodeBytes.CNZ:
+                {
+                    if (!Flags.Zero)
+                    {
+                        ExecuteCALL();
+                        incrementProgramCounter = false;
+                    }
+                    else
+                        useAlternateCycleCount = true;
+
+                    break;
+                }
+
+
                 #endregion
 
                 case OpcodeBytes.RET:

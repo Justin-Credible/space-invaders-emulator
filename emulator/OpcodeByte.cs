@@ -42,6 +42,15 @@ namespace JustinCredible.SIEmulator
         public const byte CALL3 = 0xed;
         public const byte CALL4 = 0xfd;
 
+        public const byte CM = 0xfc;
+        public const byte CPE = 0xec;
+        public const byte CC = 0xdc;
+        public const byte CZ = 0xcc;
+        public const byte CP = 0xf4;
+        public const byte CPO = 0xe4;
+        public const byte CNC = 0xd4;
+        public const byte CNZ = 0xc4;
+
         #endregion
 
         public const byte RET = 0xc9;
