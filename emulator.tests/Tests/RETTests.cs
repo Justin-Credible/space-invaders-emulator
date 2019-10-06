@@ -13,8 +13,8 @@ namespace JustinCredible.SIEmulator.Tests
                 NOP         ; $0001
                 NOP         ; $0002
                 HLT         ; $0003
-                NOP         ; $0004
-                NOP         ; $0005
+                HLT         ; $0004
+                HLT         ; $0005
                 NOP         ; $0006
                 RET         ; $0007
                 NOP         ; $0008
@@ -47,7 +47,7 @@ namespace JustinCredible.SIEmulator.Tests
 
             Assert.Equal(2, state.Iterations);
             Assert.Equal(7 + 10, state.Cycles);
-            Assert.Equal(0x0003, state.ProgramCounter);
+            Assert.Equal(0x0005, state.ProgramCounter);
         }
     }
 }

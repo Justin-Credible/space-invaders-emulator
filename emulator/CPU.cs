@@ -264,8 +264,15 @@ namespace JustinCredible.SIEmulator
 
                 case OpcodeBytes.RET:
                 case OpcodeBytes.RET2:
+                {
                     ExecuteRET();
+
+                    // Don't increment the program counter because we just updated it to
+                    // the given address.
+                    incrementProgramCounter = false;
+
                     break;
+                }
 
                 case OpcodeBytes.STA:
                 {
@@ -1091,8 +1098,10 @@ namespace JustinCredible.SIEmulator
             StackPointer++;
             StackPointer++;
 
-            // Jump back to the original location.
-            ProgramCounter = returnAddress;
+            // The statement we're jumping back to is the original CALL statement.
+            // We don't want to execute it again, so set the program counter to skip
+            // past it.
+            ProgramCounter = (UInt16)(returnAddress + OpcodeTable.CALL.Size);
         }
 
         private void ExecuteMOV(Register dest, Register source)
