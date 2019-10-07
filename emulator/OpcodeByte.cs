@@ -23,7 +23,6 @@ namespace JustinCredible.SIEmulator
         public const byte JMP = 0xc3;
         public const byte JMP2 = 0xcb;
 
-        public const byte PCHL = 0xe9;
         public const byte JPO = 0xe2;
         public const byte JPE = 0xea;
         public const byte JP = 0xf2;
@@ -78,6 +77,9 @@ namespace JustinCredible.SIEmulator
 
         public const byte SHLD = 0x22;
         public const byte LHLD = 0x2a;
+
+        public const byte PCHL = 0xe9;
+        public const byte SPHL = 0xf9;
 
         public const byte RLC = 0x07;
         public const byte RRC = 0x0f;

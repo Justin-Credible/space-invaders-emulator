@@ -157,11 +157,6 @@ namespace JustinCredible.SIEmulator
                     break;
                 }
 
-                case OpcodeBytes.PCHL:
-                    ExecuteJMP(Registers.HL);
-                    incrementProgramCounter = false;
-                    break;
-
                 case OpcodeBytes.JPO:
                 {
                     if (!Flags.Parity)
@@ -536,6 +531,15 @@ namespace JustinCredible.SIEmulator
                     Registers.H = Memory[address + 1];
                     break;
                 }
+
+                case OpcodeBytes.PCHL:
+                    ExecuteJMP(Registers.HL);
+                    incrementProgramCounter = false;
+                    break;
+
+                case OpcodeBytes.SPHL:
+                    StackPointer = Registers.HL;
+                    break;
 
                 // A = A << 1; bit 0 = prev bit 7; CY = prev bit 7
                 case OpcodeBytes.RLC:

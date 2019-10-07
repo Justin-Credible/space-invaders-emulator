@@ -25,7 +25,6 @@ namespace JustinCredible.SIEmulator
         public static Opcode JMP = new Opcode(OpcodeBytes.JMP, 3, "JMP adr", 10); // PC <= adr
         public static Opcode JMP2 = new Opcode(OpcodeBytes.JMP2, 3, "JMP adr", 10); // PC <= adr
 
-        public static Opcode PCHL = new Opcode(OpcodeBytes.PCHL, 1, "PCHL", 5); // PC.hi <- H; PC.lo <- L
         public static Opcode JPO = new Opcode(OpcodeBytes.JPO, 3, "JPO adr", 10); // if PO, PC <- adr
         public static Opcode JPE = new Opcode(OpcodeBytes.JPE, 3, "JPE adr", 10); // if PE, PC <- adr
         public static Opcode JP = new Opcode(OpcodeBytes.JP, 3, "JP adr", 10); // if P=1 PC <- adr
@@ -80,6 +79,9 @@ namespace JustinCredible.SIEmulator
 
         public static Opcode SHLD = new Opcode(OpcodeBytes.SHLD, 3, "SHLD adr", 16); // (adr) <-L; (adr+1)<-H
         public static Opcode LHLD = new Opcode(OpcodeBytes.LHLD, 3, "LHLD adr", 16); // L <- (adr); H<-(adr+1)
+
+        public static Opcode PCHL = new Opcode(OpcodeBytes.PCHL, 1, "PCHL", 5); // PC.hi <- H; PC.lo <- L
+        public static Opcode SPHL = new Opcode(OpcodeBytes.SPHL, 1, "SPHL", 5); // SP=HL
 
         public static Opcode RLC = new Opcode(OpcodeBytes.RLC, 1, "RLC", 4); // A = A << 1; bit 0 = prev bit 7; CY = prev bit 7
         public static Opcode RRC = new Opcode(OpcodeBytes.RRC, 1, "RRC", 4); // A = A >> 1; bit 7 = prev bit 0; CY = prev bit 0
@@ -343,7 +345,6 @@ namespace JustinCredible.SIEmulator
             [OpcodeBytes.JMP] = JMP,
             [OpcodeBytes.JMP2] = JMP2,
 
-            [OpcodeBytes.PCHL] = PCHL,
             [OpcodeBytes.JPO] = JPO,
             [OpcodeBytes.JPE] = JPE,
             [OpcodeBytes.JP] = JP,
@@ -398,6 +399,9 @@ namespace JustinCredible.SIEmulator
 
             [OpcodeBytes.SHLD] = SHLD,
             [OpcodeBytes.LHLD] = LHLD,
+
+            [OpcodeBytes.PCHL] = PCHL,
+            [OpcodeBytes.SPHL] = SPHL,
 
             [OpcodeBytes.RLC] = RLC,
             [OpcodeBytes.RRC] = RRC,
