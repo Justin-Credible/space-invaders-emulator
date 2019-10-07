@@ -38,6 +38,8 @@ namespace JustinCredible.SIEmulator.Tests
 
             var state = Execute(rom, initialState);
 
+            AssertFlagsSame(initialState, state);
+
             Assert.Equal(0x271E, state.StackPointer);
             Assert.Equal(0xFF, state.Memory[0x2720]);
             Assert.Equal(0x00, state.Memory[0x271F]);
@@ -82,6 +84,8 @@ namespace JustinCredible.SIEmulator.Tests
             };
 
             var state = Execute(rom, initialState);
+
+            AssertFlagsSame(initialState, state);
 
             Assert.Equal(0x2720, state.StackPointer);
             Assert.Equal(0xFF, state.Memory[0x2720]);

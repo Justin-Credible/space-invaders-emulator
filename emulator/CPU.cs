@@ -367,6 +367,8 @@ namespace JustinCredible.SIEmulator
 
                 #endregion
 
+                #region RET
+
                 case OpcodeBytes.RET:
                 case OpcodeBytes.RET2:
                 {
@@ -378,6 +380,112 @@ namespace JustinCredible.SIEmulator
 
                     break;
                 }
+
+                case OpcodeBytes.RNZ:
+                {
+                    if (!Flags.Zero)
+                    {
+                        ExecuteRET();
+                        incrementProgramCounter = false;
+                    }
+                    else
+                        useAlternateCycleCount = true;
+
+                    break;
+                }
+
+                case OpcodeBytes.RZ:
+                {
+                    if (Flags.Zero)
+                    {
+                        ExecuteRET();
+                        incrementProgramCounter = false;
+                    }
+                    else
+                        useAlternateCycleCount = true;
+
+                    break;
+                }
+
+                case OpcodeBytes.RNC:
+                {
+                    if (!Flags.Carry)
+                    {
+                        ExecuteRET();
+                        incrementProgramCounter = false;
+                    }
+                    else
+                        useAlternateCycleCount = true;
+
+                    break;
+                }
+
+                case OpcodeBytes.RC:
+                {
+                    if (Flags.Carry)
+                    {
+                        ExecuteRET();
+                        incrementProgramCounter = false;
+                    }
+                    else
+                        useAlternateCycleCount = true;
+
+                    break;
+                }
+
+                case OpcodeBytes.RPO:
+                {
+                    if (!Flags.Parity)
+                    {
+                        ExecuteRET();
+                        incrementProgramCounter = false;
+                    }
+                    else
+                        useAlternateCycleCount = true;
+
+                    break;
+                }
+
+                case OpcodeBytes.RPE:
+                {
+                    if (Flags.Parity)
+                    {
+                        ExecuteRET();
+                        incrementProgramCounter = false;
+                    }
+                    else
+                        useAlternateCycleCount = true;
+
+                    break;
+                }
+
+                case OpcodeBytes.RP:
+                {
+                    if (!Flags.Sign)
+                    {
+                        ExecuteRET();
+                        incrementProgramCounter = false;
+                    }
+                    else
+                        useAlternateCycleCount = true;
+
+                    break;
+                }
+
+                case OpcodeBytes.RM:
+                {
+                    if (Flags.Sign)
+                    {
+                        ExecuteRET();
+                        incrementProgramCounter = false;
+                    }
+                    else
+                        useAlternateCycleCount = true;
+
+                    break;
+                }
+
+                #endregion
 
                 case OpcodeBytes.STA:
                 {

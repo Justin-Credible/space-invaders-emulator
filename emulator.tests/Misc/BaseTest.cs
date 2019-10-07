@@ -126,5 +126,14 @@ namespace JustinCredible.SIEmulator.Tests
             Assert.False(stats.Flags.Sign);
             Assert.False(stats.Flags.Zero);
         }
+
+        protected void AssertFlagsSame(InitialCPUState initialState, CPUStats stats)
+        {
+            Assert.Equal(initialState.Flags.AuxCarry, stats.Flags.AuxCarry);
+            Assert.Equal(initialState.Flags.Carry, stats.Flags.Carry);
+            Assert.Equal(initialState.Flags.Parity, stats.Flags.Parity);
+            Assert.Equal(initialState.Flags.Sign, stats.Flags.Sign);
+            Assert.Equal(initialState.Flags.Zero, stats.Flags.Zero);
+        }
     }
 }

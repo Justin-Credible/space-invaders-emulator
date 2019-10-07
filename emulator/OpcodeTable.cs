@@ -55,8 +55,21 @@ namespace JustinCredible.SIEmulator
 
         #endregion
 
+        #region RET
+
         public static Opcode RET = new Opcode(OpcodeBytes.RET, 1, "RET", 10); // PC.lo <- (sp); PC.hi<-(sp+1); SP <- SP+2
         public static Opcode RET2 = new Opcode(OpcodeBytes.RET2, 1, "RET2", 10); // PC.lo <- (sp); PC.hi<-(sp+1); SP <- SP+2
+
+        public static Opcode RNZ = new Opcode(OpcodeBytes.RNZ, 1, "RNZ", 11, 5); // if NZ, RET
+        public static Opcode RZ = new Opcode(OpcodeBytes.RZ, 1, "RZ", 11, 5); // if Z, RET
+        public static Opcode RNC = new Opcode(OpcodeBytes.RNC, 1, "RNC", 11, 5); // if NCY, RET
+        public static Opcode RC = new Opcode(OpcodeBytes.RC, 1, "RC", 11, 5); // if CY, RET
+        public static Opcode RPO = new Opcode(OpcodeBytes.RPO, 1, "RPO", 11, 5); // if PO, RET
+        public static Opcode RPE = new Opcode(OpcodeBytes.RPE, 1, "RPE", 11, 5); // if PE, RET
+        public static Opcode RP = new Opcode(OpcodeBytes.RP, 1, "RP", 11, 5); // if P, RET
+        public static Opcode RM = new Opcode(OpcodeBytes.RM, 1, "RM", 11, 5); // if M, RET
+
+        #endregion
 
         public static Opcode STA = new Opcode(OpcodeBytes.HLT, 3, "STA adr", 13); // (adr) <- A
         public static Opcode LDA = new Opcode(OpcodeBytes.LDA, 3, "LDA adr", 13); // A <- (adr)
@@ -360,8 +373,21 @@ namespace JustinCredible.SIEmulator
 
             #endregion
 
+            #region RET
+
             [OpcodeBytes.RET] = RET,
             [OpcodeBytes.RET2] = RET2,
+
+            [OpcodeBytes.RNZ] = RNZ,
+            [OpcodeBytes.RZ] = RZ,
+            [OpcodeBytes.RNC] = RNC,
+            [OpcodeBytes.RC] = RC,
+            [OpcodeBytes.RPO] = RPO,
+            [OpcodeBytes.RPE] = RPE,
+            [OpcodeBytes.RP] = RP,
+            [OpcodeBytes.RM] = RM,
+
+            #endregion
 
             [OpcodeBytes.STA] = STA,
             [OpcodeBytes.LDA] = LDA,
