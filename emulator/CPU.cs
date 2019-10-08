@@ -561,6 +561,48 @@ namespace JustinCredible.SIEmulator
                     ExecuteRotateAccumulator(left: false, rotateThroughCarry: true);
                     break;
 
+                // A <- A + byte
+                case OpcodeBytes.ADI:
+                    ExecuteADD(Memory[ProgramCounter+1]);
+                    break;
+
+                // A <- A + data + CY
+                case OpcodeBytes.ACI:
+                    ExecuteADD(Memory[ProgramCounter+1], true);
+                    break;
+
+                // A <- A - data
+                case OpcodeBytes.SUI:
+                    ExecuteSUB(Memory[ProgramCounter+1]);
+                    break;
+
+                // A <- A - data - CY
+                case OpcodeBytes.SBI:
+                    ExecuteSUB(Memory[ProgramCounter+1], true);
+                    break;
+
+                // A <- A & data
+                case OpcodeBytes.ANI:
+                    Registers.A = (byte)(Registers.A & Memory[ProgramCounter+1]);
+                    SetFlags(false, Registers.A);
+                    break;
+
+                // A <- A ^ data
+                case OpcodeBytes.XRI:
+                    Registers.A = (byte)(Registers.A ^ Memory[ProgramCounter+1]);
+                    SetFlags(false, Registers.A);
+                    break;
+
+                // A <- A | data
+                case OpcodeBytes.ORI:
+                    Registers.A = (byte)(Registers.A | Memory[ProgramCounter+1]);
+                    SetFlags(false, Registers.A);
+                    break;
+
+                // A - data
+                case OpcodeBytes.CPI:
+                    ExecuteSUB(Memory[ProgramCounter+1], false, false);
+                    break;
 
                 #region MOV
 

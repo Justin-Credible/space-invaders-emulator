@@ -86,6 +86,15 @@ namespace JustinCredible.SIEmulator
         public const byte RAL = 0x17;
         public const byte RAR = 0x1f;
 
+        public const byte ADI = 0xc6;
+        public const byte ACI = 0xce;
+        public const byte SUI = 0xd6;
+        public const byte SBI = 0xde;
+        public const byte ANI = 0xe6;
+        public const byte XRI = 0xee;
+        public const byte ORI = 0xf6;
+        public const byte CPI = 0xfe;
+
         #region MOV
         public const byte MOV_B_B = 0x40;
         public const byte MOV_B_C = 0x41;

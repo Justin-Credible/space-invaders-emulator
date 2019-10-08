@@ -88,6 +88,15 @@ namespace JustinCredible.SIEmulator
         public static Opcode RAL = new Opcode(OpcodeBytes.RAL, 1, "RAL", 4); // A = A << 1; bit 0 = prev CY; CY = prev bit 7
         public static Opcode RAR = new Opcode(OpcodeBytes.RAR, 1, "RAR", 4); // A = A >> 1; bit 7 = prev bit 7; CY = prev bit 0
 
+        public static Opcode ADI =new Opcode(OpcodeBytes.ADI, 2, "ADI D8", 7); // A <- A + byte
+        public static Opcode ACI =new Opcode(OpcodeBytes.ACI, 2, "ACI D8", 7); // A <- A + data + CY
+        public static Opcode SUI =new Opcode(OpcodeBytes.SUI, 2, "SUI D8", 7); // A <- A - data
+        public static Opcode SBI =new Opcode(OpcodeBytes.SBI, 2, "SBI D8", 7); // A <- A - data - CY
+        public static Opcode ANI =new Opcode(OpcodeBytes.ANI, 2, "ANI D8", 7); // A <- A & data
+        public static Opcode XRI =new Opcode(OpcodeBytes.XRI, 2, "XRI D8", 7); // A <- A ^ data
+        public static Opcode ORI =new Opcode(OpcodeBytes.ORI, 2, "ORI D8", 7); // A <- A | data
+        public static Opcode CPI =new Opcode(OpcodeBytes.CPI, 2, "CPI D8", 7); // A - data
+
         #region MOV
         public static Opcode MOV_B_B = new Opcode(OpcodeBytes.MOV_B_B, 1, "MOV B,B", 5); // B <- B
         public static Opcode MOV_B_C = new Opcode(OpcodeBytes.MOV_B_C, 1, "MOV B,C", 5); // B <- C
