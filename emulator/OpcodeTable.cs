@@ -417,6 +417,15 @@ namespace JustinCredible.SIEmulator
             [OpcodeBytes.RAL] = RAL,
             [OpcodeBytes.RAR] = RAR,
 
+            [OpcodeBytes.ADI] = ADI,
+            [OpcodeBytes.ACI] = ACI,
+            [OpcodeBytes.SUI] = SUI,
+            [OpcodeBytes.SBI] = SBI,
+            [OpcodeBytes.ANI] = ANI,
+            [OpcodeBytes.XRI] = XRI,
+            [OpcodeBytes.ORI] = ORI,
+            [OpcodeBytes.CPI] = CPI,
+
             #region MOV
             [OpcodeBytes.MOV_B_B] = MOV_B_B,
             [OpcodeBytes.MOV_B_C] = MOV_B_C,
