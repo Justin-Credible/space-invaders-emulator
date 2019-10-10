@@ -52,7 +52,7 @@ namespace JustinCredible.SIEmulator.Tests
 
             Assert.Equal(2, state.Iterations);
             Assert.Equal(7 + 11, state.Cycles);
-            Assert.Equal(0x0005, state.ProgramCounter);
+            Assert.Equal(0x0003, state.ProgramCounter);
         }
 
         [Fact]

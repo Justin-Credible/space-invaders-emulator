@@ -54,6 +54,19 @@ namespace JustinCredible.SIEmulator
 
         #endregion
 
+        #region RST
+
+        public static Opcode RST_0 = new Opcode(OpcodeBytes.RST_0, 1, "RST 0", 11); // CALL $0
+        public static Opcode RST_1 = new Opcode(OpcodeBytes.RST_1, 1, "RST 1", 11); // CALL $8
+        public static Opcode RST_2 = new Opcode(OpcodeBytes.RST_2, 1, "RST 2", 11); // CALL $10
+        public static Opcode RST_3 = new Opcode(OpcodeBytes.RST_3, 1, "RST 3", 11); // CALL $18
+        public static Opcode RST_4 = new Opcode(OpcodeBytes.RST_4, 1, "RST 4", 11); // CALL $20
+        public static Opcode RST_5 = new Opcode(OpcodeBytes.RST_5, 1, "RST 5", 11); // CALL $28
+        public static Opcode RST_6 = new Opcode(OpcodeBytes.RST_6, 1, "RST 6", 11); // CALL $30
+        public static Opcode RST_7 = new Opcode(OpcodeBytes.RST_7, 1, "RST 7", 11); // CALL $38
+
+        #endregion
+
         #region RET
 
         public static Opcode RET = new Opcode(OpcodeBytes.RET, 1, "RET", 10); // PC.lo <- (sp); PC.hi<-(sp+1); SP <- SP+2
@@ -380,6 +393,19 @@ namespace JustinCredible.SIEmulator
             [OpcodeBytes.CPO] = CPO,
             [OpcodeBytes.CNC] = CNC,
             [OpcodeBytes.CNZ] = CNZ,
+
+            #endregion
+
+            #region RST
+
+            [OpcodeBytes.RST_0] = RST_0,
+            [OpcodeBytes.RST_1] = RST_1,
+            [OpcodeBytes.RST_2] = RST_2,
+            [OpcodeBytes.RST_3] = RST_3,
+            [OpcodeBytes.RST_4] = RST_4,
+            [OpcodeBytes.RST_5] = RST_5,
+            [OpcodeBytes.RST_6] = RST_6,
+            [OpcodeBytes.RST_7] = RST_7,
 
             #endregion
 

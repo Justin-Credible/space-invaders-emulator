@@ -52,6 +52,19 @@ namespace JustinCredible.SIEmulator
 
         #endregion
 
+        #region RST
+
+        public const byte RST_0 = 0xc7;
+        public const byte RST_1 = 0xcf;
+        public const byte RST_2 = 0xd7;
+        public const byte RST_3 = 0xdf;
+        public const byte RST_4 = 0xe7;
+        public const byte RST_5 = 0xef;
+        public const byte RST_6 = 0xf7;
+        public const byte RST_7 = 0xff;
+
+        #endregion
+
         #region RET
 
         public const byte RET = 0xc9;

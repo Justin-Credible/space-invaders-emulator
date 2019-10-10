@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace JustinCredible.SIEmulator
 {
@@ -36,6 +37,28 @@ namespace JustinCredible.SIEmulator
 
         /** Stack Pointer; 16-bits */
         public UInt16 StackPointer { get; set; }
+
+        /**
+         * Used for a sanity check when executing the RET opcode.
+         * These are the only opcodes we're expecting to return to.
+         */
+        private readonly List<byte> _expectedOpcodesToReturnTo = new List<byte>()
+        {
+            OpcodeTable.CALL.Code,
+            OpcodeTable.CALL2.Code,
+            OpcodeTable.CALL3.Code,
+            OpcodeTable.CALL4.Code,
+            OpcodeTable.RST_0.Code,
+            OpcodeTable.RST_1.Code,
+            OpcodeTable.RST_2.Code,
+            OpcodeTable.RST_3.Code,
+            OpcodeTable.RST_4.Code,
+            OpcodeTable.RST_5.Code,
+            OpcodeTable.RST_6.Code,
+            OpcodeTable.RST_7.Code,
+
+            OpcodeTable.NOP.Code, // Technically only should be required for unit tests.
+        };
 
         public CPU()
         {
@@ -359,6 +382,43 @@ namespace JustinCredible.SIEmulator
                     break;
                 }
 
+
+                #endregion
+
+                #region RST
+
+                case OpcodeBytes.RST_0:
+                    ExecuteCALL(0x0000);
+                    incrementProgramCounter = false;
+                    break;
+                case OpcodeBytes.RST_1:
+                    ExecuteCALL(0x0008);
+                    incrementProgramCounter = false;
+                    break;
+                case OpcodeBytes.RST_2:
+                    ExecuteCALL(0x0010);
+                    incrementProgramCounter = false;
+                    break;
+                case OpcodeBytes.RST_3:
+                    ExecuteCALL(0x0018);
+                    incrementProgramCounter = false;
+                    break;
+                case OpcodeBytes.RST_4:
+                    ExecuteCALL(0x0020);
+                    incrementProgramCounter = false;
+                    break;
+                case OpcodeBytes.RST_5:
+                    ExecuteCALL(0x0028);
+                    incrementProgramCounter = false;
+                    break;
+                case OpcodeBytes.RST_6:
+                    ExecuteCALL(0x0030);
+                    incrementProgramCounter = false;
+                    break;
+                case OpcodeBytes.RST_7:
+                    ExecuteCALL(0x0038);
+                    incrementProgramCounter = false;
+                    break;
 
                 #endregion
 
@@ -1357,10 +1417,21 @@ namespace JustinCredible.SIEmulator
             StackPointer++;
             StackPointer++;
 
-            // The statement we're jumping back to is the original CALL statement.
-            // We don't want to execute it again, so set the program counter to skip
-            // past it.
-            ProgramCounter = (UInt16)(returnAddress + OpcodeTable.CALL.Size);
+            var originalOpcodeByte = Memory[returnAddress];
+            var originalOpcode = OpcodeTable.Lookup[originalOpcodeByte];
+
+            // Sanity check.
+            if (!_expectedOpcodesToReturnTo.Contains(originalOpcodeByte))
+            {
+                var programCounterFormatted = String.Format("0x{0:X4}", ProgramCounter);
+                var addressFormatted = String.Format("0x{0:X4}", returnAddress);
+                var originalOpcodeByteFormatted = String.Format("0x{0:X2}", originalOpcodeByte);
+                throw new Exception($"The RET at {programCounterFormatted} is attempting to return to {addressFormatted} which contains opcode {originalOpcode.Instruction} ({originalOpcodeByteFormatted}), but RET is expecting to only return to a CALL or RST opcode.");
+            }
+
+            // The statement we're jumping back to is the original CALL or RST statement.
+            // We don't want to execute it again, so set the program counter to skip past.
+            ProgramCounter = (UInt16)(returnAddress + originalOpcode.Size);
         }
 
         private void ExecuteMOV(Register dest, Register source)
