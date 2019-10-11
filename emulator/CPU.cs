@@ -44,20 +44,20 @@ namespace JustinCredible.SIEmulator
          */
         private readonly List<byte> _expectedOpcodesToReturnTo = new List<byte>()
         {
-            OpcodeTable.CALL.Code,
-            OpcodeTable.CALL2.Code,
-            OpcodeTable.CALL3.Code,
-            OpcodeTable.CALL4.Code,
-            OpcodeTable.RST_0.Code,
-            OpcodeTable.RST_1.Code,
-            OpcodeTable.RST_2.Code,
-            OpcodeTable.RST_3.Code,
-            OpcodeTable.RST_4.Code,
-            OpcodeTable.RST_5.Code,
-            OpcodeTable.RST_6.Code,
-            OpcodeTable.RST_7.Code,
+            Opcodes.CALL.Code,
+            Opcodes.CALL2.Code,
+            Opcodes.CALL3.Code,
+            Opcodes.CALL4.Code,
+            Opcodes.RST_0.Code,
+            Opcodes.RST_1.Code,
+            Opcodes.RST_2.Code,
+            Opcodes.RST_3.Code,
+            Opcodes.RST_4.Code,
+            Opcodes.RST_5.Code,
+            Opcodes.RST_6.Code,
+            Opcodes.RST_7.Code,
 
-            OpcodeTable.NOP.Code, // Technically only should be required for unit tests.
+            Opcodes.NOP.Code, // Technically only should be required for unit tests.
         };
 
         public CPU()
@@ -108,7 +108,7 @@ namespace JustinCredible.SIEmulator
         public void PrintDebugSummary()
         {
             var opcodeByte = Memory[ProgramCounter];
-            var opcodeInstruction = OpcodeTable.Lookup[opcodeByte].Instruction;
+            var opcodeInstruction = Opcodes.Lookup[opcodeByte].Instruction;
 
             var opcode = String.Format("0x{0:X2} {1}", opcodeByte, opcodeInstruction);
             var pc = String.Format("0x{0:X4}", ProgramCounter);
@@ -138,7 +138,7 @@ namespace JustinCredible.SIEmulator
 
             // Fetch the next opcode to be executed.
             var opcodeByte = Memory[ProgramCounter];
-            var opcode = OpcodeTable.Lookup[opcodeByte];
+            var opcode = Opcodes.Lookup[opcodeByte];
 
             // Indicates if we should increment the program counter after executing the instruction.
             // This is almost always the case, but there are a few cases where we don't want to.
@@ -1418,7 +1418,7 @@ namespace JustinCredible.SIEmulator
             StackPointer++;
 
             var originalOpcodeByte = Memory[returnAddress];
-            var originalOpcode = OpcodeTable.Lookup[originalOpcodeByte];
+            var originalOpcode = Opcodes.Lookup[originalOpcodeByte];
 
             // Sanity check.
             if (!_expectedOpcodesToReturnTo.Contains(originalOpcodeByte))

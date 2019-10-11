@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace JustinCredible.SIEmulator
 {
-    public partial class OpcodeTable
+    public partial class Opcodes
     {
         public static Dictionary<byte, Opcode> Lookup = new Dictionary<byte, Opcode>()
         {

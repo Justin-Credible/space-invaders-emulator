@@ -7,7 +7,7 @@ namespace JustinCredible.SIEmulator
      * A lookup table for opcodes, which includes opcode sizes and cycle counts.
      * Derived from: http://www.pastraiser.com/cpu/i8080/i8080_opcodes.html
      */
-    public partial class OpcodeTable
+    public partial class Opcodes
     {
         /** Halt */
         public static Opcode HLT = new Opcode(OpcodeBytes.HLT, 1, "HLT", 7);
