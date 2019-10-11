@@ -26,7 +26,7 @@ namespace JustinCredible.SIEmulator
         #region Carry bit instructions
 
             /** Set Carry */
-            public static Opcode STC = new Opcode(OpcodeBytes.HLT, 1, "STC", 4); // CY = 1
+            public static Opcode STC = new Opcode(OpcodeBytes.STC, 1, "STC", 4); // CY = 1
 
             /** Complement Carry */
             public static Opcode CMC = new Opcode(OpcodeBytes.CMC, 1, "CMC", 4); // CY=!CY
@@ -58,7 +58,7 @@ namespace JustinCredible.SIEmulator
         #endregion
 
         /** Compliment Accumulator */
-        public static Opcode CMA = new Opcode(OpcodeBytes.CMC, 1, "CMA", 4); // A <- !A
+        public static Opcode CMA = new Opcode(OpcodeBytes.CMA, 1, "CMA", 4); // A <- !A
 
         #endregion
 
@@ -341,7 +341,7 @@ namespace JustinCredible.SIEmulator
         #region Direct addressing instructions
 
             /** Store accumulator direct */
-            public static Opcode STA = new Opcode(OpcodeBytes.HLT, 3, "STA adr", 13); // (adr) <- A
+            public static Opcode STA = new Opcode(OpcodeBytes.STA, 3, "STA adr", 13); // (adr) <- A
 
             /** Load accumulator direct */
             public static Opcode LDA = new Opcode(OpcodeBytes.LDA, 3, "LDA adr", 13); // A <- (adr)
