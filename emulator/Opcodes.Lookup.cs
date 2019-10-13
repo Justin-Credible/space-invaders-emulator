@@ -484,6 +484,16 @@ namespace JustinCredible.SIEmulator
                 [OpcodeBytes.RST_7] = RST_7,
 
             #endregion
+
+            #region Interrupt flip-flop instructions
+
+                /** Enable interrupts */
+                [OpcodeBytes.EI] = EI,
+
+                /** Disable interrupts */
+                [OpcodeBytes.DI] = DI,
+
+            #endregion
         };
     }
 }

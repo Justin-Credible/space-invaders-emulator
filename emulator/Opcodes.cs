@@ -486,5 +486,15 @@ namespace JustinCredible.SIEmulator
             public static Opcode RST_7 = new Opcode(OpcodeBytes.RST_7, 1, "RST 7", 11); // CALL $38
 
         #endregion
+
+        #region Interrupt flip-flop instructions
+
+            /** Enable interrupts */
+            public static Opcode EI = new Opcode(OpcodeBytes.EI, 1, "EI", 4);
+
+            /** Disable interrupts */
+            public static Opcode DI = new Opcode(OpcodeBytes.DI, 1, "DI", 4);
+
+        #endregion
     }
 }

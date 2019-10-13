@@ -19,5 +19,6 @@ namespace JustinCredible.SIEmulator.Tests
         public ConditionFlags Flags { get; set; }
         public UInt16 ProgramCounter { get; set; }
         public UInt16 StackPointer { get; set; }
+        public bool InterruptsEnabled { get; set; }
     }
 }

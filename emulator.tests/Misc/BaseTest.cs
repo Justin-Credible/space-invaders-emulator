@@ -76,6 +76,9 @@ namespace JustinCredible.SIEmulator.Tests
 
                 if (initialState.ProgramCounter != null)
                     cpu.ProgramCounter = initialState.ProgramCounter.Value;
+
+                if (initialState.InterruptsEnabled != null)
+                    cpu.InterruptsEnabled = initialState.InterruptsEnabled.Value;
             }
 
             // Finally, set the built memory map into the CPU.
@@ -113,6 +116,7 @@ namespace JustinCredible.SIEmulator.Tests
                 Flags = cpu.Flags,
                 ProgramCounter = cpu.ProgramCounter,
                 StackPointer = cpu.StackPointer,
+                InterruptsEnabled = cpu.InterruptsEnabled,
             };
 
             return results;

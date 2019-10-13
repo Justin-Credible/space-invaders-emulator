@@ -38,6 +38,9 @@ namespace JustinCredible.SIEmulator
         /** Stack Pointer; 16-bits */
         public UInt16 StackPointer { get; set; }
 
+        /** Indicates if interrupts are enabled or not. */
+        public bool InterruptsEnabled { get; set; }
+
         /**
          * Used for a sanity check when executing the RET opcode.
          * These are the only opcodes we're expecting to return to.
@@ -80,6 +83,10 @@ namespace JustinCredible.SIEmulator
 
             // Reset the flag that indicates that the ROM has finished executing.
             Finished = false;
+
+            // Ensure interrupts are enabled.
+            // TODO: Should this be enabled or disabled to start?
+            InterruptsEnabled = true;
         }
 
         public void LoadRom(byte[] rom)
@@ -1342,6 +1349,14 @@ namespace JustinCredible.SIEmulator
                     SetFlags(false, Registers.A);
                     break;
                 #endregion
+
+                case OpcodeBytes.EI:
+                    InterruptsEnabled = true;
+                    break;
+
+                case OpcodeBytes.DI:
+                    InterruptsEnabled = false;
+                    break;
 
                 default:
                     throw new NotImplementedException(String.Format("Attempted to execute unknown opcode 0x{0:X2} at memory address 0x{0:X4}", opcode, ProgramCounter));
