@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using Xunit;
 
 namespace JustinCredible.SIEmulator.Tests
@@ -18,7 +19,7 @@ namespace JustinCredible.SIEmulator.Tests
             File.WriteAllText(sourceFilePath, source);
 
             var startInfo = new ProcessStartInfo();
-            startInfo.FileName = "../../../../assembler/zasm-4.2.4-macos10.12/zasm";
+            startInfo.FileName = GetAssemblerBinaryPath();
             startInfo.Arguments = $"--asm8080 \"{sourceFilePath}\"";
             startInfo.RedirectStandardError = true;
 
@@ -34,6 +35,18 @@ namespace JustinCredible.SIEmulator.Tests
                 throw new Exception($"Error assembling Intel 8080 source code; non-zero exit code: {exitCode}; stdErr: {stdErr}");
 
             return File.ReadAllBytes(romFilePath);
+        }
+
+        private static String GetAssemblerBinaryPath()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                return "../../../../assembler/zasm-4.2.4-Linux64/zasm";
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                return "../../../../assembler/zasm-4.2.4-macos10.12/zasm";
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new Exception("The zasm assembler is not available for Windows; try using the Windows Subsystem for Linux (WSL).");
+            else
+                throw new Exception("The zasm assembler is not available this platform.");
         }
 
         protected CPUStats Execute(byte[] rom, InitialCPUState initialState = null)
