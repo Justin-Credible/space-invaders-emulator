@@ -230,9 +230,6 @@ namespace JustinCredible.SIEmulator
                     [OpcodeBytes.CMP_A] = CMP_A,
                 #endregion
 
-                /** Load SP from H and L */
-                [OpcodeBytes.SPHL] = SPHL,
-
             #endregion
 
             #region Rotate accumulator instructions
@@ -287,6 +284,15 @@ namespace JustinCredible.SIEmulator
                     [OpcodeBytes.DAD_H] = DAD_H,
                     [OpcodeBytes.DAD_SP] = DAD_SP,
                 #endregion
+
+                /** Load SP from H and L */
+                [OpcodeBytes.SPHL] = SPHL,
+
+                /** Exchange stack */
+                [OpcodeBytes.XTHL] = XTHL,
+
+                /** Exchange registers */
+                [OpcodeBytes.XCHG] = XCHG,
 
             #endregion
 

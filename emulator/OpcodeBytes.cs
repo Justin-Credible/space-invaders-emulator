@@ -288,6 +288,12 @@ namespace JustinCredible.SIEmulator
             /** Load SP from H and L */
             public const byte SPHL = 0xf9;
 
+            /** Exchange stack */
+            public const byte XTHL = 0xe3;
+
+            /** Exchange registers */
+            public const byte XCHG = 0xeb;
+
         #endregion
 
         #region Immediate instructions

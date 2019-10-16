@@ -232,9 +232,6 @@ namespace JustinCredible.SIEmulator
                 public static Opcode CMP_A = new Opcode(OpcodeBytes.CMP_A, 1, "CMP A", 4); // A - A
             #endregion
 
-            /** Load SP from H and L */
-            public static Opcode SPHL = new Opcode(OpcodeBytes.SPHL, 1, "SPHL", 5); // SP=HL
-
         #endregion
 
         #region Rotate accumulator instructions
@@ -289,6 +286,15 @@ namespace JustinCredible.SIEmulator
                 public static Opcode DAD_H = new Opcode(OpcodeBytes.DAD_H, 1, "DAD H", 10); // HL = HL + HL
                 public static Opcode DAD_SP = new Opcode(OpcodeBytes.DAD_SP, 1, "DAD SP", 10); // HL = HL + SP
             #endregion
+
+            /** Load SP from H and L */
+            public static Opcode SPHL = new Opcode(OpcodeBytes.SPHL, 1, "SPHL", 5); // SP=HL
+
+            /** Exchange stack */
+            public static Opcode XTHL = new Opcode(OpcodeBytes.XTHL, 1, "XTHL",	18); // L <-> (SP); H <-> (SP+1)
+
+            /** Exchange registers */
+            public static Opcode XCHG = new Opcode(OpcodeBytes.XCHG, 1, "XCHG",	5); // H <-> D; L <-> E
 
         #endregion
 

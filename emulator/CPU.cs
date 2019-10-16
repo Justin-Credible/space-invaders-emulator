@@ -608,6 +608,32 @@ namespace JustinCredible.SIEmulator
                     StackPointer = Registers.HL;
                     break;
 
+                // Exchange stack
+                //  L <-> (SP); H <-> (SP+1)
+                case OpcodeBytes.XTHL:
+                {
+                    var oldL = Registers.L;
+                    var oldH = Registers.H;
+                    Registers.L = Memory[StackPointer];
+                    Memory[StackPointer] = oldL;
+                    Registers.H = Memory[StackPointer+1];
+                    Memory[StackPointer+1] = oldH;
+                    break;
+                }
+
+                // Exchange registers
+                // H <-> D; L <-> E
+                case OpcodeBytes.XCHG:
+                {
+                    var oldH = Registers.H;
+                    var oldL = Registers.L;
+                    Registers.H = Registers.D;
+                    Registers.D = oldH;
+                    Registers.L = Registers.E;
+                    Registers.E = oldL;
+                    break;
+                }
+
                 // A = A << 1; bit 0 = prev bit 7; CY = prev bit 7
                 case OpcodeBytes.RLC:
                     ExecuteRotateAccumulator(left: true);
