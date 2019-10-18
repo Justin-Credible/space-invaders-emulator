@@ -571,6 +571,10 @@ namespace JustinCredible.SIEmulator
                     Registers.A = (byte)~Registers.A;
                     break;
 
+                case OpcodeBytes.DAA:
+                    throw new NotImplementedException("The DAA instruction is not implemented.");
+                    break;
+
                 case OpcodeBytes.STC:
                     Flags.Carry = true;
                     break;

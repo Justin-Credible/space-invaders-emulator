@@ -58,6 +58,9 @@ namespace JustinCredible.SIEmulator
             /** Compliment Accumulator */
             public const byte CMA = 0x2f;
 
+            /** Decimal Adjust Accumulator */
+            public const byte DAA = 0x27;
+
         #endregion
 
         #region Data transfer instructions

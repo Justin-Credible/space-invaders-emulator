@@ -58,6 +58,9 @@ namespace JustinCredible.SIEmulator
             /** Compliment Accumulator */
             [OpcodeBytes.CMA] = CMA,
 
+            /** Decimal Adjust Accumulator */
+            [OpcodeBytes.DAA] = DAA,
+
             #endregion
 
             #region Data transfer instructions

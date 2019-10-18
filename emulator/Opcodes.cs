@@ -60,6 +60,9 @@ namespace JustinCredible.SIEmulator
         /** Compliment Accumulator */
         public static Opcode CMA = new Opcode(OpcodeBytes.CMA, 1, "CMA", 4); // A <- !A
 
+        /** Decimal Adjust Accumulator */
+        public static Opcode DAA = new Opcode(OpcodeBytes.DAA, 1, "DAA", 4);
+
         #endregion
 
         #region Data transfer instructions
