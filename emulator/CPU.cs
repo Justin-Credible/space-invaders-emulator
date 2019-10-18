@@ -155,1242 +155,1370 @@ namespace JustinCredible.SIEmulator
             // the operation. This indicates how we should increment the program counter.
             var useAlternateCycleCount = false;
 
+            #region Opcode Execution
+
             // Execute the opcode.
             switch (opcodeByte)
             {
-                case OpcodeBytes.NOP:
-                case OpcodeBytes.NOP2:
-                case OpcodeBytes.NOP3:
-                case OpcodeBytes.NOP4:
-                case OpcodeBytes.NOP5:
-                case OpcodeBytes.NOP6:
-                case OpcodeBytes.NOP7:
-                case OpcodeBytes.NOP8:
-                    break;
-
                 case OpcodeBytes.HLT:
                     Finished = true;
                     incrementProgramCounter = false;
                     break;
 
-                #region JUMP
+                #region NOP - No operation
 
-                case OpcodeBytes.JMP:
-                case OpcodeBytes.JMP2:
-                {
-                    ExecuteJMP();
+                    case OpcodeBytes.NOP:
+                    case OpcodeBytes.NOP2:
+                    case OpcodeBytes.NOP3:
+                    case OpcodeBytes.NOP4:
+                    case OpcodeBytes.NOP5:
+                    case OpcodeBytes.NOP6:
+                    case OpcodeBytes.NOP7:
+                    case OpcodeBytes.NOP8:
+                        break;
 
-                    // Don't increment the program counter because we just updated it to
-                    // the given address.
-                    incrementProgramCounter = false;
+                #endregion
 
-                    break;
-                }
+                #region Carry bit instructions
 
-                case OpcodeBytes.JPO:
-                {
-                    if (!Flags.Parity)
+                    case OpcodeBytes.CMC:
+                        Flags.Carry = !Flags.Carry;
+                        break;
+
+                    case OpcodeBytes.STC:
+                        Flags.Carry = true;
+                        break;
+
+                #endregion
+
+                #region Single register instructions
+
+                    #region INR - Increment Register or Memory
+
+                        case OpcodeBytes.INR_B:
+                            Registers.B++;
+                            SetFlags(false, Registers.B);
+                            break;
+                        case OpcodeBytes.INR_C:
+                            Registers.C++;
+                            SetFlags(false, Registers.C);
+                            break;
+                        case OpcodeBytes.INR_D:
+                            Registers.D++;
+                            SetFlags(false, Registers.D);
+                            break;
+                        case OpcodeBytes.INR_E:
+                            Registers.E++;
+                            SetFlags(false, Registers.E);
+                            break;
+                        case OpcodeBytes.INR_H:
+                            Registers.H++;
+                            SetFlags(false, Registers.H);
+                            break;
+                        case OpcodeBytes.INR_L:
+                            Registers.L++;
+                            SetFlags(false, Registers.L);
+                            break;
+                        case OpcodeBytes.INR_M:
+                            Memory[Registers.HL]++;
+                            SetFlags(false, Memory[Registers.HL]);
+                            break;
+                        case OpcodeBytes.INR_A:
+                            Registers.A++;
+                            SetFlags(false, Registers.A);
+                            break;
+
+                    #endregion
+
+                    #region DCR - Decrement Register or Memory
+
+                        case OpcodeBytes.DCR_B:
+                            Registers.B--;
+                            SetFlags(false, Registers.B);
+                            break;
+                        case OpcodeBytes.DCR_C:
+                            Registers.C--;
+                            SetFlags(false, Registers.C);
+                            break;
+                        case OpcodeBytes.DCR_D:
+                            Registers.D--;
+                            SetFlags(false, Registers.D);
+                            break;
+                        case OpcodeBytes.DCR_E:
+                            Registers.E--;
+                            SetFlags(false, Registers.E);
+                            break;
+                        case OpcodeBytes.DCR_H:
+                            Registers.H--;
+                            SetFlags(false, Registers.H);
+                            break;
+                        case OpcodeBytes.DCR_L:
+                            Registers.L--;
+                            SetFlags(false, Registers.L);
+                            break;
+                        case OpcodeBytes.DCR_M:
+                            Memory[Registers.HL]--;
+                            SetFlags(false, Memory[Registers.HL]);
+                            break;
+                        case OpcodeBytes.DCR_A:
+                            Registers.A--;
+                            SetFlags(false, Registers.A);
+                            break;
+
+                    #endregion
+
+                    /** Compliment Accumulator */
+                    case OpcodeBytes.CMA:
+                        Registers.A = (byte)~Registers.A;
+                        break;
+
+                    /** Decimal Adjust Accumulator */
+                    case OpcodeBytes.DAA:
+                        throw new NotImplementedException("The DAA instruction is not implemented.");
+
+                #endregion
+
+                #region Data transfer instructions
+
+                    #region STAX - Store accumulator
+
+                        case OpcodeBytes.STAX_B:
+                            Memory[Registers.BC] = Registers.A;
+                            break;
+                        case OpcodeBytes.STAX_D:
+                            Memory[Registers.DE] = Registers.A;
+                            break;
+
+                    #endregion
+
+                    #region LDAX - Load accumulator
+
+                        case OpcodeBytes.LDAX_B:
+                            Registers.A = Memory[Registers.BC];
+                            break;
+                        case OpcodeBytes.LDAX_D:
+                            Registers.A = Memory[Registers.DE];
+                            break;
+
+                    #endregion
+
+                    #region MOV - Move (copy) data
+
+                        #region MOV X, X (from register to register)
+
+                        case OpcodeBytes.MOV_B_B:
+                            // NOP
+                            break;
+                        case OpcodeBytes.MOV_B_C:
+                            Registers.B = Registers.C;
+                            break;
+                        case OpcodeBytes.MOV_B_D:
+                            Registers.B = Registers.D;
+                            break;
+                        case OpcodeBytes.MOV_B_E:
+                            Registers.B = Registers.E;
+                            break;
+                        case OpcodeBytes.MOV_B_H:
+                            Registers.B = Registers.H;
+                            break;
+                        case OpcodeBytes.MOV_B_L:
+                            Registers.B = Registers.L;
+                            break;
+                        case OpcodeBytes.MOV_B_A:
+                            Registers.B = Registers.A;
+                            break;
+                        case OpcodeBytes.MOV_C_B:
+                            Registers.C = Registers.B;
+                            break;
+                        case OpcodeBytes.MOV_C_C:
+                            // NOP
+                            break;
+                        case OpcodeBytes.MOV_C_D:
+                            Registers.C = Registers.D;
+                            break;
+                        case OpcodeBytes.MOV_C_E:
+                            Registers.C = Registers.E;
+                            break;
+                        case OpcodeBytes.MOV_C_H:
+                            Registers.C = Registers.H;
+                            break;
+                        case OpcodeBytes.MOV_C_L:
+                            Registers.C = Registers.L;
+                            break;
+                        case OpcodeBytes.MOV_C_A:
+                            Registers.C = Registers.A;
+                            break;
+                        case OpcodeBytes.MOV_D_B:
+                            Registers.D = Registers.B;
+                            break;
+                        case OpcodeBytes.MOV_D_C:
+                            Registers.D = Registers.C;
+                            break;
+                        case OpcodeBytes.MOV_D_D:
+                            // NOP
+                            break;
+                        case OpcodeBytes.MOV_D_E:
+                            Registers.D = Registers.E;
+                            break;
+                        case OpcodeBytes.MOV_D_H:
+                            Registers.D = Registers.H;
+                            break;
+                        case OpcodeBytes.MOV_D_L:
+                            Registers.D = Registers.L;
+                            break;
+                        case OpcodeBytes.MOV_D_A:
+                            Registers.D = Registers.A;
+                            break;
+                        case OpcodeBytes.MOV_E_B:
+                            Registers.E = Registers.B;
+                            break;
+                        case OpcodeBytes.MOV_E_C:
+                            Registers.E = Registers.C;
+                            break;
+                        case OpcodeBytes.MOV_E_D:
+                            Registers.E = Registers.D;
+                            break;
+                        case OpcodeBytes.MOV_E_E:
+                            // NOP
+                            break;
+                        case OpcodeBytes.MOV_E_H:
+                            Registers.E = Registers.H;
+                            break;
+                        case OpcodeBytes.MOV_E_L:
+                            Registers.E = Registers.L;
+                            break;
+                        case OpcodeBytes.MOV_E_A:
+                            Registers.E = Registers.A;
+                            break;
+                        case OpcodeBytes.MOV_H_B:
+                            Registers.H = Registers.B;
+                            break;
+                        case OpcodeBytes.MOV_H_C:
+                            Registers.H = Registers.C;
+                            break;
+                        case OpcodeBytes.MOV_H_D:
+                            Registers.H = Registers.D;
+                            break;
+                        case OpcodeBytes.MOV_H_E:
+                            Registers.H = Registers.E;
+                            break;
+                        case OpcodeBytes.MOV_H_H:
+                            // NOP
+                            break;
+                        case OpcodeBytes.MOV_H_L:
+                            Registers.H = Registers.L;
+                            break;
+                        case OpcodeBytes.MOV_H_A:
+                            Registers.H = Registers.A;
+                            break;
+                        case OpcodeBytes.MOV_L_B:
+                            Registers.L = Registers.B;
+                            break;
+                        case OpcodeBytes.MOV_L_C:
+                            Registers.L = Registers.C;
+                            break;
+                        case OpcodeBytes.MOV_L_D:
+                            Registers.L = Registers.D;
+                            break;
+                        case OpcodeBytes.MOV_L_E:
+                            Registers.L = Registers.E;
+                            break;
+                        case OpcodeBytes.MOV_L_H:
+                            Registers.L = Registers.H;
+                            break;
+                        case OpcodeBytes.MOV_L_L:
+                            // NOP
+                            break;
+                        case OpcodeBytes.MOV_L_A:
+                            Registers.L = Registers.A;
+                            break;
+                        case OpcodeBytes.MOV_A_B:
+                            Registers.A = Registers.B;
+                            break;
+                        case OpcodeBytes.MOV_A_C:
+                            Registers.A = Registers.C;
+                            break;
+                        case OpcodeBytes.MOV_A_D:
+                            Registers.A = Registers.D;
+                            break;
+                        case OpcodeBytes.MOV_A_E:
+                            Registers.A = Registers.E;
+                            break;
+                        case OpcodeBytes.MOV_A_H:
+                            Registers.A = Registers.H;
+                            break;
+                        case OpcodeBytes.MOV_A_L:
+                            Registers.A = Registers.L;
+                            break;
+                        case OpcodeBytes.MOV_A_A:
+                            // NOP
+                            break;
+
+                        #endregion
+
+                        #region MOV X, M (from memory to register)
+
+                        case OpcodeBytes.MOV_B_M:
+                            Registers.B = Memory[Registers.HL];
+                            break;
+                        case OpcodeBytes.MOV_C_M:
+                            Registers.C = Memory[Registers.HL];
+                            break;
+                        case OpcodeBytes.MOV_D_M:
+                            Registers.D = Memory[Registers.HL];
+                            break;
+                        case OpcodeBytes.MOV_E_M:
+                            Registers.E = Memory[Registers.HL];
+                            break;
+                        case OpcodeBytes.MOV_H_M:
+                            Registers.H = Memory[Registers.HL];
+                            break;
+                        case OpcodeBytes.MOV_L_M:
+                            Registers.L = Memory[Registers.HL];
+                            break;
+                        case OpcodeBytes.MOV_A_M:
+                            Registers.A = Memory[Registers.HL];
+                            break;
+
+                        #endregion
+
+                        #region MOV M, X (from register to memory)
+
+                        case OpcodeBytes.MOV_M_B:
+                            ExecuteMOVFromRegisterToMemory(Register.B);
+                            break;
+                        case OpcodeBytes.MOV_M_C:
+                            ExecuteMOVFromRegisterToMemory(Register.C);
+                            break;
+                        case OpcodeBytes.MOV_M_D:
+                            ExecuteMOVFromRegisterToMemory(Register.D);
+                            break;
+                        case OpcodeBytes.MOV_M_E:
+                            ExecuteMOVFromRegisterToMemory(Register.E);
+                            break;
+                        case OpcodeBytes.MOV_M_H:
+                            ExecuteMOVFromRegisterToMemory(Register.H);
+                            break;
+                        case OpcodeBytes.MOV_M_L:
+                            ExecuteMOVFromRegisterToMemory(Register.L);
+                            break;
+                        case OpcodeBytes.MOV_M_A:
+                            ExecuteMOVFromRegisterToMemory(Register.A);
+                            break;
+
+                        #endregion
+
+                    #endregion
+
+                #endregion
+
+                #region Register or memory to accumulator instructions
+
+                    #region ADD - Add register or memory to accumulator
+
+                        case OpcodeBytes.ADD_B:
+                            ExecuteADD(Registers.B);
+                            break;
+                        case OpcodeBytes.ADD_C:
+                            ExecuteADD(Registers.C);
+                            break;
+                        case OpcodeBytes.ADD_D:
+                            ExecuteADD(Registers.D);
+                            break;
+                        case OpcodeBytes.ADD_E:
+                            ExecuteADD(Registers.E);
+                            break;
+                        case OpcodeBytes.ADD_H:
+                            ExecuteADD(Registers.H);
+                            break;
+                        case OpcodeBytes.ADD_L:
+                            ExecuteADD(Registers.L);
+                            break;
+                        case OpcodeBytes.ADD_M:
+                            ExecuteADD(Memory[Registers.HL]);
+                            break;
+                        case OpcodeBytes.ADD_A:
+                            ExecuteADD(Registers.A);
+                            break;
+
+                    #endregion
+
+                    #region SUB - Subtract register or memory from accumulator
+
+                        case OpcodeBytes.SUB_B:
+                            ExecuteSUB(Registers.B);
+                            break;
+                        case OpcodeBytes.SUB_C:
+                            ExecuteSUB(Registers.C);
+                            break;
+                        case OpcodeBytes.SUB_D:
+                            ExecuteSUB(Registers.D);
+                            break;
+                        case OpcodeBytes.SUB_E:
+                            ExecuteSUB(Registers.E);
+                            break;
+                        case OpcodeBytes.SUB_H:
+                            ExecuteSUB(Registers.H);
+                            break;
+                        case OpcodeBytes.SUB_L:
+                            ExecuteSUB(Registers.L);
+                            break;
+                        case OpcodeBytes.SUB_M:
+                            ExecuteSUB(Memory[Registers.HL]);
+                            break;
+                        case OpcodeBytes.SUB_A:
+                            ExecuteSUB(Registers.A);
+                            break;
+
+                    #endregion
+
+                    #region ANA - Logical AND register or memory with accumulator
+
+                        case OpcodeBytes.ANA_B:
+                            Registers.A = (byte)(Registers.A & Registers.B);
+                            SetFlags(false, Registers.A);
+                            break;
+                        case OpcodeBytes.ANA_C:
+                            Registers.A = (byte)(Registers.A & Registers.C);
+                            SetFlags(false, Registers.A);
+                            break;
+                        case OpcodeBytes.ANA_D:
+                            Registers.A = (byte)(Registers.A & Registers.D);
+                            SetFlags(false, Registers.A);
+                            break;
+                        case OpcodeBytes.ANA_E:
+                            Registers.A = (byte)(Registers.A & Registers.E);
+                            SetFlags(false, Registers.A);
+                            break;
+                        case OpcodeBytes.ANA_H:
+                            Registers.A = (byte)(Registers.A & Registers.H);
+                            SetFlags(false, Registers.A);
+                            break;
+                        case OpcodeBytes.ANA_L:
+                            Registers.A = (byte)(Registers.A & Registers.L);
+                            SetFlags(false, Registers.A);
+                            break;
+                        case OpcodeBytes.ANA_M:
+                            Registers.A = (byte)(Registers.A & Memory[Registers.HL]);
+                            SetFlags(false, Registers.A);
+                            break;
+                        case OpcodeBytes.ANA_A:
+                            Registers.A = (byte)(Registers.A & Registers.A);
+                            SetFlags(false, Registers.A);
+                            break;
+
+                    #endregion
+
+                    #region ORA - Logical OR register or memory with accumulator
+
+                        case OpcodeBytes.ORA_B:
+                            Registers.A = (byte)(Registers.A | Registers.B);
+                            SetFlags(false, Registers.A);
+                            break;
+                        case OpcodeBytes.ORA_C:
+                            Registers.A = (byte)(Registers.A | Registers.C);
+                            SetFlags(false, Registers.A);
+                            break;
+                        case OpcodeBytes.ORA_D:
+                            Registers.A = (byte)(Registers.A | Registers.D);
+                            SetFlags(false, Registers.A);
+                            break;
+                        case OpcodeBytes.ORA_E:
+                            Registers.A = (byte)(Registers.A | Registers.E);
+                            SetFlags(false, Registers.A);
+                            break;
+                        case OpcodeBytes.ORA_H:
+                            Registers.A = (byte)(Registers.A | Registers.H);
+                            SetFlags(false, Registers.A);
+                            break;
+                        case OpcodeBytes.ORA_L:
+                            Registers.A = (byte)(Registers.A | Registers.L);
+                            SetFlags(false, Registers.A);
+                            break;
+                        case OpcodeBytes.ORA_M:
+                            Registers.A = (byte)(Registers.A | Memory[Registers.HL]);
+                            SetFlags(false, Registers.A);
+                            break;
+                        case OpcodeBytes.ORA_A:
+                            Registers.A = (byte)(Registers.A | Registers.A);
+                            SetFlags(false, Registers.A);
+                            break;
+
+                    #endregion
+
+                    #region ADC - Add register or memory to accumulator with carry
+
+                        case OpcodeBytes.ADC_B:
+                            ExecuteADD(Registers.B, true);
+                            break;
+                        case OpcodeBytes.ADC_C:
+                            ExecuteADD(Registers.C, true);
+                            break;
+                        case OpcodeBytes.ADC_D:
+                            ExecuteADD(Registers.D, true);
+                            break;
+                        case OpcodeBytes.ADC_E:
+                            ExecuteADD(Registers.E, true);
+                            break;
+                        case OpcodeBytes.ADC_H:
+                            ExecuteADD(Registers.H, true);
+                            break;
+                        case OpcodeBytes.ADC_L:
+                            ExecuteADD(Registers.L, true);
+                            break;
+                        case OpcodeBytes.ADC_M:
+                            ExecuteADD(Memory[Registers.HL], true);
+                            break;
+                        case OpcodeBytes.ADC_A:
+                            ExecuteADD(Registers.A, true);
+                            break;
+
+                    #endregion
+
+                    #region SBB - Subtract register or memory from accumulator with borrow
+
+                        case OpcodeBytes.SBB_B:
+                            ExecuteSUB(Registers.B, true);
+                            break;
+                        case OpcodeBytes.SBB_C:
+                            ExecuteSUB(Registers.C, true);
+                            break;
+                        case OpcodeBytes.SBB_D:
+                            ExecuteSUB(Registers.D, true);
+                            break;
+                        case OpcodeBytes.SBB_E:
+                            ExecuteSUB(Registers.E, true);
+                            break;
+                        case OpcodeBytes.SBB_H:
+                            ExecuteSUB(Registers.H, true);
+                            break;
+                        case OpcodeBytes.SBB_L:
+                            ExecuteSUB(Registers.L, true);
+                            break;
+                        case OpcodeBytes.SBB_M:
+                            ExecuteSUB(Memory[Registers.HL], true);
+                            break;
+                        case OpcodeBytes.SBB_A:
+                            ExecuteSUB(Registers.A, true);
+                            break;
+
+                    #endregion
+
+                    #region XRA - Logical XOR register or memory with accumulator
+
+                        case OpcodeBytes.XRA_B:
+                            Registers.A = (byte)(Registers.A ^ Registers.B);
+                            SetFlags(false, Registers.A);
+                            break;
+                        case OpcodeBytes.XRA_C:
+                            Registers.A = (byte)(Registers.A ^ Registers.C);
+                            SetFlags(false, Registers.A);
+                            break;
+                        case OpcodeBytes.XRA_D:
+                            Registers.A = (byte)(Registers.A ^ Registers.D);
+                            SetFlags(false, Registers.A);
+                            break;
+                        case OpcodeBytes.XRA_E:
+                            Registers.A = (byte)(Registers.A ^ Registers.E);
+                            SetFlags(false, Registers.A);
+                            break;
+                        case OpcodeBytes.XRA_H:
+                            Registers.A = (byte)(Registers.A ^ Registers.H);
+                            SetFlags(false, Registers.A);
+                            break;
+                        case OpcodeBytes.XRA_L:
+                            Registers.A = (byte)(Registers.A ^ Registers.L);
+                            SetFlags(false, Registers.A);
+                            break;
+                        case OpcodeBytes.XRA_M:
+                            Registers.A = (byte)(Registers.A ^ Memory[Registers.HL]);
+                            SetFlags(false, Registers.A);
+                            break;
+                        case OpcodeBytes.XRA_A:
+                            Registers.A = (byte)(Registers.A ^ Registers.A);
+                            SetFlags(false, Registers.A);
+                            break;
+
+                    #endregion
+
+                    #region CMP - Compare register or memory with accumulator
+
+                        case OpcodeBytes.CMP_B:
+                            ExecuteSUB(Registers.B, false, false);
+                            break;
+                        case OpcodeBytes.CMP_C:
+                            ExecuteSUB(Registers.C, false, false);
+                            break;
+                        case OpcodeBytes.CMP_D:
+                            ExecuteSUB(Registers.D, false, false);
+                            break;
+                        case OpcodeBytes.CMP_E:
+                            ExecuteSUB(Registers.E, false, false);
+                            break;
+                        case OpcodeBytes.CMP_H:
+                            ExecuteSUB(Registers.H, false, false);
+                            break;
+                        case OpcodeBytes.CMP_L:
+                            ExecuteSUB(Registers.L, false, false);
+                            break;
+                        case OpcodeBytes.CMP_M:
+                            ExecuteSUB(Memory[Registers.HL], false, false);
+                            break;
+                        case OpcodeBytes.CMP_A:
+                            ExecuteSUB(Registers.A, false, false);
+                            break;
+
+                    #endregion
+
+                #endregion
+
+                #region Rotate accumulator instructions
+
+                    // Rotate accumulator left
+                    // A = A << 1; bit 0 = prev bit 7; CY = prev bit 7
+                    case OpcodeBytes.RLC:
+                        ExecuteRotateAccumulator(left: true);
+                        break;
+
+                    // Rotate accumulator right
+                    // A = A >> 1; bit 7 = prev bit 0; CY = prev bit 0
+                    case OpcodeBytes.RRC:
+                        ExecuteRotateAccumulator(left: false);
+                        break;
+
+                    // Rotate accumulator left through carry
+                    // A = A << 1; bit 0 = prev CY; CY = prev bit 7
+                    case OpcodeBytes.RAL:
+                        ExecuteRotateAccumulator(left: true, rotateThroughCarry: true);
+                        break;
+
+                    // Rotate accumulator right through carry
+                    // A = A >> 1; bit 7 = prev CY; CY = prev bit 0
+                    case OpcodeBytes.RAR:
+                        ExecuteRotateAccumulator(left: false, rotateThroughCarry: true);
+                        break;
+
+                #endregion
+
+                #region Register pair instructions
+
+                    #region INX - Increment register pair
+
+                        case OpcodeBytes.INX_B:
+                            Registers.BC++;
+                            break;
+                        case OpcodeBytes.INX_D:
+                            Registers.DE++;
+                            break;
+                        case OpcodeBytes.INX_H:
+                            Registers.HL++;
+                            break;
+                        case OpcodeBytes.INX_SP:
+                            StackPointer++;
+                            break;
+
+                    #endregion
+
+                    #region DCX - Decrement register pair
+
+                        case OpcodeBytes.DCX_B:
+                            Registers.BC--;
+                            break;
+                        case OpcodeBytes.DCX_D:
+                            Registers.DE--;
+                            break;
+                        case OpcodeBytes.DCX_H:
+                            Registers.HL--;
+                            break;
+                        case OpcodeBytes.DCX_SP:
+                            StackPointer--;
+                            break;
+
+                    #endregion
+
+                    #region PUSH - Push data onto the stack
+
+                        case OpcodeBytes.PUSH_B:
+                            Memory[StackPointer - 1] = Registers.B;
+                            Memory[StackPointer - 2] = Registers.C;
+                            StackPointer = (UInt16)(StackPointer - 2);
+                            break;
+                        case OpcodeBytes.PUSH_D:
+                            Memory[StackPointer - 1] = Registers.D;
+                            Memory[StackPointer - 2] = Registers.E;
+                            StackPointer = (UInt16)(StackPointer - 2);
+                            break;
+                        case OpcodeBytes.PUSH_H:
+                            Memory[StackPointer - 1] = Registers.H;
+                            Memory[StackPointer - 2] = Registers.L;
+                            StackPointer = (UInt16)(StackPointer - 2);
+                            break;
+                        case OpcodeBytes.PUSH_PSW:
+                            Memory[StackPointer - 1] = Registers.A;
+                            Memory[StackPointer - 2] = Flags.ToByte();
+                            StackPointer = (UInt16)(StackPointer - 2);
+                            break;
+
+                    #endregion
+
+                    #region POP - Pop data off of the stack
+
+                        case OpcodeBytes.POP_B:
+                            Registers.B = Memory[StackPointer + 1];
+                            Registers.C = Memory[StackPointer];
+                            StackPointer = (UInt16)(StackPointer + 2);
+                            break;
+                        case OpcodeBytes.POP_D:
+                            Registers.D = Memory[StackPointer + 1];
+                            Registers.E = Memory[StackPointer];
+                            StackPointer = (UInt16)(StackPointer + 2);
+                            break;
+                        case OpcodeBytes.POP_H:
+                            Registers.H = Memory[StackPointer + 1];
+                            Registers.L = Memory[StackPointer];
+                            StackPointer = (UInt16)(StackPointer + 2);
+                            break;
+                        case OpcodeBytes.POP_PSW:
+                            Registers.A = Memory[StackPointer + 1];
+                            Flags.SetFromByte(Memory[StackPointer]);
+                            StackPointer = (UInt16)(StackPointer + 2);
+                            break;
+
+                    #endregion
+
+                    #region DAD - Double (16-bit) add
+
+                        case OpcodeBytes.DAD_B:
+                            ExecuteDAD(Registers.BC);
+                            break;
+                        case OpcodeBytes.DAD_D:
+                            ExecuteDAD(Registers.DE);
+                            break;
+                        case OpcodeBytes.DAD_H:
+                            ExecuteDAD(Registers.HL);
+                            break;
+                        case OpcodeBytes.DAD_SP:
+                            ExecuteDAD(StackPointer);
+                            break;
+
+                    #endregion
+
+                    // Load SP from H and L
+                    case OpcodeBytes.SPHL:
+                        StackPointer = Registers.HL;
+                        break;
+
+                    // Exchange stack
+                    //  L <-> (SP); H <-> (SP+1)
+                    case OpcodeBytes.XTHL:
+                    {
+                        var oldL = Registers.L;
+                        var oldH = Registers.H;
+                        Registers.L = Memory[StackPointer];
+                        Memory[StackPointer] = oldL;
+                        Registers.H = Memory[StackPointer+1];
+                        Memory[StackPointer+1] = oldH;
+                        break;
+                    }
+
+                    // Exchange registers
+                    // H <-> D; L <-> E
+                    case OpcodeBytes.XCHG:
+                    {
+                        var oldH = Registers.H;
+                        var oldL = Registers.L;
+                        Registers.H = Registers.D;
+                        Registers.D = oldH;
+                        Registers.L = Registers.E;
+                        Registers.E = oldL;
+                        break;
+                    }
+
+                #endregion
+
+                #region Immediate instructions
+
+                    #region MVI - Move immediate data
+
+                        case OpcodeBytes.MVI_B:
+                            Registers.B = Memory[ProgramCounter + 1];
+                            break;
+                        case OpcodeBytes.MVI_C:
+                            Registers.C = Memory[ProgramCounter + 1];
+                            break;
+                        case OpcodeBytes.MVI_D:
+                            Registers.D = Memory[ProgramCounter + 1];
+                            break;
+                        case OpcodeBytes.MVI_E:
+                            Registers.E = Memory[ProgramCounter + 1];
+                            break;
+                        case OpcodeBytes.MVI_H:
+                            Registers.H = Memory[ProgramCounter + 1];
+                            break;
+                        case OpcodeBytes.MVI_L:
+                            Registers.L = Memory[ProgramCounter + 1];
+                            break;
+                        case OpcodeBytes.MVI_M:
+                            ExecuteMOVIToMemory(Memory[ProgramCounter + 1]);
+                            break;
+                        case OpcodeBytes.MVI_A:
+                            Registers.A = Memory[ProgramCounter + 1];
+                            break;
+
+                    #endregion
+
+                    #region LXI - Load register pair immediate
+
+                        case OpcodeBytes.LXI_B:
+                            Registers.B = Memory[ProgramCounter + 2];
+                            Registers.C = Memory[ProgramCounter + 1];
+                            break;
+                        case OpcodeBytes.LXI_D:
+                            Registers.D = Memory[ProgramCounter + 2];
+                            Registers.E = Memory[ProgramCounter + 1];
+                            break;
+                        case OpcodeBytes.LXI_H:
+                            Registers.H = Memory[ProgramCounter + 2];
+                            Registers.L = Memory[ProgramCounter + 1];
+                            break;
+                        case OpcodeBytes.LXI_SP:
+                        {
+                            var upper = Memory[ProgramCounter + 2] << 8;
+                            var lower = Memory[ProgramCounter + 1];
+                            var address = upper | lower;
+                            StackPointer = (UInt16)address;
+                            break;
+                        }
+
+                    #endregion
+
+                    // Add immediate to accumulator
+                    // A <- A + byte
+                    case OpcodeBytes.ADI:
+                        ExecuteADD(Memory[ProgramCounter+1]);
+                        break;
+
+                    // Add immediate to accumulator with carry
+                    // A <- A + data + CY
+                    case OpcodeBytes.ACI:
+                        ExecuteADD(Memory[ProgramCounter+1], true);
+                        break;
+
+                    // Subtract immediate from accumulator
+                    // A <- A - data
+                    case OpcodeBytes.SUI:
+                        ExecuteSUB(Memory[ProgramCounter+1]);
+                        break;
+
+                    // Subtract immediate from accumulator with borrow
+                    // A <- A - data - CY
+                    case OpcodeBytes.SBI:
+                        ExecuteSUB(Memory[ProgramCounter+1], true);
+                        break;
+
+                    // Logical AND immediate with accumulator
+                    // A <- A & data
+                    case OpcodeBytes.ANI:
+                        Registers.A = (byte)(Registers.A & Memory[ProgramCounter+1]);
+                        SetFlags(false, Registers.A);
+                        break;
+
+                    // XOR immediate with accumulator
+                    // A <- A ^ data
+                    case OpcodeBytes.XRI:
+                        Registers.A = (byte)(Registers.A ^ Memory[ProgramCounter+1]);
+                        SetFlags(false, Registers.A);
+                        break;
+
+                    // Logical OR immediate with accumulator
+                    // A <- A | data
+                    case OpcodeBytes.ORI:
+                        Registers.A = (byte)(Registers.A | Memory[ProgramCounter+1]);
+                        SetFlags(false, Registers.A);
+                        break;
+
+                    // Compare immediate with accumulator
+                    // A - data
+                    case OpcodeBytes.CPI:
+                        ExecuteSUB(Memory[ProgramCounter+1], false, false);
+                        break;
+
+                #endregion
+
+                #region Direct addressing instructions
+
+                    // Store accumulator direct
+                    case OpcodeBytes.STA:
+                    {
+                        var upper = Memory[ProgramCounter + 2] << 8;
+                        var lower = Memory[ProgramCounter + 1];
+                        var address = upper | lower;
+                        Memory[address] = Registers.A;
+                        break;
+                    }
+
+                    // Load accumulator direct
+                    case OpcodeBytes.LDA:
+                    {
+                        var upper = Memory[ProgramCounter + 2] << 8;
+                        var lower = Memory[ProgramCounter + 1];
+                        var address = upper | lower;
+                        Registers.A = Memory[address];
+                        break;
+                    }
+
+                    // Store H and L direct
+                    case OpcodeBytes.SHLD:
+                    {
+                        var upper = Memory[ProgramCounter + 2] << 8;
+                        var lower = Memory[ProgramCounter + 1];
+                        var address = upper | lower;
+                        Memory[address] = Registers.L;
+                        Memory[address + 1] = Registers.H;
+                        break;
+                    }
+
+                    // Load H and L direct
+                    case OpcodeBytes.LHLD:
+                    {
+                        var upper = Memory[ProgramCounter + 2] << 8;
+                        var lower = Memory[ProgramCounter + 1];
+                        var address = upper | lower;
+                        Registers.L = Memory[address];
+                        Registers.H = Memory[address + 1];
+                        break;
+                    }
+
+                #endregion
+
+                #region Jump instructions
+
+                    // Load program counter
+                    case OpcodeBytes.PCHL:
+                        ExecuteJMP(Registers.HL);
+                        incrementProgramCounter = false;
+                        break;
+
+                    // Jump
+                    case OpcodeBytes.JMP:
+                    // Jump (duplicate)
+                    case OpcodeBytes.JMP2:
                     {
                         ExecuteJMP();
-                        incrementProgramCounter = false;
-                    }
-                    break;
-                }
 
-                case OpcodeBytes.JPE:
-                {
-                    if (Flags.Parity)
-                    {
-                        ExecuteJMP();
+                        // Don't increment the program counter because we just updated it to
+                        // the given address.
                         incrementProgramCounter = false;
-                    }
-                    break;
-                }
 
-                case OpcodeBytes.JP:
-                {
-                    if (!Flags.Sign)
-                    {
-                        ExecuteJMP();
-                        incrementProgramCounter = false;
+                        break;
                     }
-                    break;
-                }
 
-                case OpcodeBytes.JZ:
-                {
-                    if (Flags.Zero)
+                    // Jump if parity odd
+                    case OpcodeBytes.JPO:
                     {
-                        ExecuteJMP();
-                        incrementProgramCounter = false;
+                        if (!Flags.Parity)
+                        {
+                            ExecuteJMP();
+                            incrementProgramCounter = false;
+                        }
+                        break;
                     }
-                    break;
-                }
 
-                case OpcodeBytes.JNZ:
-                {
-                    if (!Flags.Zero)
+                    // Jump if parity even
+                    case OpcodeBytes.JPE:
                     {
-                        ExecuteJMP();
-                        incrementProgramCounter = false;
+                        if (Flags.Parity)
+                        {
+                            ExecuteJMP();
+                            incrementProgramCounter = false;
+                        }
+                        break;
                     }
-                    break;
-                }
 
-                case OpcodeBytes.JNC:
-                {
-                    if (!Flags.Carry)
+                    // Jump if plus/positive
+                    case OpcodeBytes.JP:
                     {
-                        ExecuteJMP();
-                        incrementProgramCounter = false;
+                        if (!Flags.Sign)
+                        {
+                            ExecuteJMP();
+                            incrementProgramCounter = false;
+                        }
+                        break;
                     }
-                    break;
-                }
 
-                case OpcodeBytes.JC:
-                {
-                    if (Flags.Carry)
+                    // Jump if zero
+                    case OpcodeBytes.JZ:
                     {
-                        ExecuteJMP();
-                        incrementProgramCounter = false;
+                        if (Flags.Zero)
+                        {
+                            ExecuteJMP();
+                            incrementProgramCounter = false;
+                        }
+                        break;
                     }
-                    break;
-                }
 
-                case OpcodeBytes.JM:
-                {
-                    if (Flags.Sign)
+                    // Jump if not zero
+                    case OpcodeBytes.JNZ:
                     {
-                        ExecuteJMP();
-                        incrementProgramCounter = false;
+                        if (!Flags.Zero)
+                        {
+                            ExecuteJMP();
+                            incrementProgramCounter = false;
+                        }
+                        break;
                     }
-                    break;
-                }
+
+                    // Jump if not carry
+                    case OpcodeBytes.JNC:
+                    {
+                        if (!Flags.Carry)
+                        {
+                            ExecuteJMP();
+                            incrementProgramCounter = false;
+                        }
+                        break;
+                    }
+
+                    // Jump if carry
+                    case OpcodeBytes.JC:
+                    {
+                        if (Flags.Carry)
+                        {
+                            ExecuteJMP();
+                            incrementProgramCounter = false;
+                        }
+                        break;
+                    }
+
+                    // Jump if minus/negative
+                    case OpcodeBytes.JM:
+                    {
+                        if (Flags.Sign)
+                        {
+                            ExecuteJMP();
+                            incrementProgramCounter = false;
+                        }
+                        break;
+                    }
 
                 #endregion
 
-                #region CALL
+                #region Call subroutine instructions
 
-                case OpcodeBytes.CALL:
-                case OpcodeBytes.CALL2:
-                case OpcodeBytes.CALL3:
-                case OpcodeBytes.CALL4:
-                {
-                    ExecuteCALL();
-
-                    // Don't increment the program counter because we just updated it to
-                    // the given address.
-                    incrementProgramCounter = false;
-
-                    break;
-                }
-
-                case OpcodeBytes.CM:
-                {
-                    if (Flags.Sign)
-                    {
-                        ExecuteCALL();
-                        incrementProgramCounter = false;
-                    }
-                    else
-                        useAlternateCycleCount = true;
-
-                    break;
-                }
-
-                case OpcodeBytes.CPE:
-                {
-                    if (Flags.Parity)
+                    case OpcodeBytes.CALL:
+                    case OpcodeBytes.CALL2:
+                    case OpcodeBytes.CALL3:
+                    case OpcodeBytes.CALL4:
                     {
                         ExecuteCALL();
+
+                        // Don't increment the program counter because we just updated it to
+                        // the given address.
                         incrementProgramCounter = false;
+
+                        break;
                     }
-                    else
-                        useAlternateCycleCount = true;
 
-                    break;
-                }
-
-                case OpcodeBytes.CC:
-                {
-                    if (Flags.Carry)
+                    // Call if minus/negative
+                    case OpcodeBytes.CM:
                     {
-                        ExecuteCALL();
-                        incrementProgramCounter = false;
+                        if (Flags.Sign)
+                        {
+                            ExecuteCALL();
+                            incrementProgramCounter = false;
+                        }
+                        else
+                            useAlternateCycleCount = true;
+
+                        break;
                     }
-                    else
-                        useAlternateCycleCount = true;
 
-                    break;
-                }
-
-                case OpcodeBytes.CZ:
-                {
-                    if (Flags.Zero)
+                    // Call if party even
+                    case OpcodeBytes.CPE:
                     {
-                        ExecuteCALL();
-                        incrementProgramCounter = false;
+                        if (Flags.Parity)
+                        {
+                            ExecuteCALL();
+                            incrementProgramCounter = false;
+                        }
+                        else
+                            useAlternateCycleCount = true;
+
+                        break;
                     }
-                    else
-                        useAlternateCycleCount = true;
 
-                    break;
-                }
-
-                case OpcodeBytes.CP:
-                {
-                    if (!Flags.Sign)
+                    // Call if carry
+                    case OpcodeBytes.CC:
                     {
-                        ExecuteCALL();
-                        incrementProgramCounter = false;
+                        if (Flags.Carry)
+                        {
+                            ExecuteCALL();
+                            incrementProgramCounter = false;
+                        }
+                        else
+                            useAlternateCycleCount = true;
+
+                        break;
                     }
-                    else
-                        useAlternateCycleCount = true;
 
-                    break;
-                }
-
-                case OpcodeBytes.CPO:
-                {
-                    if (!Flags.Parity)
+                    // Call if zero
+                    case OpcodeBytes.CZ:
                     {
-                        ExecuteCALL();
-                        incrementProgramCounter = false;
+                        if (Flags.Zero)
+                        {
+                            ExecuteCALL();
+                            incrementProgramCounter = false;
+                        }
+                        else
+                            useAlternateCycleCount = true;
+
+                        break;
                     }
-                    else
-                        useAlternateCycleCount = true;
 
-                    break;
-                }
-
-                case OpcodeBytes.CNC:
-                {
-                    if (!Flags.Carry)
+                    // Call if plus/positive
+                    case OpcodeBytes.CP:
                     {
-                        ExecuteCALL();
-                        incrementProgramCounter = false;
+                        if (!Flags.Sign)
+                        {
+                            ExecuteCALL();
+                            incrementProgramCounter = false;
+                        }
+                        else
+                            useAlternateCycleCount = true;
+
+                        break;
                     }
-                    else
-                        useAlternateCycleCount = true;
 
-                    break;
-                }
-
-                case OpcodeBytes.CNZ:
-                {
-                    if (!Flags.Zero)
+                    // Call if party odd
+                    case OpcodeBytes.CPO:
                     {
-                        ExecuteCALL();
-                        incrementProgramCounter = false;
+                        if (!Flags.Parity)
+                        {
+                            ExecuteCALL();
+                            incrementProgramCounter = false;
+                        }
+                        else
+                            useAlternateCycleCount = true;
+
+                        break;
                     }
-                    else
-                        useAlternateCycleCount = true;
 
-                    break;
-                }
+                    // Call if no carry
+                    case OpcodeBytes.CNC:
+                    {
+                        if (!Flags.Carry)
+                        {
+                            ExecuteCALL();
+                            incrementProgramCounter = false;
+                        }
+                        else
+                            useAlternateCycleCount = true;
 
+                        break;
+                    }
+
+                    // Call if not zero
+                    case OpcodeBytes.CNZ:
+                    {
+                        if (!Flags.Zero)
+                        {
+                            ExecuteCALL();
+                            incrementProgramCounter = false;
+                        }
+                        else
+                            useAlternateCycleCount = true;
+
+                        break;
+                    }
 
                 #endregion
 
-                #region RST
+                #region Return from subroutine instructions
 
-                case OpcodeBytes.RST_0:
-                    ExecuteCALL(0x0000);
-                    incrementProgramCounter = false;
-                    break;
-                case OpcodeBytes.RST_1:
-                    ExecuteCALL(0x0008);
-                    incrementProgramCounter = false;
-                    break;
-                case OpcodeBytes.RST_2:
-                    ExecuteCALL(0x0010);
-                    incrementProgramCounter = false;
-                    break;
-                case OpcodeBytes.RST_3:
-                    ExecuteCALL(0x0018);
-                    incrementProgramCounter = false;
-                    break;
-                case OpcodeBytes.RST_4:
-                    ExecuteCALL(0x0020);
-                    incrementProgramCounter = false;
-                    break;
-                case OpcodeBytes.RST_5:
-                    ExecuteCALL(0x0028);
-                    incrementProgramCounter = false;
-                    break;
-                case OpcodeBytes.RST_6:
-                    ExecuteCALL(0x0030);
-                    incrementProgramCounter = false;
-                    break;
-                case OpcodeBytes.RST_7:
-                    ExecuteCALL(0x0038);
-                    incrementProgramCounter = false;
-                    break;
-
-                #endregion
-
-                #region RET
-
-                case OpcodeBytes.RET:
-                case OpcodeBytes.RET2:
-                {
-                    ExecuteRET();
-
-                    // Don't increment the program counter because we just updated it to
-                    // the given address.
-                    incrementProgramCounter = false;
-
-                    break;
-                }
-
-                case OpcodeBytes.RNZ:
-                {
-                    if (!Flags.Zero)
+                    // Return from subroutine
+                    case OpcodeBytes.RET:
+                    // Return from subroutine (duplicate)
+                    case OpcodeBytes.RET2:
                     {
                         ExecuteRET();
+
+                        // Don't increment the program counter because we just updated it to
+                        // the given address.
                         incrementProgramCounter = false;
+
+                        break;
                     }
-                    else
-                        useAlternateCycleCount = true;
 
-                    break;
-                }
-
-                case OpcodeBytes.RZ:
-                {
-                    if (Flags.Zero)
+                    // Return if not zero
+                    case OpcodeBytes.RNZ:
                     {
-                        ExecuteRET();
-                        incrementProgramCounter = false;
+                        if (!Flags.Zero)
+                        {
+                            ExecuteRET();
+                            incrementProgramCounter = false;
+                        }
+                        else
+                            useAlternateCycleCount = true;
+
+                        break;
                     }
-                    else
-                        useAlternateCycleCount = true;
 
-                    break;
-                }
-
-                case OpcodeBytes.RNC:
-                {
-                    if (!Flags.Carry)
+                    // Return if zero
+                    case OpcodeBytes.RZ:
                     {
-                        ExecuteRET();
-                        incrementProgramCounter = false;
+                        if (Flags.Zero)
+                        {
+                            ExecuteRET();
+                            incrementProgramCounter = false;
+                        }
+                        else
+                            useAlternateCycleCount = true;
+
+                        break;
                     }
-                    else
-                        useAlternateCycleCount = true;
 
-                    break;
-                }
-
-                case OpcodeBytes.RC:
-                {
-                    if (Flags.Carry)
+                    // Return if no carry
+                    case OpcodeBytes.RNC:
                     {
-                        ExecuteRET();
-                        incrementProgramCounter = false;
+                        if (!Flags.Carry)
+                        {
+                            ExecuteRET();
+                            incrementProgramCounter = false;
+                        }
+                        else
+                            useAlternateCycleCount = true;
+
+                        break;
                     }
-                    else
-                        useAlternateCycleCount = true;
 
-                    break;
-                }
-
-                case OpcodeBytes.RPO:
-                {
-                    if (!Flags.Parity)
+                    // Return if carry
+                    case OpcodeBytes.RC:
                     {
-                        ExecuteRET();
-                        incrementProgramCounter = false;
+                        if (Flags.Carry)
+                        {
+                            ExecuteRET();
+                            incrementProgramCounter = false;
+                        }
+                        else
+                            useAlternateCycleCount = true;
+
+                        break;
                     }
-                    else
-                        useAlternateCycleCount = true;
 
-                    break;
-                }
-
-                case OpcodeBytes.RPE:
-                {
-                    if (Flags.Parity)
+                    // Return if parity odd
+                    case OpcodeBytes.RPO:
                     {
-                        ExecuteRET();
-                        incrementProgramCounter = false;
+                        if (!Flags.Parity)
+                        {
+                            ExecuteRET();
+                            incrementProgramCounter = false;
+                        }
+                        else
+                            useAlternateCycleCount = true;
+
+                        break;
                     }
-                    else
-                        useAlternateCycleCount = true;
 
-                    break;
-                }
-
-                case OpcodeBytes.RP:
-                {
-                    if (!Flags.Sign)
+                    // Return if parity even
+                    case OpcodeBytes.RPE:
                     {
-                        ExecuteRET();
-                        incrementProgramCounter = false;
+                        if (Flags.Parity)
+                        {
+                            ExecuteRET();
+                            incrementProgramCounter = false;
+                        }
+                        else
+                            useAlternateCycleCount = true;
+
+                        break;
                     }
-                    else
-                        useAlternateCycleCount = true;
 
-                    break;
-                }
-
-                case OpcodeBytes.RM:
-                {
-                    if (Flags.Sign)
+                    // Return if plus/positive
+                    case OpcodeBytes.RP:
                     {
-                        ExecuteRET();
-                        incrementProgramCounter = false;
+                        if (!Flags.Sign)
+                        {
+                            ExecuteRET();
+                            incrementProgramCounter = false;
+                        }
+                        else
+                            useAlternateCycleCount = true;
+
+                        break;
                     }
-                    else
-                        useAlternateCycleCount = true;
 
-                    break;
-                }
+                    // Return if minus/negative
+                    case OpcodeBytes.RM:
+                    {
+                        if (Flags.Sign)
+                        {
+                            ExecuteRET();
+                            incrementProgramCounter = false;
+                        }
+                        else
+                            useAlternateCycleCount = true;
 
-                #endregion
-
-                case OpcodeBytes.STA:
-                {
-                    var upper = Memory[ProgramCounter + 2] << 8;
-                    var lower = Memory[ProgramCounter + 1];
-                    var address = upper | lower;
-                    Memory[address] = Registers.A;
-                    break;
-                }
-
-                case OpcodeBytes.LDA:
-                {
-                    var upper = Memory[ProgramCounter + 2] << 8;
-                    var lower = Memory[ProgramCounter + 1];
-                    var address = upper | lower;
-                    Registers.A = Memory[address];
-                    break;
-                }
-
-                case OpcodeBytes.CMA:
-                    Registers.A = (byte)~Registers.A;
-                    break;
-
-                case OpcodeBytes.DAA:
-                    throw new NotImplementedException("The DAA instruction is not implemented.");
-                    break;
-
-                case OpcodeBytes.STC:
-                    Flags.Carry = true;
-                    break;
-
-                case OpcodeBytes.CMC:
-                    Flags.Carry = !Flags.Carry;
-                    break;
-
-                case OpcodeBytes.SHLD:
-                {
-                    var upper = Memory[ProgramCounter + 2] << 8;
-                    var lower = Memory[ProgramCounter + 1];
-                    var address = upper | lower;
-                    Memory[address] = Registers.L;
-                    Memory[address + 1] = Registers.H;
-                    break;
-                }
-
-                case OpcodeBytes.LHLD:
-                {
-                    var upper = Memory[ProgramCounter + 2] << 8;
-                    var lower = Memory[ProgramCounter + 1];
-                    var address = upper | lower;
-                    Registers.L = Memory[address];
-                    Registers.H = Memory[address + 1];
-                    break;
-                }
-
-                case OpcodeBytes.PCHL:
-                    ExecuteJMP(Registers.HL);
-                    incrementProgramCounter = false;
-                    break;
-
-                case OpcodeBytes.SPHL:
-                    StackPointer = Registers.HL;
-                    break;
-
-                // Exchange stack
-                //  L <-> (SP); H <-> (SP+1)
-                case OpcodeBytes.XTHL:
-                {
-                    var oldL = Registers.L;
-                    var oldH = Registers.H;
-                    Registers.L = Memory[StackPointer];
-                    Memory[StackPointer] = oldL;
-                    Registers.H = Memory[StackPointer+1];
-                    Memory[StackPointer+1] = oldH;
-                    break;
-                }
-
-                // Exchange registers
-                // H <-> D; L <-> E
-                case OpcodeBytes.XCHG:
-                {
-                    var oldH = Registers.H;
-                    var oldL = Registers.L;
-                    Registers.H = Registers.D;
-                    Registers.D = oldH;
-                    Registers.L = Registers.E;
-                    Registers.E = oldL;
-                    break;
-                }
-
-                // A = A << 1; bit 0 = prev bit 7; CY = prev bit 7
-                case OpcodeBytes.RLC:
-                    ExecuteRotateAccumulator(left: true);
-                    break;
-
-                // A = A >> 1; bit 7 = prev bit 0; CY = prev bit 0
-                case OpcodeBytes.RRC:
-                    ExecuteRotateAccumulator(left: false);
-                    break;
-
-                // A = A << 1; bit 0 = prev CY; CY = prev bit 7
-                case OpcodeBytes.RAL:
-                    ExecuteRotateAccumulator(left: true, rotateThroughCarry: true);
-                    break;
-
-                // A = A >> 1; bit 7 = prev CY; CY = prev bit 0
-                case OpcodeBytes.RAR:
-                    ExecuteRotateAccumulator(left: false, rotateThroughCarry: true);
-                    break;
-
-                // A <- A + byte
-                case OpcodeBytes.ADI:
-                    ExecuteADD(Memory[ProgramCounter+1]);
-                    break;
-
-                // A <- A + data + CY
-                case OpcodeBytes.ACI:
-                    ExecuteADD(Memory[ProgramCounter+1], true);
-                    break;
-
-                // A <- A - data
-                case OpcodeBytes.SUI:
-                    ExecuteSUB(Memory[ProgramCounter+1]);
-                    break;
-
-                // A <- A - data - CY
-                case OpcodeBytes.SBI:
-                    ExecuteSUB(Memory[ProgramCounter+1], true);
-                    break;
-
-                // A <- A & data
-                case OpcodeBytes.ANI:
-                    Registers.A = (byte)(Registers.A & Memory[ProgramCounter+1]);
-                    SetFlags(false, Registers.A);
-                    break;
-
-                // A <- A ^ data
-                case OpcodeBytes.XRI:
-                    Registers.A = (byte)(Registers.A ^ Memory[ProgramCounter+1]);
-                    SetFlags(false, Registers.A);
-                    break;
-
-                // A <- A | data
-                case OpcodeBytes.ORI:
-                    Registers.A = (byte)(Registers.A | Memory[ProgramCounter+1]);
-                    SetFlags(false, Registers.A);
-                    break;
-
-                // A - data
-                case OpcodeBytes.CPI:
-                    ExecuteSUB(Memory[ProgramCounter+1], false, false);
-                    break;
-
-                #region MOV
-
-                #region MOV X, X (from register to register)
-
-                case OpcodeBytes.MOV_B_B:
-                    // NOP
-                    break;
-                case OpcodeBytes.MOV_B_C:
-                    Registers.B = Registers.C;
-                    break;
-                case OpcodeBytes.MOV_B_D:
-                    Registers.B = Registers.D;
-                    break;
-                case OpcodeBytes.MOV_B_E:
-                    Registers.B = Registers.E;
-                    break;
-                case OpcodeBytes.MOV_B_H:
-                    Registers.B = Registers.H;
-                    break;
-                case OpcodeBytes.MOV_B_L:
-                    Registers.B = Registers.L;
-                    break;
-                case OpcodeBytes.MOV_B_A:
-                    Registers.B = Registers.A;
-                    break;
-                case OpcodeBytes.MOV_C_B:
-                    Registers.C = Registers.B;
-                    break;
-                case OpcodeBytes.MOV_C_C:
-                    // NOP
-                    break;
-                case OpcodeBytes.MOV_C_D:
-                    Registers.C = Registers.D;
-                    break;
-                case OpcodeBytes.MOV_C_E:
-                    Registers.C = Registers.E;
-                    break;
-                case OpcodeBytes.MOV_C_H:
-                    Registers.C = Registers.H;
-                    break;
-                case OpcodeBytes.MOV_C_L:
-                    Registers.C = Registers.L;
-                    break;
-                case OpcodeBytes.MOV_C_A:
-                    Registers.C = Registers.A;
-                    break;
-                case OpcodeBytes.MOV_D_B:
-                    Registers.D = Registers.B;
-                    break;
-                case OpcodeBytes.MOV_D_C:
-                    Registers.D = Registers.C;
-                    break;
-                case OpcodeBytes.MOV_D_D:
-                    // NOP
-                    break;
-                case OpcodeBytes.MOV_D_E:
-                    Registers.D = Registers.E;
-                    break;
-                case OpcodeBytes.MOV_D_H:
-                    Registers.D = Registers.H;
-                    break;
-                case OpcodeBytes.MOV_D_L:
-                    Registers.D = Registers.L;
-                    break;
-                case OpcodeBytes.MOV_D_A:
-                    Registers.D = Registers.A;
-                    break;
-                case OpcodeBytes.MOV_E_B:
-                    Registers.E = Registers.B;
-                    break;
-                case OpcodeBytes.MOV_E_C:
-                    Registers.E = Registers.C;
-                    break;
-                case OpcodeBytes.MOV_E_D:
-                    Registers.E = Registers.D;
-                    break;
-                case OpcodeBytes.MOV_E_E:
-                    // NOP
-                    break;
-                case OpcodeBytes.MOV_E_H:
-                    Registers.E = Registers.H;
-                    break;
-                case OpcodeBytes.MOV_E_L:
-                    Registers.E = Registers.L;
-                    break;
-                case OpcodeBytes.MOV_E_A:
-                    Registers.E = Registers.A;
-                    break;
-                case OpcodeBytes.MOV_H_B:
-                    Registers.H = Registers.B;
-                    break;
-                case OpcodeBytes.MOV_H_C:
-                    Registers.H = Registers.C;
-                    break;
-                case OpcodeBytes.MOV_H_D:
-                    Registers.H = Registers.D;
-                    break;
-                case OpcodeBytes.MOV_H_E:
-                    Registers.H = Registers.E;
-                    break;
-                case OpcodeBytes.MOV_H_H:
-                    // NOP
-                    break;
-                case OpcodeBytes.MOV_H_L:
-                    Registers.H = Registers.L;
-                    break;
-                case OpcodeBytes.MOV_H_A:
-                    Registers.H = Registers.A;
-                    break;
-                case OpcodeBytes.MOV_L_B:
-                    Registers.L = Registers.B;
-                    break;
-                case OpcodeBytes.MOV_L_C:
-                    Registers.L = Registers.C;
-                    break;
-                case OpcodeBytes.MOV_L_D:
-                    Registers.L = Registers.D;
-                    break;
-                case OpcodeBytes.MOV_L_E:
-                    Registers.L = Registers.E;
-                    break;
-                case OpcodeBytes.MOV_L_H:
-                    Registers.L = Registers.H;
-                    break;
-                case OpcodeBytes.MOV_L_L:
-                    // NOP
-                    break;
-                case OpcodeBytes.MOV_L_A:
-                    Registers.L = Registers.A;
-                    break;
-                case OpcodeBytes.MOV_A_B:
-                    Registers.A = Registers.B;
-                    break;
-                case OpcodeBytes.MOV_A_C:
-                    Registers.A = Registers.C;
-                    break;
-                case OpcodeBytes.MOV_A_D:
-                    Registers.A = Registers.D;
-                    break;
-                case OpcodeBytes.MOV_A_E:
-                    Registers.A = Registers.E;
-                    break;
-                case OpcodeBytes.MOV_A_H:
-                    Registers.A = Registers.H;
-                    break;
-                case OpcodeBytes.MOV_A_L:
-                    Registers.A = Registers.L;
-                    break;
-                case OpcodeBytes.MOV_A_A:
-                    // NOP
-                    break;
+                        break;
+                    }
 
                 #endregion
 
-                #region MOV X, M (from memory to register)
+                #region Restart (interrupt handlers) instructions
 
-                case OpcodeBytes.MOV_B_M:
-                    Registers.B = Memory[Registers.HL];
-                    break;
-                case OpcodeBytes.MOV_C_M:
-                    Registers.C = Memory[Registers.HL];
-                    break;
-                case OpcodeBytes.MOV_D_M:
-                    Registers.D = Memory[Registers.HL];
-                    break;
-                case OpcodeBytes.MOV_E_M:
-                    Registers.E = Memory[Registers.HL];
-                    break;
-                case OpcodeBytes.MOV_H_M:
-                    Registers.H = Memory[Registers.HL];
-                    break;
-                case OpcodeBytes.MOV_L_M:
-                    Registers.L = Memory[Registers.HL];
-                    break;
-                case OpcodeBytes.MOV_A_M:
-                    Registers.A = Memory[Registers.HL];
-                    break;
-
-                #endregion
-
-                #region MOV M, X (from register to memory)
-
-                case OpcodeBytes.MOV_M_B:
-                    ExecuteMOVFromRegisterToMemory(Register.B);
-                    break;
-                case OpcodeBytes.MOV_M_C:
-                    ExecuteMOVFromRegisterToMemory(Register.C);
-                    break;
-                case OpcodeBytes.MOV_M_D:
-                    ExecuteMOVFromRegisterToMemory(Register.D);
-                    break;
-                case OpcodeBytes.MOV_M_E:
-                    ExecuteMOVFromRegisterToMemory(Register.E);
-                    break;
-                case OpcodeBytes.MOV_M_H:
-                    ExecuteMOVFromRegisterToMemory(Register.H);
-                    break;
-                case OpcodeBytes.MOV_M_L:
-                    ExecuteMOVFromRegisterToMemory(Register.L);
-                    break;
-                case OpcodeBytes.MOV_M_A:
-                    ExecuteMOVFromRegisterToMemory(Register.A);
-                    break;
+                    case OpcodeBytes.RST_0:
+                        ExecuteCALL(0x0000);
+                        incrementProgramCounter = false;
+                        break;
+                    case OpcodeBytes.RST_1:
+                        ExecuteCALL(0x0008);
+                        incrementProgramCounter = false;
+                        break;
+                    case OpcodeBytes.RST_2:
+                        ExecuteCALL(0x0010);
+                        incrementProgramCounter = false;
+                        break;
+                    case OpcodeBytes.RST_3:
+                        ExecuteCALL(0x0018);
+                        incrementProgramCounter = false;
+                        break;
+                    case OpcodeBytes.RST_4:
+                        ExecuteCALL(0x0020);
+                        incrementProgramCounter = false;
+                        break;
+                    case OpcodeBytes.RST_5:
+                        ExecuteCALL(0x0028);
+                        incrementProgramCounter = false;
+                        break;
+                    case OpcodeBytes.RST_6:
+                        ExecuteCALL(0x0030);
+                        incrementProgramCounter = false;
+                        break;
+                    case OpcodeBytes.RST_7:
+                        ExecuteCALL(0x0038);
+                        incrementProgramCounter = false;
+                        break;
 
                 #endregion
 
-                #endregion
+                #region Interrupt flip-flop instructions
 
-                #region MVI
+                    // Enable interrupts
+                    case OpcodeBytes.EI:
+                        InterruptsEnabled = true;
+                        break;
 
-                case OpcodeBytes.MVI_B:
-                    Registers.B = Memory[ProgramCounter + 1];
-                    break;
-                case OpcodeBytes.MVI_C:
-                    Registers.C = Memory[ProgramCounter + 1];
-                    break;
-                case OpcodeBytes.MVI_D:
-                    Registers.D = Memory[ProgramCounter + 1];
-                    break;
-                case OpcodeBytes.MVI_E:
-                    Registers.E = Memory[ProgramCounter + 1];
-                    break;
-                case OpcodeBytes.MVI_H:
-                    Registers.H = Memory[ProgramCounter + 1];
-                    break;
-                case OpcodeBytes.MVI_L:
-                    Registers.L = Memory[ProgramCounter + 1];
-                    break;
-                case OpcodeBytes.MVI_M:
-                    ExecuteMOVIToMemory(Memory[ProgramCounter + 1]);
-                    break;
-                case OpcodeBytes.MVI_A:
-                    Registers.A = Memory[ProgramCounter + 1];
-                    break;
+                    // Disable interrupts
+                    case OpcodeBytes.DI:
+                        InterruptsEnabled = false;
+                        break;
 
                 #endregion
-
-                #region LXI
-                case OpcodeBytes.LXI_B:
-                    Registers.B = Memory[ProgramCounter + 2];
-                    Registers.C = Memory[ProgramCounter + 1];
-                    break;
-                case OpcodeBytes.LXI_D:
-                    Registers.D = Memory[ProgramCounter + 2];
-                    Registers.E = Memory[ProgramCounter + 1];
-                    break;
-                case OpcodeBytes.LXI_H:
-                    Registers.H = Memory[ProgramCounter + 2];
-                    Registers.L = Memory[ProgramCounter + 1];
-                    break;
-                case OpcodeBytes.LXI_SP:
-                {
-                    var upper = Memory[ProgramCounter + 2] << 8;
-                    var lower = Memory[ProgramCounter + 1];
-                    var address = upper | lower;
-                    StackPointer = (UInt16)address;
-                    break;
-                }
-                #endregion
-
-                #region STAX
-                case OpcodeBytes.STAX_B:
-                    Memory[Registers.BC] = Registers.A;
-                    break;
-                case OpcodeBytes.STAX_D:
-                    Memory[Registers.DE] = Registers.A;
-                    break;
-                #endregion
-
-                #region LDAX
-                case OpcodeBytes.LDAX_B:
-                    Registers.A = Memory[Registers.BC];
-                    break;
-                case OpcodeBytes.LDAX_D:
-                    Registers.A = Memory[Registers.DE];
-                    break;
-                #endregion
-
-                #region INX
-                case OpcodeBytes.INX_B:
-                    Registers.BC++;
-                    break;
-                case OpcodeBytes.INX_D:
-                    Registers.DE++;
-                    break;
-                case OpcodeBytes.INX_H:
-                    Registers.HL++;
-                    break;
-                case OpcodeBytes.INX_SP:
-                    StackPointer++;
-                    break;
-                #endregion
-
-                #region DCX
-                case OpcodeBytes.DCX_B:
-                    Registers.BC--;
-                    break;
-                case OpcodeBytes.DCX_D:
-                    Registers.DE--;
-                    break;
-                case OpcodeBytes.DCX_H:
-                    Registers.HL--;
-                    break;
-                case OpcodeBytes.DCX_SP:
-                    StackPointer--;
-                    break;
-                #endregion
-
-                #region PUSH
-                case OpcodeBytes.PUSH_B:
-                    Memory[StackPointer - 1] = Registers.B;
-                    Memory[StackPointer - 2] = Registers.C;
-                    StackPointer = (UInt16)(StackPointer - 2);
-                    break;
-                case OpcodeBytes.PUSH_D:
-                    Memory[StackPointer - 1] = Registers.D;
-                    Memory[StackPointer - 2] = Registers.E;
-                    StackPointer = (UInt16)(StackPointer - 2);
-                    break;
-                case OpcodeBytes.PUSH_H:
-                    Memory[StackPointer - 1] = Registers.H;
-                    Memory[StackPointer - 2] = Registers.L;
-                    StackPointer = (UInt16)(StackPointer - 2);
-                    break;
-                case OpcodeBytes.PUSH_PSW:
-                    Memory[StackPointer - 1] = Registers.A;
-                    Memory[StackPointer - 2] = Flags.ToByte();
-                    StackPointer = (UInt16)(StackPointer - 2);
-                    break;
-                #endregion
-
-                #region POP
-                case OpcodeBytes.POP_B:
-                    Registers.B = Memory[StackPointer + 1];
-                    Registers.C = Memory[StackPointer];
-                    StackPointer = (UInt16)(StackPointer + 2);
-                    break;
-                case OpcodeBytes.POP_D:
-                    Registers.D = Memory[StackPointer + 1];
-                    Registers.E = Memory[StackPointer];
-                    StackPointer = (UInt16)(StackPointer + 2);
-                    break;
-                case OpcodeBytes.POP_H:
-                    Registers.H = Memory[StackPointer + 1];
-                    Registers.L = Memory[StackPointer];
-                    StackPointer = (UInt16)(StackPointer + 2);
-                    break;
-                case OpcodeBytes.POP_PSW:
-                    Registers.A = Memory[StackPointer + 1];
-                    Flags.SetFromByte(Memory[StackPointer]);
-                    StackPointer = (UInt16)(StackPointer + 2);
-                    break;
-                #endregion
-
-                #region ADD
-                case OpcodeBytes.ADD_B:
-                    ExecuteADD(Registers.B);
-                    break;
-                case OpcodeBytes.ADD_C:
-                    ExecuteADD(Registers.C);
-                    break;
-                case OpcodeBytes.ADD_D:
-                    ExecuteADD(Registers.D);
-                    break;
-                case OpcodeBytes.ADD_E:
-                    ExecuteADD(Registers.E);
-                    break;
-                case OpcodeBytes.ADD_H:
-                    ExecuteADD(Registers.H);
-                    break;
-                case OpcodeBytes.ADD_L:
-                    ExecuteADD(Registers.L);
-                    break;
-                case OpcodeBytes.ADD_M:
-                    ExecuteADD(Memory[Registers.HL]);
-                    break;
-                case OpcodeBytes.ADD_A:
-                    ExecuteADD(Registers.A);
-                    break;
-                #endregion
-
-                #region SUB
-                case OpcodeBytes.SUB_B:
-                    ExecuteSUB(Registers.B);
-                    break;
-                case OpcodeBytes.SUB_C:
-                    ExecuteSUB(Registers.C);
-                    break;
-                case OpcodeBytes.SUB_D:
-                    ExecuteSUB(Registers.D);
-                    break;
-                case OpcodeBytes.SUB_E:
-                    ExecuteSUB(Registers.E);
-                    break;
-                case OpcodeBytes.SUB_H:
-                    ExecuteSUB(Registers.H);
-                    break;
-                case OpcodeBytes.SUB_L:
-                    ExecuteSUB(Registers.L);
-                    break;
-                case OpcodeBytes.SUB_M:
-                    ExecuteSUB(Memory[Registers.HL]);
-                    break;
-                case OpcodeBytes.SUB_A:
-                    ExecuteSUB(Registers.A);
-                    break;
-                #endregion
-
-                #region ANA
-                case OpcodeBytes.ANA_B:
-                    Registers.A = (byte)(Registers.A & Registers.B);
-                    SetFlags(false, Registers.A);
-                    break;
-                case OpcodeBytes.ANA_C:
-                    Registers.A = (byte)(Registers.A & Registers.C);
-                    SetFlags(false, Registers.A);
-                    break;
-                case OpcodeBytes.ANA_D:
-                    Registers.A = (byte)(Registers.A & Registers.D);
-                    SetFlags(false, Registers.A);
-                    break;
-                case OpcodeBytes.ANA_E:
-                    Registers.A = (byte)(Registers.A & Registers.E);
-                    SetFlags(false, Registers.A);
-                    break;
-                case OpcodeBytes.ANA_H:
-                    Registers.A = (byte)(Registers.A & Registers.H);
-                    SetFlags(false, Registers.A);
-                    break;
-                case OpcodeBytes.ANA_L:
-                    Registers.A = (byte)(Registers.A & Registers.L);
-                    SetFlags(false, Registers.A);
-                    break;
-                case OpcodeBytes.ANA_M:
-                    Registers.A = (byte)(Registers.A & Memory[Registers.HL]);
-                    SetFlags(false, Registers.A);
-                    break;
-                case OpcodeBytes.ANA_A:
-                    Registers.A = (byte)(Registers.A & Registers.A);
-                    SetFlags(false, Registers.A);
-                    break;
-                #endregion
-
-                #region ORA
-                case OpcodeBytes.ORA_B:
-                    Registers.A = (byte)(Registers.A | Registers.B);
-                    SetFlags(false, Registers.A);
-                    break;
-                case OpcodeBytes.ORA_C:
-                    Registers.A = (byte)(Registers.A | Registers.C);
-                    SetFlags(false, Registers.A);
-                    break;
-                case OpcodeBytes.ORA_D:
-                    Registers.A = (byte)(Registers.A | Registers.D);
-                    SetFlags(false, Registers.A);
-                    break;
-                case OpcodeBytes.ORA_E:
-                    Registers.A = (byte)(Registers.A | Registers.E);
-                    SetFlags(false, Registers.A);
-                    break;
-                case OpcodeBytes.ORA_H:
-                    Registers.A = (byte)(Registers.A | Registers.H);
-                    SetFlags(false, Registers.A);
-                    break;
-                case OpcodeBytes.ORA_L:
-                    Registers.A = (byte)(Registers.A | Registers.L);
-                    SetFlags(false, Registers.A);
-                    break;
-                case OpcodeBytes.ORA_M:
-                    Registers.A = (byte)(Registers.A | Memory[Registers.HL]);
-                    SetFlags(false, Registers.A);
-                    break;
-                case OpcodeBytes.ORA_A:
-                    Registers.A = (byte)(Registers.A | Registers.A);
-                    SetFlags(false, Registers.A);
-                    break;
-                #endregion
-
-                #region ADC
-                case OpcodeBytes.ADC_B:
-                    ExecuteADD(Registers.B, true);
-                    break;
-                case OpcodeBytes.ADC_C:
-                    ExecuteADD(Registers.C, true);
-                    break;
-                case OpcodeBytes.ADC_D:
-                    ExecuteADD(Registers.D, true);
-                    break;
-                case OpcodeBytes.ADC_E:
-                    ExecuteADD(Registers.E, true);
-                    break;
-                case OpcodeBytes.ADC_H:
-                    ExecuteADD(Registers.H, true);
-                    break;
-                case OpcodeBytes.ADC_L:
-                    ExecuteADD(Registers.L, true);
-                    break;
-                case OpcodeBytes.ADC_M:
-                    ExecuteADD(Memory[Registers.HL], true);
-                    break;
-                case OpcodeBytes.ADC_A:
-                    ExecuteADD(Registers.A, true);
-                    break;
-                #endregion
-
-                #region SBB
-                case OpcodeBytes.SBB_B:
-                    ExecuteSUB(Registers.B, true);
-                    break;
-                case OpcodeBytes.SBB_C:
-                    ExecuteSUB(Registers.C, true);
-                    break;
-                case OpcodeBytes.SBB_D:
-                    ExecuteSUB(Registers.D, true);
-                    break;
-                case OpcodeBytes.SBB_E:
-                    ExecuteSUB(Registers.E, true);
-                    break;
-                case OpcodeBytes.SBB_H:
-                    ExecuteSUB(Registers.H, true);
-                    break;
-                case OpcodeBytes.SBB_L:
-                    ExecuteSUB(Registers.L, true);
-                    break;
-                case OpcodeBytes.SBB_M:
-                    ExecuteSUB(Memory[Registers.HL], true);
-                    break;
-                case OpcodeBytes.SBB_A:
-                    ExecuteSUB(Registers.A, true);
-                    break;
-                #endregion
-
-                #region XRA
-                case OpcodeBytes.XRA_B:
-                    Registers.A = (byte)(Registers.A ^ Registers.B);
-                    SetFlags(false, Registers.A);
-                    break;
-                case OpcodeBytes.XRA_C:
-                    Registers.A = (byte)(Registers.A ^ Registers.C);
-                    SetFlags(false, Registers.A);
-                    break;
-                case OpcodeBytes.XRA_D:
-                    Registers.A = (byte)(Registers.A ^ Registers.D);
-                    SetFlags(false, Registers.A);
-                    break;
-                case OpcodeBytes.XRA_E:
-                    Registers.A = (byte)(Registers.A ^ Registers.E);
-                    SetFlags(false, Registers.A);
-                    break;
-                case OpcodeBytes.XRA_H:
-                    Registers.A = (byte)(Registers.A ^ Registers.H);
-                    SetFlags(false, Registers.A);
-                    break;
-                case OpcodeBytes.XRA_L:
-                    Registers.A = (byte)(Registers.A ^ Registers.L);
-                    SetFlags(false, Registers.A);
-                    break;
-                case OpcodeBytes.XRA_M:
-                    Registers.A = (byte)(Registers.A ^ Memory[Registers.HL]);
-                    SetFlags(false, Registers.A);
-                    break;
-                case OpcodeBytes.XRA_A:
-                    Registers.A = (byte)(Registers.A ^ Registers.A);
-                    SetFlags(false, Registers.A);
-                    break;
-                #endregion
-
-                #region CMP
-                case OpcodeBytes.CMP_B:
-                    ExecuteSUB(Registers.B, false, false);
-                    break;
-                case OpcodeBytes.CMP_C:
-                    ExecuteSUB(Registers.C, false, false);
-                    break;
-                case OpcodeBytes.CMP_D:
-                    ExecuteSUB(Registers.D, false, false);
-                    break;
-                case OpcodeBytes.CMP_E:
-                    ExecuteSUB(Registers.E, false, false);
-                    break;
-                case OpcodeBytes.CMP_H:
-                    ExecuteSUB(Registers.H, false, false);
-                    break;
-                case OpcodeBytes.CMP_L:
-                    ExecuteSUB(Registers.L, false, false);
-                    break;
-                case OpcodeBytes.CMP_M:
-                    ExecuteSUB(Memory[Registers.HL], false, false);
-                    break;
-                case OpcodeBytes.CMP_A:
-                    ExecuteSUB(Registers.A, false, false);
-                    break;
-                #endregion
-
-                #region DAD
-                case OpcodeBytes.DAD_B:
-                    ExecuteDAD(Registers.BC);
-                    break;
-                case OpcodeBytes.DAD_D:
-                    ExecuteDAD(Registers.DE);
-                    break;
-                case OpcodeBytes.DAD_H:
-                    ExecuteDAD(Registers.HL);
-                    break;
-                case OpcodeBytes.DAD_SP:
-                    ExecuteDAD(StackPointer);
-                    break;
-                #endregion
-
-                #region INR
-                case OpcodeBytes.INR_B:
-                    Registers.B++;
-                    SetFlags(false, Registers.B);
-                    break;
-                case OpcodeBytes.INR_C:
-                    Registers.C++;
-                    SetFlags(false, Registers.C);
-                    break;
-                case OpcodeBytes.INR_D:
-                    Registers.D++;
-                    SetFlags(false, Registers.D);
-                    break;
-                case OpcodeBytes.INR_E:
-                    Registers.E++;
-                    SetFlags(false, Registers.E);
-                    break;
-                case OpcodeBytes.INR_H:
-                    Registers.H++;
-                    SetFlags(false, Registers.H);
-                    break;
-                case OpcodeBytes.INR_L:
-                    Registers.L++;
-                    SetFlags(false, Registers.L);
-                    break;
-                case OpcodeBytes.INR_M:
-                    Memory[Registers.HL]++;
-                    SetFlags(false, Memory[Registers.HL]);
-                    break;
-                case OpcodeBytes.INR_A:
-                    Registers.A++;
-                    SetFlags(false, Registers.A);
-                    break;
-                #endregion
-
-                #region DCR
-                case OpcodeBytes.DCR_B:
-                    Registers.B--;
-                    SetFlags(false, Registers.B);
-                    break;
-                case OpcodeBytes.DCR_C:
-                    Registers.C--;
-                    SetFlags(false, Registers.C);
-                    break;
-                case OpcodeBytes.DCR_D:
-                    Registers.D--;
-                    SetFlags(false, Registers.D);
-                    break;
-                case OpcodeBytes.DCR_E:
-                    Registers.E--;
-                    SetFlags(false, Registers.E);
-                    break;
-                case OpcodeBytes.DCR_H:
-                    Registers.H--;
-                    SetFlags(false, Registers.H);
-                    break;
-                case OpcodeBytes.DCR_L:
-                    Registers.L--;
-                    SetFlags(false, Registers.L);
-                    break;
-                case OpcodeBytes.DCR_M:
-                    Memory[Registers.HL]--;
-                    SetFlags(false, Memory[Registers.HL]);
-                    break;
-                case OpcodeBytes.DCR_A:
-                    Registers.A--;
-                    SetFlags(false, Registers.A);
-                    break;
-                #endregion
-
-                case OpcodeBytes.EI:
-                    InterruptsEnabled = true;
-                    break;
-
-                case OpcodeBytes.DI:
-                    InterruptsEnabled = false;
-                    break;
 
                 default:
                     throw new NotImplementedException(String.Format("Attempted to execute unknown opcode 0x{0:X2} at memory address 0x{0:X4}", opcode, ProgramCounter));
             }
+
+            #endregion
 
             // Determine how many cycles the instruction took.
 
