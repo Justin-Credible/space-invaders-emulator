@@ -505,5 +505,15 @@ namespace JustinCredible.SIEmulator
             public static Opcode DI = new Opcode(OpcodeBytes.DI, 1, "DI", 4);
 
         #endregion
+
+        #region Input/Output Instructions
+
+            /** Output accumulator to given device number */
+            public static Opcode OUT = new Opcode(OpcodeBytes.OUT, 2, "OUT", 10);
+
+            /** Retrieve input from given device number and populate accumulator */
+            public static Opcode IN = new Opcode(OpcodeBytes.IN, 2, "IN", 10);
+
+        #endregion
     }
 }

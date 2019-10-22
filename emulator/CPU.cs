@@ -42,6 +42,27 @@ namespace JustinCredible.SIEmulator
         public bool InterruptsEnabled { get; set; }
 
         /**
+         * Event handler for handling CPU writes to devices.
+         * 
+         * Indicates the ID of the device to write the given data to.
+         */
+        public delegate void DeviceWriteEvent(int deviceID, byte data);
+
+        /** Fired when the OUT instruction is encountered. */
+        public event DeviceWriteEvent OnDeviceWrite;
+
+        /**
+         * Event handler for handling CPU reads from devices.
+         * 
+         * Indicates the ID of the device to read from and should return
+         * the data for that device.
+         */
+        public delegate byte DeviceReadEvent(int deviceID);
+
+        /** Fired when the IN instruction is encountered. */
+        public event DeviceReadEvent OnDeviceRead;
+
+        /**
          * Used for a sanity check when executing the RET opcode.
          * These are the only opcodes we're expecting to return to.
          */
@@ -1511,6 +1532,28 @@ namespace JustinCredible.SIEmulator
                     case OpcodeBytes.DI:
                         InterruptsEnabled = false;
                         break;
+
+                #endregion
+
+                #region Input/Output Instructions
+
+                    // Output accumulator to given device number
+                    case OpcodeBytes.OUT:
+                    {
+                        if (OnDeviceWrite != null)
+                            OnDeviceWrite(Memory[ProgramCounter + 1], Registers.A);
+
+                        break;
+                    }
+
+                    // Retrieve input from given device number and populate accumulator
+                    case OpcodeBytes.IN:
+                    {
+                        if (OnDeviceRead != null)
+                            Registers.A = OnDeviceRead(Memory[ProgramCounter + 1]);
+
+                        break;
+                    }
 
                 #endregion
 

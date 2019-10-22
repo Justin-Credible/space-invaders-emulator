@@ -502,5 +502,15 @@ namespace JustinCredible.SIEmulator
             public const byte DI = 0xf3;
 
         #endregion
+
+        #region Input/Output Instructions
+
+            /** Output accumulator to given device number */
+            public const byte OUT = 0xd3;
+
+            /** Retrieve input from given device number and populate accumulator */
+            public const byte IN = 0xdb;
+
+        #endregion
     }
 }

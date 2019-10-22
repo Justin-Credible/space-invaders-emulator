@@ -503,6 +503,16 @@ namespace JustinCredible.SIEmulator
                 [OpcodeBytes.DI] = DI,
 
             #endregion
+
+            #region Input/Output Instructions
+
+                /** Output accumulator to given device number */
+                [OpcodeBytes.OUT] = OUT,
+
+                /** Retrieve input from given device number and populate accumulator */
+                [OpcodeBytes.IN] = IN,
+
+            #endregion
         };
     }
 }

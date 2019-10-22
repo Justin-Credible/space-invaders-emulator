@@ -49,9 +49,11 @@ namespace JustinCredible.SIEmulator.Tests
                 throw new Exception("The zasm assembler is not available this platform.");
         }
 
-        protected CPUStats Execute(byte[] rom, InitialCPUState initialState = null)
+        protected CPUStats Execute(byte[] rom, InitialCPUState initialState = null, CPU cpu = null)
         {
-            var cpu = new CPU();
+            if (cpu == null)
+                cpu = new CPU();
+
             cpu.Reset();
 
             // Ensure the ROM data is not larger than we can load.
