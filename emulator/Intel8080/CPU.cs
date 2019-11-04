@@ -91,7 +91,7 @@ namespace JustinCredible.SIEmulator
 
         public void Reset()
         {
-            // Initialize the regisgters and memory.
+            // Initialize the registers and memory.
             Memory = new byte[16*1024];
             Registers = new CPURegisters();
             Flags = new ConditionFlags();
@@ -100,14 +100,13 @@ namespace JustinCredible.SIEmulator
             ProgramCounter = 0x0000;
 
             // Initialize the stack pointer.
-            StackPointer = 0x0000; // TODO: ???
+            StackPointer = 0x0000;
 
             // Reset the flag that indicates that the ROM has finished executing.
             Finished = false;
 
             // Ensure interrupts are enabled.
-            // TODO: Should this be enabled or disabled to start?
-            InterruptsEnabled = true;
+            InterruptsEnabled = false;
         }
 
         public void LoadRom(byte[] rom)
