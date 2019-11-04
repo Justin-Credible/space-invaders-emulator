@@ -1,6 +1,9 @@
 
 namespace JustinCredible.SIEmulator
 {
+    /**
+     * Describes an opcode for the Intel 8080 CPU.
+     */
     public class Opcode
     {
         public Opcode(byte code, int size, string instruction, int cycles, int? alternateCycles = null)

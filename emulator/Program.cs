@@ -115,7 +115,7 @@ namespace JustinCredible.SIEmulator
                 _cpu.LoadRom(rom);
 
                 var gui = new GUI();
-                gui.Initialize("Space Invaders Emulator", 640, 320, 10, 10);
+                gui.Initialize("Space Invaders Emulator", SpaceInvaders.RESOLUTION_WIDTH, SpaceInvaders.RESOLUTION_HEIGHT, 10, 10);
                 gui.OnTick += GUI_OnTick;
 
                 if (_logPerformance)

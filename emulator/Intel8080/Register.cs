@@ -3,7 +3,7 @@ namespace JustinCredible.SIEmulator
 {
     public enum Register
     {
-        A,
+        A, // Accumulator
         B,
         C,
         D,

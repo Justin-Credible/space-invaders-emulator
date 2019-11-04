@@ -3,10 +3,13 @@ using System.Collections.Generic;
 
 namespace JustinCredible.SIEmulator
 {
+    /**
+     * An emulated version of the Intel 8080 CPU.
+     */
     public class CPU
     {
         /**
-         * Indicates the ROM has finished executing via a TODO opcode.
+         * Indicates the ROM has finished executing via a HLT opcode.
          * Step should not be called again without first calling Reset.
          */
         public bool Finished { get; private set; }
@@ -156,15 +159,46 @@ namespace JustinCredible.SIEmulator
             Console.WriteLine($"Carry: ${Flags.Carry}\tAuxillary Carry: ${Flags.AuxCarry}");
         }
 
+        /** Executes the given interrupt RST instruction and returns the number of cycles it took to execute. */
+        public int StepInterrupt(Interrupt id)
+        {
+            switch (id)
+            {
+                case Interrupt.Zero:
+                    return Step(Opcodes.RST_0.Code);
+                case Interrupt.One:
+                    return Step(Opcodes.RST_1.Code);
+                case Interrupt.Two:
+                    return Step(Opcodes.RST_2.Code);
+                case Interrupt.Three:
+                    return Step(Opcodes.RST_3.Code);
+                case Interrupt.Four:
+                    return Step(Opcodes.RST_4.Code);
+                case Interrupt.Five:
+                    return Step(Opcodes.RST_5.Code);
+                case Interrupt.Six:
+                    return Step(Opcodes.RST_6.Code);
+                default:
+                    throw new Exception($"Unhandled interrupt ID: {id}");
+            }
+        }
+
         /** Executes the next instruction and returns the number of cycles it took to execute. */
         public int Step()
+        {
+            // Fetch the next opcode to be executed, as indicated by the program counter.
+            var opcodeByte = Memory[ProgramCounter];
+
+            return Step(opcodeByte);
+        }
+
+        private int Step(byte opcodeByte)
         {
             // Sanity check.
             if (Finished)
                 throw new Exception("Program has finished execution; Reset() must be invoked before invoking Step() again.");
 
-            // Fetch the next opcode to be executed.
-            var opcodeByte = Memory[ProgramCounter];
+            // Fetch the opcode metadata.
             var opcode = Opcodes.Lookup[opcodeByte];
 
             // Indicates if we should increment the program counter after executing the instruction.

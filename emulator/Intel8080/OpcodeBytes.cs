@@ -2,7 +2,7 @@
 namespace JustinCredible.SIEmulator
 {
     /**
-     * Assemble instruction name to opcode map derived from:
+     * Assembly instruction name to opcode map derived from:
      * http://www.emulator101.com/8080-by-opcode.html
      */
     public class OpcodeBytes
