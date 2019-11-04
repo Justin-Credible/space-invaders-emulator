@@ -178,6 +178,8 @@ namespace JustinCredible.SIEmulator
                     return Step(Opcodes.RST_5.Code);
                 case Interrupt.Six:
                     return Step(Opcodes.RST_6.Code);
+                case Interrupt.Seven:
+                    return Step(Opcodes.RST_7.Code);
                 default:
                     throw new Exception($"Unhandled interrupt ID: {id}");
             }
