@@ -45,6 +45,18 @@ namespace JustinCredible.SIEmulator
         public bool InterruptsEnabled { get; set; }
 
         /**
+         * Special flag used to patch the CALL calls for the cpudiag.bin program.
+         * This allow CALL 0x05 to simulate CP/M writing the console and will exit
+         * on CALL 0x02. This is only used for testing the CPU with this specific ROM.
+         */
+        public bool EnableCPUDiagMode { get; set; }
+
+        public delegate void CPUDiagDebugEvent(int eventID);
+
+        /** Fired on CALL 0x05 when EnableCPUDiagMode is true. */
+        public event CPUDiagDebugEvent OnCPUDiagDebugEvent;
+
+        /**
          * Event handler for handling CPU writes to devices.
          * 
          * Indicates the ID of the device to write the given data to.
@@ -1654,6 +1666,35 @@ namespace JustinCredible.SIEmulator
             Memory[StackPointer - 2] = returnAddressLower;
             StackPointer--;
             StackPointer--;
+
+            #region CPU Diagnostics Debugging Mode
+
+            // This is special case code only for running the CPU diagnostic program.
+            // See the EnableCPUDiagMode flag for more details.
+
+            if (EnableCPUDiagMode)
+            {
+                if (address == 0x00)
+                {
+                    // This is a CALL 0x00 which returns control to CP/M.
+                    this.Finished = true;
+                    return;
+                }
+                else if (address == 0x05)
+                {
+                    // This is a CALL 0x05 which is a CP/M call.
+                    // Register C is a flag, if value of 9 indicates a console print.
+                    // The value of register pair DE is a pointer to the string to print
+                    // which is terminated by the $ character.
+                    if (OnCPUDiagDebugEvent != null)
+                        OnCPUDiagDebugEvent(Registers.C);
+
+                    ExecuteRET();
+                    return;
+                }
+            }
+
+            #endregion
 
             // Jump to the given address.
             ProgramCounter = address;
