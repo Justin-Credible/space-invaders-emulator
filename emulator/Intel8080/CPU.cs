@@ -151,12 +151,12 @@ namespace JustinCredible.SIEmulator
             var regH = String.Format("0x{0:X2}", Registers.H);
             var regL = String.Format("0x{0:X2}", Registers.L);
 
-            Console.WriteLine($"Opcode: ${opcode}");
-            Console.WriteLine($"PC: ${pc}\tSP: ${sp}");
-            Console.WriteLine($"A: ${regA}\tB: ${regB}\tC: ${regC}\tD: ${regD}");
-            Console.WriteLine($"E: ${regE}\tH: ${regH}\tL: ${regL}");
-            Console.WriteLine($"Zero: ${Flags.Zero}\tSign: ${Flags.Sign}\tParity: ${Flags.Parity}");
-            Console.WriteLine($"Carry: ${Flags.Carry}\tAuxillary Carry: ${Flags.AuxCarry}");
+            Console.WriteLine($"Opcode: {opcode}");
+            Console.WriteLine($"PC: {pc}\tSP: {sp}");
+            Console.WriteLine($"A: {regA}\tB: {regB}\tC: {regC}\tD: {regD}");
+            Console.WriteLine($"E: {regE}\tH: {regH}\tL: {regL}");
+            Console.WriteLine($"Zero: {Flags.Zero}\tSign: {Flags.Sign}\tParity: {Flags.Parity}");
+            Console.WriteLine($"Carry: {Flags.Carry}\tAuxillary Carry: {Flags.AuxCarry}");
         }
 
         /** Executes the given interrupt RST instruction and returns the number of cycles it took to execute. */
