@@ -15,6 +15,8 @@ namespace JustinCredible.SIEmulator
         public bool Finished { get; private set; }
 
         /**
+         * This is the memory layout specific to Space Invaders:
+         * 
          * ROM (8K)
          * $0000-$07ff:  invaders.h
          * $0800-$0fff:  invaders.g
@@ -26,13 +28,15 @@ namespace JustinCredible.SIEmulator
          * $2400-$3fff:  video RAM (7K)
          * 
          * $4000-:       RAM mirror
+         * 
+         * TODO: Move Space Invaders specific implementation details out of here.
          */
         public byte[] Memory { get; set; }
 
         /** The primary CPU registers. */
         public CPURegisters Registers { get; set; }
 
-        /** The encapsulated condition/flags regiser. */
+        /** The encapsulated condition/flags register. */
         public ConditionFlags Flags { get; set; }
 
         /** Program Counter; 16-bits */
@@ -229,8 +233,9 @@ namespace JustinCredible.SIEmulator
             // This is almost always the case, but there are a few cases where we don't want to.
             var incrementProgramCounter = true;
 
-            // Some instructions have an alternate cycle count depending on the outcome of
-            // the operation. This indicates how we should increment the program counter.
+            // Some instructions have an alternate cycle count depending on the outcome of the
+            // operation. This indicates if we should count the regular or alternate cycle count
+            // when returning the number of cycles that the instruction took to execute.
             var useAlternateCycleCount = false;
 
             #region Opcode Execution
