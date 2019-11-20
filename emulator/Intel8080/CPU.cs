@@ -87,6 +87,16 @@ namespace JustinCredible.SIEmulator
             Opcodes.CALL2.Code,
             Opcodes.CALL3.Code,
             Opcodes.CALL4.Code,
+
+            Opcodes.CM.Code,
+            Opcodes.CPE.Code,
+            Opcodes.CC.Code,
+            Opcodes.CZ.Code,
+            Opcodes.CP.Code,
+            Opcodes.CPO.Code,
+            Opcodes.CNC.Code,
+            Opcodes.CNZ.Code,
+
             Opcodes.RST_0.Code,
             Opcodes.RST_1.Code,
             Opcodes.RST_2.Code,
