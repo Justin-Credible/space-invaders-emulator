@@ -9,6 +9,7 @@ I started using the codebase from my [CHIP-8 emulator](https://github.com/Justin
   - [X] Interrupts
   - [X] I/O
   - [X] Unit Tests (600+!)
+  - [X] Integration Test (cpudiag.bin) 🎉
 - [ ] Space Invaders specific hardware
   - [X] CPU loop
   - [X] Interrupt generator
