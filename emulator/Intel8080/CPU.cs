@@ -47,7 +47,7 @@ namespace JustinCredible.SIEmulator
         /**
          * Special flag used to patch the CALL calls for the cpudiag.bin program.
          * This allow CALL 0x05 to simulate CP/M writing the console and will exit
-         * on CALL 0x02. This is only used for testing the CPU with this specific ROM.
+         * on JMP 0x00. This is only used for testing the CPU with this specific ROM.
          */
         public bool EnableCPUDiagMode { get; set; }
 
@@ -1651,6 +1651,19 @@ namespace JustinCredible.SIEmulator
 
         private void ExecuteJMP(UInt16 address)
         {
+            #region CPU Diagnostics Debugging Mode
+
+            // This is special case code only for running the CPU diagnostic program.
+            // See the EnableCPUDiagMode flag for more details.
+            if (EnableCPUDiagMode && address == 0x00)
+            {
+                // This is a CALL 0x00 which returns control to CP/M.
+                this.Finished = true;
+                return;
+            }
+
+            #endregion
+
             ProgramCounter = address;
         }
 
@@ -1682,26 +1695,18 @@ namespace JustinCredible.SIEmulator
             // This is special case code only for running the CPU diagnostic program.
             // See the EnableCPUDiagMode flag for more details.
 
-            if (EnableCPUDiagMode)
+            if (EnableCPUDiagMode && address == 0x05)
             {
-                if (address == 0x00)
-                {
-                    // This is a CALL 0x00 which returns control to CP/M.
-                    this.Finished = true;
-                    return;
-                }
-                else if (address == 0x05)
-                {
-                    // This is a CALL 0x05 which is a CP/M call.
-                    // Register C is a flag, if value of 9 indicates a console print.
-                    // The value of register pair DE is a pointer to the string to print
-                    // which is terminated by the $ character.
-                    if (OnCPUDiagDebugEvent != null)
-                        OnCPUDiagDebugEvent(Registers.C);
+                // This is a CALL 0x05 which is a CP/M call.
+                // Register C is a flag, a value of 9 indicates a string print using
+                // the value of register pair DE as a pointer to the string to print
+                // which is terminated by the $ character. If register C is a value
+                // of 2 it is a character print based on the value of register A.
+                if (OnCPUDiagDebugEvent != null)
+                    OnCPUDiagDebugEvent(Registers.C);
 
-                    ExecuteRET();
-                    return;
-                }
+                ExecuteRET();
+                return;
             }
 
             #endregion
@@ -1745,18 +1750,30 @@ namespace JustinCredible.SIEmulator
         {
             var address = Registers.HL;
 
-            // TODO: Should allow write to memory mirror area?
-            // TODO: Should not panic on ROM area write?
+            // Determine if we should allow the write to memory based on the address.
+            var allowWrite = EnableCPUDiagMode
 
-            // Only allow writes to the work/video RAM and not the ROM or memory mirror.
-            // $2000-$23ff:  work RAM (1K)
-            // $2400-$3fff:  video RAM (7K)
-            if (address >= 0x2000 && address <= 0x3FFF)
+                // In order to pass the cpudiag.bin tests, we need to allow writes
+                // to areas that would normally be ROM in Space Invaders. The test
+                // is written for a general Intel 8080, which could have a different
+                // memory layout. So in this case we're just ensuring that we don't
+                // write outside of the allocated 16KB address range.
+                ? address < 0x4000
+
+                // Only allow writes to the work/video RAM and not the ROM or memory mirror.
+                // $0000-$1FFF:  ROM (8K)
+                // $2000-$23FF:  work RAM (1K)
+                // $2400-$3FFF:  video RAM (7K)
+                // TODO: Allow writes to 0x4000 - 0x6000 (RAM mirror)?
+                : address >= 0x2000 && address <= 0x3FFF;
+
+            if (allowWrite)
                 Memory[address] = Registers[source];
             else
             {
+                var programCounterFormatted = String.Format("0x{0:X4}", ProgramCounter);
                 var addressFormatted = String.Format("0x{0:X4}", address);
-                throw new Exception($"Illegal memory address ({addressFormatted}) specified for 'MOV M, {source}' operation; expected address to be between 0x2000 and 0x3FFF inclusive.");
+                throw new Exception($"Illegal memory address ({addressFormatted}) specified for 'MOV M, {source}' operation at address {programCounterFormatted}; expected address to be between 0x2000 and 0x3FFF inclusive.");
             }
         }
 
@@ -1764,18 +1781,30 @@ namespace JustinCredible.SIEmulator
         {
             var address = Registers.HL;
 
-            // TODO: Should allow write to memory mirror area?
-            // TODO: Should not panic on ROM area write?
+            // Determine if we should allow the write to memory based on the address.
+            var allowWrite = EnableCPUDiagMode
 
-            // Only allow writes to the work/video RAM and not the ROM or memory mirror.
-            // $2000-$23ff:  work RAM (1K)
-            // $2400-$3fff:  video RAM (7K)
-            if (address >= 0x2000 && address <= 0x3FFF)
+                // In order to pass the cpudiag.bin tests, we need to allow writes
+                // to areas that would normally be ROM in Space Invaders. The test
+                // is written for a general Intel 8080, which could have a different
+                // memory layout. So in this case we're just ensuring that we don't
+                // write outside of the allocated 16KB address range.
+                ? address < 0x4000
+
+                // Only allow writes to the work/video RAM and not the ROM or memory mirror.
+                // $0000-$1FFF:  ROM (8K)
+                // $2000-$23FF:  work RAM (1K)
+                // $2400-$3FFF:  video RAM (7K)
+                // TODO: Allow writes to 0x4000 - 0x6000 (RAM mirror)?
+                : address >= 0x2000 && address <= 0x3FFF;
+
+            if (allowWrite)
                 Memory[address] = data;
             else
             {
+                var programCounterFormatted = String.Format("0x{0:X4}", ProgramCounter);
                 var addressFormatted = String.Format("0x{0:X4}", address);
-                throw new Exception($"Illegal memory address ({addressFormatted}) specified for 'MVI M, d8' operation; expected address to be between 0x2000 and 0x3FFF inclusive.");
+                throw new Exception($"Illegal memory address ({addressFormatted}) specified for 'MVI M, d8' operation at address {programCounterFormatted}; expected address to be between 0x2000 and 0x3FFF inclusive.");
             }
         }
 
