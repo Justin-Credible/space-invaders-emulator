@@ -17,7 +17,9 @@ namespace JustinCredible.SIEmulator
         public const int RESOLUTION_HEIGHT = 224;
 
         private Thread _thread;
+
         private CPU _cpu;
+        private ShiftRegister _shiftRegister;
 
         // The game's video hardware generates runs at 60hz. It generates two interrupts @ 60hz. Interrupt
         // #1 the middle of a frame and interrupt #2 at the end (vblank). To simulate this, we'll calculate
@@ -28,7 +30,6 @@ namespace JustinCredible.SIEmulator
         private Interrupt _nextInterrupt;
 
         // TODO: Implement I/O ports
-        // TODO: Implement shift register port
         // TODO: Implement audio event emitter
         // TODO: Implement framebuffer emitter
         // TODO: Implement input handler
@@ -42,7 +43,13 @@ namespace JustinCredible.SIEmulator
             _nextInterrupt = Interrupt.One;
 
             _cpu = new CPU();
+
+            _cpu.OnDeviceRead += CPU_OnDeviceRead;
+            _cpu.OnDeviceWrite += CPU_OnDeviceWrite;
+
             _cpu.LoadRom(rom);
+
+            _shiftRegister = new ShiftRegister();
 
             _thread = new Thread(new ThreadStart(Loop));
             _thread.Start();
@@ -56,6 +63,60 @@ namespace JustinCredible.SIEmulator
             _thread.Abort();
             _cpu = null;
             _thread = null;
+        }
+
+        /**
+         * Used to handle the CPU's IN instruction; read value from given device ID.
+         */
+        private byte CPU_OnDeviceRead(int deviceID)
+        {
+            // http://computerarcheology.com/Arcade/SpaceInvaders/Hardware.html
+            switch (deviceID)
+            {
+                // Inputs - Ports 0-2
+                case 0x00:
+                case 0x01:
+                case 0x02:
+                    // TODO
+                    return 0x00;
+
+                // Shift Register - Read
+                case 0x03:
+                    return _shiftRegister.Read();
+
+                default:
+                    Console.WriteLine($"WARNING: An IN/Read for port {deviceID} is not implemented.");
+                    return 0x00;
+            }
+        }
+
+        /**
+         * Used to handle the CPU's OUT instruction; write value to given device ID.
+         */
+        private void CPU_OnDeviceWrite(int deviceID, byte data)
+        {
+            //http://computerarcheology.com/Arcade/SpaceInvaders/Hardware.html
+            switch (deviceID)
+            {
+                // Shift Register - Set Offset
+                case 0x02:
+                    _shiftRegister.SetOffset(data);
+                    break;
+
+                // Shift Register - Write
+                case 0x04:
+                    _shiftRegister.Write(data);
+                    break;
+
+                case 0x03: // Sounds
+                case 0x05: // Sounds
+                    // TODO
+                    break;
+
+                default:
+                    Console.WriteLine($"WARNING: An OUT/Write for port {deviceID} (value: {data}) is not implemented.");
+                    break;
+            }
         }
 
         private void Loop()

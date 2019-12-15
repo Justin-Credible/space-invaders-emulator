@@ -14,7 +14,7 @@ I started using the codebase from my [CHIP-8 emulator](https://github.com/Justin
   - [X] CPU loop
   - [X] Interrupt generator
   - [ ] I/O ports
-  - [ ] Shift register port
+  - [X] Shift register port
   - [ ] Audio
   - [ ] Framebuffer
 - [ ] GUI / "Glue" Program
