@@ -23,7 +23,7 @@ namespace JustinCredible.SIEmulator.Tests
                 [pair] = 0x3902,
             };
 
-            var initialState = new InitialCPUState()
+            var initialState = new CPUConfig()
             {
                 Registers = registers,
             };
@@ -50,7 +50,7 @@ namespace JustinCredible.SIEmulator.Tests
                 HLT
             ");
 
-            var initialState = new InitialCPUState()
+            var initialState = new CPUConfig()
             {
                 StackPointer = 0x3902,
             };

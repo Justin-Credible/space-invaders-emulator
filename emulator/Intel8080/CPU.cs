@@ -14,24 +14,8 @@ namespace JustinCredible.SIEmulator
          */
         public bool Finished { get; private set; }
 
-        /**
-         * This is the memory layout specific to Space Invaders:
-         * 
-         * ROM (8K)
-         * $0000-$07ff:  invaders.h
-         * $0800-$0fff:  invaders.g
-         * $1000-$17ff:  invaders.f
-         * $1800-$1fff:  invaders.e
-         * 
-         * RAM (8K)
-         * $2000-$23ff:  work RAM (1K)
-         * $2400-$3fff:  video RAM (7K)
-         * 
-         * $4000-:       RAM mirror
-         * 
-         * TODO: Move Space Invaders specific implementation details out of here.
-         */
-        public byte[] Memory { get; set; }
+        /** The addressable memory; can include RAM and ROM. See CPUConfig. */
+        public byte[] Memory { get; private set; }
 
         /** The primary CPU registers. */
         public CPURegisters Registers { get; set; }
@@ -48,12 +32,8 @@ namespace JustinCredible.SIEmulator
         /** Indicates if interrupts are enabled or not. */
         public bool InterruptsEnabled { get; set; }
 
-        /**
-         * Special flag used to patch the CALL calls for the cpudiag.bin program.
-         * This allow CALL 0x05 to simulate CP/M writing the console and will exit
-         * on JMP 0x00. This is only used for testing the CPU with this specific ROM.
-         */
-        public bool EnableCPUDiagMode { get; set; }
+        /** Configuration for the CPU; used to customize the CPU instance. */
+        public CPUConfig Config { get; private set; }
 
         public delegate void CPUDiagDebugEvent(int eventID);
 
@@ -113,52 +93,41 @@ namespace JustinCredible.SIEmulator
             Opcodes.NOP.Code, // Technically only should be required for unit tests.
         };
 
-        public CPU()
+        public CPU(CPUConfig config)
         {
+            Config = config;
             this.Reset();
         }
 
         public void Reset()
         {
-            // Initialize the registers and memory.
-            Memory = new byte[16*1024];
-            Registers = new CPURegisters();
-            Flags = new ConditionFlags();
-
-            // The ROMs are loaded at the lower 8K of addressable memory.
-            ProgramCounter = 0x0000;
-
-            // Initialize the stack pointer.
-            StackPointer = 0x0000;
+            // Re-initialize the CPU based on configuration.
+            Memory = new byte[Config.MemorySize];
+            Registers = Config.Registers ?? new CPURegisters();
+            Flags = Config.Flags ?? new ConditionFlags();
+            ProgramCounter = Config.ProgramCounter;
+            StackPointer = Config.StackPointer;
+            InterruptsEnabled = Config.InterruptsEnabled;
 
             // Reset the flag that indicates that the ROM has finished executing.
             Finished = false;
-
-            // Ensure interrupts are enabled.
-            InterruptsEnabled = false;
-        }
-
-        public void LoadRom(byte[] rom)
-        {
-            // Ensure the ROM data is not larger than we can load.
-            if (rom.Length > 8192)
-                throw new Exception("ROM filesize cannot exceed 8 kilobytes.");
-
-            var memory = new byte[16384];
-
-            // The ROM is the lower 8K of addressable memory.
-            Array.Copy(rom, memory, rom.Length);
-
-            LoadMemory(memory);
         }
 
         public void LoadMemory(byte[] memory)
         {
             // Ensure the memory data is not larger than we can load.
-            if (memory.Length > 16384)
-                throw new Exception("Memory cannot exceed 16 kilobytes.");
+            if (memory.Length > Config.MemorySize)
+                throw new Exception($"Memory cannot exceed {Config.MemorySize} bytes.");
 
-            Memory = memory;
+            if (memory.Length != Config.MemorySize)
+            {
+                // If the memory given is less than the configured memory size, then
+                // ensure that the rest of the memory array is zeroed out.
+                Memory = new byte[Config.MemorySize];
+                Array.Copy(memory, Memory, memory.Length);
+            }
+            else
+                Memory = memory;
         }
 
         public void PrintDebugSummary()
@@ -1659,8 +1628,8 @@ namespace JustinCredible.SIEmulator
             #region CPU Diagnostics Debugging Mode
 
             // This is special case code only for running the CPU diagnostic program.
-            // See the EnableCPUDiagMode flag for more details.
-            if (EnableCPUDiagMode && address == 0x00)
+            // See the EnableDiagnosticsMode flag for more details.
+            if (Config.EnableDiagnosticsMode && address == 0x00)
             {
                 // This is a CALL 0x00 which returns control to CP/M.
                 this.Finished = true;
@@ -1698,9 +1667,9 @@ namespace JustinCredible.SIEmulator
             #region CPU Diagnostics Debugging Mode
 
             // This is special case code only for running the CPU diagnostic program.
-            // See the EnableCPUDiagMode flag for more details.
+            // See the EnableDiagnosticsMode flag for more details.
 
-            if (EnableCPUDiagMode && address == 0x05)
+            if (Config.EnableDiagnosticsMode && address == 0x05)
             {
                 // This is a CALL 0x05 which is a CP/M call.
                 // Register C is a flag, a value of 9 indicates a string print using
@@ -1755,22 +1724,13 @@ namespace JustinCredible.SIEmulator
         {
             var address = Registers.HL;
 
-            // Determine if we should allow the write to memory based on the address.
-            var allowWrite = EnableCPUDiagMode
+            // Determine if we should allow the write to memory based on the address
+            // if the configuration has specified a restricted writeable range.
+            var enforceWriteBoundsCheck = Config.WriteableMemoryStart != 0 && Config.WriteableMemoryEnd != 0;
+            var allowWrite = true;
 
-                // In order to pass the cpudiag.bin tests, we need to allow writes
-                // to areas that would normally be ROM in Space Invaders. The test
-                // is written for a general Intel 8080, which could have a different
-                // memory layout. So in this case we're just ensuring that we don't
-                // write outside of the allocated 16KB address range.
-                ? address < 0x4000
-
-                // Only allow writes to the work/video RAM and not the ROM or memory mirror.
-                // $0000-$1FFF:  ROM (8K)
-                // $2000-$23FF:  work RAM (1K)
-                // $2400-$3FFF:  video RAM (7K)
-                // TODO: Allow writes to 0x4000 - 0x6000 (RAM mirror)?
-                : address >= 0x2000 && address <= 0x3FFF;
+            if (enforceWriteBoundsCheck)
+                allowWrite = address >= Config.WriteableMemoryStart && address <= Config.WriteableMemoryEnd;
 
             if (allowWrite)
                 Memory[address] = Registers[source];
@@ -1778,7 +1738,9 @@ namespace JustinCredible.SIEmulator
             {
                 var programCounterFormatted = String.Format("0x{0:X4}", ProgramCounter);
                 var addressFormatted = String.Format("0x{0:X4}", address);
-                throw new Exception($"Illegal memory address ({addressFormatted}) specified for 'MOV M, {source}' operation at address {programCounterFormatted}; expected address to be between 0x2000 and 0x3FFF inclusive.");
+                var startAddressFormatted = String.Format("0x{0:X4}", Config.WriteableMemoryStart);
+                var endAddressFormatted = String.Format("0x{0:X4}", Config.WriteableMemoryEnd);
+                throw new Exception($"Illegal memory address ({addressFormatted}) specified for 'MOV M, {source}' operation at address {programCounterFormatted}; expected address to be between {startAddressFormatted} and {endAddressFormatted} inclusive.");
             }
         }
 
@@ -1786,22 +1748,13 @@ namespace JustinCredible.SIEmulator
         {
             var address = Registers.HL;
 
-            // Determine if we should allow the write to memory based on the address.
-            var allowWrite = EnableCPUDiagMode
+            // Determine if we should allow the write to memory based on the address
+            // if the configuration has specified a restricted writeable range.
+            var enforceWriteBoundsCheck = Config.WriteableMemoryStart != 0 && Config.WriteableMemoryEnd != 0;
+            var allowWrite = true;
 
-                // In order to pass the cpudiag.bin tests, we need to allow writes
-                // to areas that would normally be ROM in Space Invaders. The test
-                // is written for a general Intel 8080, which could have a different
-                // memory layout. So in this case we're just ensuring that we don't
-                // write outside of the allocated 16KB address range.
-                ? address < 0x4000
-
-                // Only allow writes to the work/video RAM and not the ROM or memory mirror.
-                // $0000-$1FFF:  ROM (8K)
-                // $2000-$23FF:  work RAM (1K)
-                // $2400-$3FFF:  video RAM (7K)
-                // TODO: Allow writes to 0x4000 - 0x6000 (RAM mirror)?
-                : address >= 0x2000 && address <= 0x3FFF;
+            if (enforceWriteBoundsCheck)
+                allowWrite = address >= Config.WriteableMemoryStart && address <= Config.WriteableMemoryEnd;
 
             if (allowWrite)
                 Memory[address] = data;
@@ -1809,7 +1762,9 @@ namespace JustinCredible.SIEmulator
             {
                 var programCounterFormatted = String.Format("0x{0:X4}", ProgramCounter);
                 var addressFormatted = String.Format("0x{0:X4}", address);
-                throw new Exception($"Illegal memory address ({addressFormatted}) specified for 'MVI M, d8' operation at address {programCounterFormatted}; expected address to be between 0x2000 and 0x3FFF inclusive.");
+                var startAddressFormatted = String.Format("0x{0:X4}", Config.WriteableMemoryStart);
+                var endAddressFormatted = String.Format("0x{0:X4}", Config.WriteableMemoryEnd);
+                throw new Exception($"Illegal memory address ({addressFormatted}) specified for 'MVI M, d8' operation at address {programCounterFormatted}; expected address to be between {startAddressFormatted} and {endAddressFormatted} inclusive.");
             }
         }
 
@@ -1925,7 +1880,9 @@ namespace JustinCredible.SIEmulator
             Flags.Zero = result == 0;
             Flags.Sign = (result & 0b10000000) == 0b10000000;
             Flags.Parity = CalculateParityBit((byte)result);
-            // Flags.AuxCarry = // TODO
+
+            // TODO: Space Invaders doesn't use this, so skip for now.
+            // Flags.AuxCarry = ???
         }
 
         private bool CalculateParityBit(byte value)

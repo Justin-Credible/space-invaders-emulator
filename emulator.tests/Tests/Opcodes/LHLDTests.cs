@@ -17,12 +17,12 @@ namespace JustinCredible.SIEmulator.Tests
             memory[0x2477] = 0x77;
             memory[0x2478] = 0x66;
 
-            var initialState = new InitialCPUState()
+            var initialState = new CPUConfig()
             {
-                Memory = memory,
+                MemorySize = memory.Length,
             };
 
-            var state = Execute(rom, initialState);
+            var state = Execute(rom, memory, initialState);
 
             Assert.Equal(0x66, state.Registers.H);
             Assert.Equal(0x77, state.Registers.L);

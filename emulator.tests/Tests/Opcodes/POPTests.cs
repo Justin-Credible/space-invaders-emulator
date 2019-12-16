@@ -20,13 +20,13 @@ namespace JustinCredible.SIEmulator.Tests
             memory[0x2FFE] = 0x77;
             memory[0x2FFF] = 0x24;
 
-            var initialState = new InitialCPUState()
+            var initialState = new CPUConfig()
             {
-                Memory = memory,
                 StackPointer = 0x2FFE,
+                MemorySize = memory.Length,
             };
 
-            var state = Execute(rom, initialState);
+            var state = Execute(rom, memory, initialState);
 
             Assert.Equal(0x2477, state.Registers[pair]);
             Assert.Equal(0x00, state.Memory[0x3000]);
@@ -63,13 +63,13 @@ namespace JustinCredible.SIEmulator.Tests
             var registers = new CPURegisters();
             registers.A = 0x42;
 
-            var initialState = new InitialCPUState()
+            var initialState = new CPUConfig()
             {
-                Memory = memory,
                 StackPointer = 0x2FFE,
+                MemorySize = memory.Length,
             };
 
-            var state = Execute(rom, initialState);
+            var state = Execute(rom, memory, initialState);
 
             Assert.Equal(0x42, state.Registers.A);
             Assert.Equal(0x00, state.Memory[0x3000]);

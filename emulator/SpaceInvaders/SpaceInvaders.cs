@@ -16,9 +16,44 @@ namespace JustinCredible.SIEmulator
         public const int RESOLUTION_WIDTH = 256;
         public const int RESOLUTION_HEIGHT = 224;
 
+        // The configuration of the Intel 8080 CPU specifically for Space Invaders.
+        private static readonly CPUConfig _cpuConfig = new CPUConfig()
+        {
+            // 16 KB of RAM
+            MemorySize = 16 * 1024,
+
+            /**
+             * This is the memory layout specific to Space Invaders:
+             * 
+             * ROM (8K)
+             * $0000-$07ff:  invaders.h
+             * $0800-$0fff:  invaders.g
+             * $1000-$17ff:  invaders.f
+             * $1800-$1fff:  invaders.e
+             * 
+             * RAM (8K)
+             * $2000-$23ff:  work RAM (1K)
+             * $2400-$3fff:  video RAM (7K)
+             * 
+             * $4000-:       RAM mirror
+             * 
+             * TODO: Allow writes to 0x4000 - 0x6000 (RAM mirror)?
+             */
+            WriteableMemoryStart = 0x2000,
+            WriteableMemoryEnd = 0x3FFFF,
+
+            // Interrupts are initially disabled, and will be enabled by the program ROM when ready.
+            InterruptsEnabled = false,
+
+            EnableDiagnosticsMode = false,
+        };
+
         private Thread _thread;
 
+        // Intel 8080
         private CPU _cpu;
+
+        // Dedicated Shift Hardware
         private ShiftRegister _shiftRegister;
 
         // The game's video hardware generates runs at 60hz. It generates two interrupts @ 60hz. Interrupt
@@ -42,12 +77,16 @@ namespace JustinCredible.SIEmulator
             _cyclesSinceLastInterrupt = 0;
             _nextInterrupt = Interrupt.One;
 
-            _cpu = new CPU();
+            _cpu = new CPU(_cpuConfig);
 
             _cpu.OnDeviceRead += CPU_OnDeviceRead;
             _cpu.OnDeviceWrite += CPU_OnDeviceWrite;
 
-            _cpu.LoadRom(rom);
+            // Map the ROM into the lower 8K of the memory space.
+            var memory = new byte[_cpuConfig.MemorySize];
+            Array.Copy(rom, memory, rom.Length);
+
+            _cpu.LoadMemory(memory);
 
             _shiftRegister = new ShiftRegister();
 

@@ -29,7 +29,7 @@ namespace JustinCredible.SIEmulator.Tests
                 Carry = false,
             };
 
-            var initialState = new InitialCPUState()
+            var initialState = new CPUConfig()
             {
                 Registers = registers,
                 Flags = flags,
@@ -75,7 +75,7 @@ namespace JustinCredible.SIEmulator.Tests
                 Carry = false,
             };
 
-            var initialState = new InitialCPUState()
+            var initialState = new CPUConfig()
             {
                 Registers = registers,
                 Flags = flags,
@@ -120,7 +120,7 @@ namespace JustinCredible.SIEmulator.Tests
                 Carry = false,
             };
 
-            var initialState = new InitialCPUState()
+            var initialState = new CPUConfig()
             {
                 Registers = registers,
                 StackPointer = 0x3434,
@@ -162,7 +162,7 @@ namespace JustinCredible.SIEmulator.Tests
                 [pair] = 0x0005,
             };
 
-            var initialState = new InitialCPUState()
+            var initialState = new CPUConfig()
             {
                 Registers = registers,
             };
@@ -196,7 +196,7 @@ namespace JustinCredible.SIEmulator.Tests
                 HL = 0xFFF0,
             };
 
-            var initialState = new InitialCPUState()
+            var initialState = new CPUConfig()
             {
                 Registers = registers,
             };
@@ -229,7 +229,7 @@ namespace JustinCredible.SIEmulator.Tests
                 HL = 0xFFFE,
             };
 
-            var initialState = new InitialCPUState()
+            var initialState = new CPUConfig()
             {
                 Registers = registers,
                 StackPointer = 0x0005,

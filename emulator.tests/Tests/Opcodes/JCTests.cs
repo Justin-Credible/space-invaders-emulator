@@ -20,7 +20,7 @@ namespace JustinCredible.SIEmulator.Tests
                 HLT         ; $000A
             ");
 
-            var initialState = new InitialCPUState()
+            var initialState = new CPUConfig()
             {
                 Flags = new ConditionFlags()
                 {
@@ -58,7 +58,7 @@ namespace JustinCredible.SIEmulator.Tests
                 HLT         ; $000A
             ");
 
-            var initialState = new InitialCPUState()
+            var initialState = new CPUConfig()
             {
                 Flags = new ConditionFlags()
                 {

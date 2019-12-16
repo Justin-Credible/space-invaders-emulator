@@ -13,15 +13,14 @@ namespace JustinCredible.SIEmulator.Tests
                 HLT
             ");
 
-            var initialState = new InitialCPUState()
+            var initialState = GetCPUConfig();
+
+            initialState.Registers = new CPURegisters()
             {
-                Registers = new CPURegisters()
-                {
-                    A = 0x00,
-                },
+                A = 0x00,
             };
 
-            var cpu = new CPU();
+            var cpu = new CPU(initialState);
 
             cpu.OnDeviceRead += (int deviceID) => {
 
@@ -36,7 +35,7 @@ namespace JustinCredible.SIEmulator.Tests
                 }
             };
 
-            var state = Execute(rom, initialState, cpu);
+            var state = Execute(rom, cpu);
 
             Assert.Equal(0x66, state.Registers.A);
 
@@ -56,17 +55,16 @@ namespace JustinCredible.SIEmulator.Tests
                 HLT
             ");
 
-            var initialState = new InitialCPUState()
+            var initialState = GetCPUConfig();
+
+            initialState.Registers = new CPURegisters()
             {
-                Registers = new CPURegisters()
-                {
-                    A = 0x11,
-                },
+                A = 0x11,
             };
 
-            var cpu = new CPU();
+            var cpu = new CPU(initialState);
 
-            var state = Execute(rom, initialState, cpu);
+            var state = Execute(rom, cpu);
 
             Assert.Equal(0x11, state.Registers.A);
 

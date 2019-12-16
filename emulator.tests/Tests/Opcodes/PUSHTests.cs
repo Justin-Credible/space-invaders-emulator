@@ -21,7 +21,7 @@ namespace JustinCredible.SIEmulator.Tests
                 [pair] = 0x2477,
             };
 
-            var initialState = new InitialCPUState()
+            var initialState = new CPUConfig()
             {
                 Registers = registers,
                 StackPointer = 0x3000,
@@ -67,7 +67,7 @@ namespace JustinCredible.SIEmulator.Tests
                 Carry = true,
             };
 
-            var initialState = new InitialCPUState()
+            var initialState = new CPUConfig()
             {
                 Registers = registers,
                 Flags = flags,

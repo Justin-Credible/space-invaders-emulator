@@ -51,14 +51,14 @@ namespace JustinCredible.SIEmulator.Tests
             memory[0x271E] = 0xFF;
             memory[0x271D] = 0xFF;
 
-            var initialState = new InitialCPUState()
+            var initialState = new CPUConfig()
             {
                 ProgramCounter = 0x0040,
                 StackPointer = 0x2720,
-                Memory = memory,
+                MemorySize = memory.Length,
             };
 
-            var state = Execute(rom, initialState);
+            var state = Execute(rom, memory, initialState);
 
             Assert.Equal(0x271E, state.StackPointer);
             Assert.Equal(0xFF, state.Memory[0x2720]);
@@ -131,14 +131,14 @@ namespace JustinCredible.SIEmulator.Tests
             memory[0x271A] = 0xFF;
             memory[0x2719] = 0xFF;
 
-            var initialState = new InitialCPUState()
+            var initialState = new CPUConfig()
             {
                 ProgramCounter = 0x0040,
                 StackPointer = 0x2720,
-                Memory = memory,
+                MemorySize = memory.Length,
             };
 
-            var state = Execute(rom, initialState);
+            var state = Execute(rom, memory, initialState);
 
             Assert.Equal(0x2720, state.StackPointer);
             Assert.Equal(0xFF, state.Memory[0x2720]);

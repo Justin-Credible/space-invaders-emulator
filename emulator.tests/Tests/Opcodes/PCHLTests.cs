@@ -15,7 +15,7 @@ namespace JustinCredible.SIEmulator.Tests
                 HLT     ; $0003
             ");
 
-            var initialState = new InitialCPUState()
+            var initialState = new CPUConfig()
             {
                 Registers = new CPURegisters()
                 {

@@ -19,18 +19,23 @@ namespace JustinCredible.SIEmulator.Tests
             var rom = new byte[0x100 + originalRom.Length];
             Array.Copy(originalRom, 0, rom, 0x100, originalRom.Length);
 
+            var cpuConfig = GetCPUConfig();
+
             // Ensure we're running the CPU in a special diagnostics mode.
             // This allows for special behavior as if CP/M was running our
             // program (e.g. JMP 0x00 exits and CALL 0x05 prints a message).
-            var cpu = new CPU()
-            {
-                EnableCPUDiagMode = true,
+            cpuConfig.EnableDiagnosticsMode = true;
 
-                // The cpudiag.bin program is assembled with it's first instruction at $100.
-                ProgramCounter = 0x100,
-            };
+            // Disable memory write protection.
+            cpuConfig.WriteableMemoryStart = 0;
+            cpuConfig.WriteableMemoryEnd = 0;
 
-            cpu.LoadRom(rom);
+            // The cpudiag.bin program is assembled with it's first instruction at $100.
+            cpuConfig.ProgramCounter = 0x100;
+
+            var cpu = new CPU(cpuConfig);
+
+            cpu.LoadMemory(rom);
 
             var passed = false;
             string consoleOutput = "";

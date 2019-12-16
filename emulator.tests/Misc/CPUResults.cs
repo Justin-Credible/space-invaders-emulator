@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace JustinCredible.SIEmulator.Tests
 {
-    public class CPUStats
+    public class CPUResults
     {
         /** The number of CPU steps or instructions executed */
         public int Iterations { get; set; }

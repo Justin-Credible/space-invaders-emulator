@@ -109,10 +109,11 @@ namespace JustinCredible.SIEmulator
                 if (keepOpenOption.HasValue())
                     _keepOpenWhenDoneEmulating = true;
 
+                // TODO: Glue Program; initialize SpaceInvaders class here instead of the CPU core.
                 // TODO: Get ROM file path via standard File > Open dialog if one not specified
                 // via the command line arguments.
-                _cpu = new CPU();
-                _cpu.LoadRom(rom);
+                _cpu = new CPU(null);
+                // _cpu.LoadRom(rom);
 
                 var gui = new GUI();
                 gui.Initialize("Space Invaders Emulator", SpaceInvaders.RESOLUTION_WIDTH, SpaceInvaders.RESOLUTION_HEIGHT, 10, 10);

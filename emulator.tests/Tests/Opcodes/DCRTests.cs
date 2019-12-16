@@ -25,7 +25,7 @@ namespace JustinCredible.SIEmulator.Tests
                 [sourceReg] = 0x44,
             };
 
-            var initialState = new InitialCPUState()
+            var initialState = new CPUConfig()
             {
                 Registers = registers,
             };
@@ -62,7 +62,7 @@ namespace JustinCredible.SIEmulator.Tests
                 [sourceReg] = 0x45,
             };
 
-            var initialState = new InitialCPUState()
+            var initialState = new CPUConfig()
             {
                 Registers = registers,
             };
@@ -102,7 +102,7 @@ namespace JustinCredible.SIEmulator.Tests
                 [sourceReg] = 0x81,
             };
 
-            var initialState = new InitialCPUState()
+            var initialState = new CPUConfig()
             {
                 Registers = registers,
             };
@@ -142,7 +142,7 @@ namespace JustinCredible.SIEmulator.Tests
                 [sourceReg] = 0x01,
             };
 
-            var initialState = new InitialCPUState()
+            var initialState = new CPUConfig()
             {
                 Registers = registers,
             };
@@ -182,7 +182,7 @@ namespace JustinCredible.SIEmulator.Tests
                 [sourceReg] = 0x00,
             };
 
-            var initialState = new InitialCPUState()
+            var initialState = new CPUConfig()
             {
                 Registers = registers,
             };
@@ -218,13 +218,13 @@ namespace JustinCredible.SIEmulator.Tests
             var memory = new byte[16384];
             memory[0x2477] = 0x44;
 
-            var initialState = new InitialCPUState()
+            var initialState = new CPUConfig()
             {
                 Registers = registers,
-                Memory = memory,
+                MemorySize = memory.Length,
             };
 
-            var state = Execute(rom, initialState);
+            var state = Execute(rom, memory, initialState);
 
             Assert.Equal(0x43, state.Memory[0x2477]);
 
@@ -252,13 +252,13 @@ namespace JustinCredible.SIEmulator.Tests
             var memory = new byte[16384];
             memory[0x2477] = 0x45;
 
-            var initialState = new InitialCPUState()
+            var initialState = new CPUConfig()
             {
                 Registers = registers,
-                Memory = memory,
+                MemorySize = memory.Length,
             };
 
-            var state = Execute(rom, initialState);
+            var state = Execute(rom, memory, initialState);
 
             Assert.Equal(0x44, state.Memory[0x2477]);
 
@@ -289,13 +289,13 @@ namespace JustinCredible.SIEmulator.Tests
             var memory = new byte[16384];
             memory[0x2477] = 0x81;
 
-            var initialState = new InitialCPUState()
+            var initialState = new CPUConfig()
             {
                 Registers = registers,
-                Memory = memory,
+                MemorySize = memory.Length,
             };
 
-            var state = Execute(rom, initialState);
+            var state = Execute(rom, memory, initialState);
 
             Assert.Equal(0x80, state.Memory[0x2477]);
 
@@ -326,13 +326,13 @@ namespace JustinCredible.SIEmulator.Tests
             var memory = new byte[16384];
             memory[0x2477] = 0x01;
 
-            var initialState = new InitialCPUState()
+            var initialState = new CPUConfig()
             {
                 Registers = registers,
-                Memory = memory,
+                MemorySize = memory.Length,
             };
 
-            var state = Execute(rom, initialState);
+            var state = Execute(rom, memory, initialState);
 
             Assert.Equal(0x00, state.Memory[0x2477]);
 
@@ -363,13 +363,13 @@ namespace JustinCredible.SIEmulator.Tests
             var memory = new byte[16384];
             memory[0x2477] = 0x00;
 
-            var initialState = new InitialCPUState()
+            var initialState = new CPUConfig()
             {
                 Registers = registers,
-                Memory = memory,
+                MemorySize = memory.Length,
             };
 
-            var state = Execute(rom, initialState);
+            var state = Execute(rom, memory, initialState);
 
             Assert.Equal(0xFF, state.Memory[0x2477]);
 

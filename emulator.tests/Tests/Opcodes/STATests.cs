@@ -16,7 +16,7 @@ namespace JustinCredible.SIEmulator.Tests
             var registers = new CPURegisters();
             registers.A = 0x42;
 
-            var initialState = new InitialCPUState()
+            var initialState = new CPUConfig()
             {
                 Registers = registers,
             };

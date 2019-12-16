@@ -10,6 +10,14 @@ namespace JustinCredible.SIEmulator.Tests
 {
     public class BaseTest
     {
+        protected CPUConfig GetCPUConfig()
+        {
+            // NOTE: To prevent a ton of refactoring this is returning an instance
+            // of the CPUConfig from the unit test Tests namesapce that includes
+            // defaults that all of the unit tests use.
+            return new CPUConfig();
+        }
+
         protected static byte[] AssembleSource(string source)
         {
             var tempFilePath = Path.GetTempFileName();
@@ -49,57 +57,35 @@ namespace JustinCredible.SIEmulator.Tests
                 throw new Exception("The zasm assembler is not available this platform.");
         }
 
-        protected CPUStats Execute(byte[] rom, InitialCPUState initialState = null, CPU cpu = null)
+        protected CPUResults Execute(byte[] rom, byte[] memory, CPUConfig cpuConfig = null)
         {
-            if (cpu == null)
-                cpu = new CPU();
-
-            cpu.Reset();
-
-            // Ensure the ROM data is not larger than we can load.
-            if (rom.Length > 8192)
-                throw new Exception("ROM filesize cannot exceed 8 kilobytes.");
-
-            // Build the memory map manually, so that if a unit tests provides the RAM we can
-            // just map it in below.
-            var memory = new byte[16384];
-
-            // The ROM is the lower 8K of addressable memory.
+            // Map the ROM into the memory space.
             Array.Copy(rom, memory, rom.Length);
 
-            // Map in the registers and/or RAM if the unit test provided them.
-            if (initialState != null)
-            {
-                if (initialState.Memory != null)
-                {
-                    if (rom.Length > 16384)
-                        throw new Exception("Memory cannot exceed 16 kilobytes.");
+            return Execute(memory, cpuConfig);
+        }
 
-                    // Copy the RAM portion (upper 8K) into the memory map that already contains
-                    // the ROM in the lower 8K.
-                    Array.Copy(initialState.Memory, 8192, memory, 8192, 8192);
-                }
+        // protected CPUResults Execute(byte[] rom, CPUConfig cpuConfig = null, CPU cpu = null)
+        protected CPUResults Execute(byte[] memory, CPUConfig cpuConfig = null)
+        {
+            var cpu = new CPU(cpuConfig ?? GetCPUConfig());
 
-                if (initialState.Registers != null)
-                    cpu.Registers = initialState.Registers;
+            return Execute(memory, cpu);
+        }
 
-                if (initialState.Flags != null)
-                    cpu.Flags = initialState.Flags;
+        protected CPUResults Execute(byte[] rom, byte[] memory, CPU cpu)
+        {
+            // Map the ROM into the memory space.
+            Array.Copy(rom, memory, rom.Length);
 
-                if (initialState.StackPointer != null)
-                    cpu.StackPointer = initialState.StackPointer.Value;
+            return Execute(memory, cpu);
+        }
 
-                if (initialState.ProgramCounter != null)
-                    cpu.ProgramCounter = initialState.ProgramCounter.Value;
-
-                if (initialState.InterruptsEnabled != null)
-                    cpu.InterruptsEnabled = initialState.InterruptsEnabled.Value;
-            }
-
-            // Finally, set the built memory map into the CPU.
+        protected CPUResults Execute(byte[] memory, CPU cpu)
+        {
             cpu.LoadMemory(memory);
 
-            // Record the number of iterations (instructions), CPU cycles, and the address of teh
+            // Record the number of iterations (instructions), CPU cycles, and the address of the
             // program counter after each instruction is executed. This allows tests to assert each
             // of these values in addition to the CPU state.
             var iterations = 0;
@@ -121,7 +107,7 @@ namespace JustinCredible.SIEmulator.Tests
 
             // Return the state of the CPU so tests can do verification.
 
-            var results = new CPUStats()
+            var results = new CPUResults()
             {
                 Iterations = iterations,
                 Cycles = cycles,
@@ -137,7 +123,7 @@ namespace JustinCredible.SIEmulator.Tests
             return results;
         }
 
-        protected void AssertFlagsFalse(CPUStats stats)
+        protected void AssertFlagsFalse(CPUResults stats)
         {
             Assert.False(stats.Flags.AuxCarry);
             Assert.False(stats.Flags.Carry);
@@ -146,7 +132,7 @@ namespace JustinCredible.SIEmulator.Tests
             Assert.False(stats.Flags.Zero);
         }
 
-        protected void AssertFlagsSame(InitialCPUState initialState, CPUStats stats)
+        protected void AssertFlagsSame(CPUConfig initialState, CPUResults stats)
         {
             Assert.Equal(initialState.Flags.AuxCarry, stats.Flags.AuxCarry);
             Assert.Equal(initialState.Flags.Carry, stats.Flags.Carry);

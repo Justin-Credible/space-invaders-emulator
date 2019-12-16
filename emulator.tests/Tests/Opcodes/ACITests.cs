@@ -13,7 +13,7 @@ namespace JustinCredible.SIEmulator.Tests
                 HLT
             ");
 
-            var initialState = new InitialCPUState()
+            var initialState = new CPUConfig()
             {
                 Registers = new CPURegisters()
                 {
@@ -48,7 +48,7 @@ namespace JustinCredible.SIEmulator.Tests
                 HLT
             ");
 
-            var initialState = new InitialCPUState()
+            var initialState = new CPUConfig()
             {
                 Registers = new CPURegisters()
                 {
@@ -83,7 +83,7 @@ namespace JustinCredible.SIEmulator.Tests
                 HLT
             ");
 
-            var initialState = new InitialCPUState()
+            var initialState = new CPUConfig()
             {
                 Registers = new CPURegisters()
                 {
@@ -118,7 +118,7 @@ namespace JustinCredible.SIEmulator.Tests
                 HLT
             ");
 
-            var initialState = new InitialCPUState()
+            var initialState = new CPUConfig()
             {
                 Registers = new CPURegisters()
                 {
@@ -153,7 +153,7 @@ namespace JustinCredible.SIEmulator.Tests
                 HLT
             ");
 
-            var initialState = new InitialCPUState()
+            var initialState = new CPUConfig()
             {
                 Registers = new CPURegisters()
                 {
@@ -188,7 +188,7 @@ namespace JustinCredible.SIEmulator.Tests
                 HLT
             ");
 
-            var initialState = new InitialCPUState()
+            var initialState = new CPUConfig()
             {
                 Registers = new CPURegisters()
                 {
