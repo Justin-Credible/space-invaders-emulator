@@ -16,6 +16,12 @@ namespace JustinCredible.SIEmulator
         public const int RESOLUTION_WIDTH = 256;
         public const int RESOLUTION_HEIGHT = 224;
 
+        // The frame buffer is 256 x 224, which is 57,344 pixels. Since the display is only
+        // black and white, we only need one bit per pixel. Therefore we need 57,344 / 8
+        // => 7,168 bytes or 7 KB for the frame buffer. This is pulled from the video RAM
+        // portion which is at $2400-$3fff.
+        private const int FRAME_BUFFER_SIZE = 1024 * 7;
+
         // The configuration of the Intel 8080 CPU specifically for Space Invaders.
         private static readonly CPUConfig _cpuConfig = new CPUConfig()
         {
@@ -47,6 +53,10 @@ namespace JustinCredible.SIEmulator
 
             EnableDiagnosticsMode = false,
         };
+
+        public delegate void RenderEvent(RenderEventArgs e);
+        public event RenderEvent OnRender;
+        private RenderEventArgs _renderEventArgs;
 
         private Thread _thread;
 
@@ -89,6 +99,12 @@ namespace JustinCredible.SIEmulator
             _cpu.LoadMemory(memory);
 
             _shiftRegister = new ShiftRegister();
+
+            _renderEventArgs = new RenderEventArgs()
+            {
+                ShouldRender = false,
+                FrameBuffer = new byte[FRAME_BUFFER_SIZE],
+            };
 
             _thread = new Thread(new ThreadStart(Loop));
             _thread.Start();
@@ -171,9 +187,23 @@ namespace JustinCredible.SIEmulator
                     _cpu.StepInterrupt(_nextInterrupt);
 
                     if (_nextInterrupt == Interrupt.One)
-                        _nextInterrupt = Interrupt.Two; // End of screen (vblank).
+                    {
+                        // CRT electron beam is at the middle of the screen (approximately).
+
+                        _nextInterrupt = Interrupt.Two;
+                    }
                     else if (_nextInterrupt == Interrupt.Two)
-                        _nextInterrupt = Interrupt.One; // Middle of screen.
+                    {
+                        // CRT electron beam reached the end (V-Blank).
+
+                        if (OnRender != null)
+                        {
+                            Array.Copy(_cpu.Memory, 0x2400, _renderEventArgs.FrameBuffer, 0, FRAME_BUFFER_SIZE);
+                            OnRender(_renderEventArgs);
+                        }
+
+                        _nextInterrupt = Interrupt.One;
+                    }
                     else
                         throw new Exception($"Unexpected next interrupt: {_nextInterrupt}.");
                 }
