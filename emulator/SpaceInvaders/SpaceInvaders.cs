@@ -1,5 +1,6 @@
 
 using System;
+using System.Collections.Generic;
 using System.Threading;
 
 namespace JustinCredible.SIEmulator
@@ -54,6 +55,14 @@ namespace JustinCredible.SIEmulator
             EnableDiagnosticsMode = false,
         };
 
+        public bool Debug { get; set; }
+
+        // For Debugging; updated when Debug = true
+        private int _totalCycles = 0;
+        private int _totalSteps = 0;
+        private List<UInt16> _addressHistory = new List<UInt16>();
+        private static readonly int MAX_ADDRESS_HISTORY = 100;
+
         public delegate void RenderEvent(RenderEventArgs e);
         public event RenderEvent OnRender;
         private RenderEventArgs _renderEventArgs;
@@ -106,8 +115,8 @@ namespace JustinCredible.SIEmulator
                 FrameBuffer = new byte[FRAME_BUFFER_SIZE],
             };
 
-            _thread = new Thread(new ThreadStart(Loop));
-            _thread.Name = "Emulator Loop";
+            _thread = new Thread(new ThreadStart(HardwareLoop));
+            _thread.Name = "Emulator: Hardware Loop";
             _thread.Start();
         }
 
@@ -175,23 +184,39 @@ namespace JustinCredible.SIEmulator
             }
         }
 
-        // For Debugging
-        // private int _totalCycles = 0;
-        // private int _totalSteps = 0;
-
-        private void Loop()
+        /**
+         * Handles stepping the CPU to execute instructions as well as firing interrupts.
+         */
+        private void HardwareLoop()
         {
             while (true)
             {
+                // Record the current address.
+                if (Debug)
+                {
+                    _addressHistory.Add(_cpu.ProgramCounter);
+
+                    if (_addressHistory.Count >= MAX_ADDRESS_HISTORY)
+                        _addressHistory.RemoveAt(0);
+                }
+
+                // Step the CPU to execute the next instruction.
                 var cycles = _cpu.Step();
 
-                // _totalSteps++;
-                // _totalCycles += cycles;
+                // Keep track of the total number of steps (instructions) and cycles ellapsed.
+                if (Debug)
+                {
+                    _totalSteps++;
+                    _totalCycles += cycles;
+                }
 
+                // Keep track of the number of cycles since the last interrupt occurred.
                 _cyclesSinceLastInterrupt += cycles;
 
+                // Determine if it's time for the video hardware to fire an interrupt.
                 if (_cyclesSinceLastInterrupt >= _cyclesPerInterrupt)
                 {
+                    // If interrupts are enabled, then handle them, otherwise do nothing.
                     if (_cpu.InterruptsEnabled)
                     {
                         // If we're going to run an interrupt handler, ensure interrupts are disabled.
@@ -199,8 +224,10 @@ namespace JustinCredible.SIEmulator
                         // re-enable the interrupts manually.
                         _cpu.InterruptsEnabled = false;
 
+                        // Execute the handler for the interrupt.
                         _cpu.StepInterrupt(_nextInterrupt);
 
+                        // The video hardware alternates between these two interrupts.
                         if (_nextInterrupt == Interrupt.One)
                         {
                             // CRT electron beam is at the middle of the screen (approximately).
@@ -223,6 +250,7 @@ namespace JustinCredible.SIEmulator
                             throw new Exception($"Unexpected next interrupt: {_nextInterrupt}.");
                     }
 
+                    // Reset the count so we can count up again.
                     _cyclesSinceLastInterrupt = 0;
                 }
             }

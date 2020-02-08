@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using Microsoft.Extensions.CommandLineUtils;
 
 namespace JustinCredible.SIEmulator
@@ -10,8 +11,6 @@ namespace JustinCredible.SIEmulator
         private static CommandLineApplication _app;
 
         private static SpaceInvaders _game;
-
-        private static bool _guiClosed = false;
 
         // Used to pass data from the emulator thread's loop to the GUI loop.
         private static byte[] _frameBuffer;
@@ -57,6 +56,8 @@ namespace JustinCredible.SIEmulator
 
             var romPathArg = command.Argument("[ROM path]", "The path to a directory containing the Space Invaders ROM set to load.");
 
+            var debugOption = command.Option("-d|--debug", "Run in debug mode; enables internal statistics and logs useful when debugging.", CommandOptionType.NoValue);
+
             command.OnExecute(() =>
             {
                 if (String.IsNullOrWhiteSpace(romPathArg.Value))
@@ -67,17 +68,36 @@ namespace JustinCredible.SIEmulator
 
                 var rom = ReadRomFiles(romPathArg.Value);
 
+                Thread.CurrentThread.Name = "GUI Loop";
+
+                // Initialize the user interface (window) and wire an event handler
+                // that will handle receiving user input as well as sending the
+                // framebuffer to be rendered.
                 var gui = new GUI();
                 gui.Initialize("Space Invaders Emulator", SpaceInvaders.RESOLUTION_WIDTH, SpaceInvaders.RESOLUTION_HEIGHT, 10, 10);
                 gui.OnTick += GUI_OnTick;
 
+                // Initialize the Space Invaders hardware/emulator and wire an event
+                // handler so receive the framebuffer to be rendered.
                 _game = new SpaceInvaders();
                 _game.OnRender += SpaceInvaders_OnRender;
+
+                if (debugOption.HasValue())
+                    _game.Debug = true;
+
+                // Start the emulation; this occurs in a seperate thread and
+                // therefore this call is non-blocking.
                 _game.Start(rom);
 
+                // Starts the event loop for the user interface; this occurs on
+                // the same thread and is a blocking call. Once this method returns
+                // we know that the user closed the window or quit the program via
+                // the OS (e.g. ALT+F4 / CMD+Q).
                 gui.StartLoop();
+
+                // Ensure the GUI resources are cleaned up and stop the emulation.
                 gui.Dispose();
-                _guiClosed = true;
+                _game.Stop();
 
                 return 0;
             });
@@ -114,12 +134,20 @@ namespace JustinCredible.SIEmulator
             return bytes.ToArray();
         }
 
+        /**
+         * Fired when the emulator has a full frame to be rendered.
+         * This should occur at approximately 60hz.
+         */
         private static void SpaceInvaders_OnRender(RenderEventArgs eventArgs)
         {
             _frameBuffer = eventArgs.FrameBuffer;
             _renderFrameNextTick = true;
         }
 
+        /**
+         * Fired when the GUI event loop "ticks". This provides an opportunity
+         * to receive user input as well as send the framebuffer to be rendered.
+         */
         private static void GUI_OnTick(GUITickEventArgs eventArgs)
         {
             _keys = eventArgs.Keys;
