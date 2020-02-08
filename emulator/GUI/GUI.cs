@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using SDL2;
+using static SDL2.SDL;
 
 namespace JustinCredible.SIEmulator
 {
@@ -106,17 +107,32 @@ namespace JustinCredible.SIEmulator
 
                     var frameBuffer = tickEventArgs.FrameBuffer;
 
-                    // TODO: Build out a 2D array of points so we can do a single call to SDL_RenderDrawPoints here.
                     if (frameBuffer != null)
                     {
-                        for (var x = 0; x < frameBuffer.GetLength(0); x++)
+                        var bits = new System.Collections.BitArray(frameBuffer);
+
+                        var pixels = new List<SDL_Point>();
+
+                        var x = 0;
+                        var y = 0;
+
+                        for (var i = 0; i < bits.Length; i++)
                         {
-                            for (var y = 0; y < frameBuffer.GetLength(1); y++)
+                            pixels.Add(new SDL_Point() { x = x, y = y });
+
+                            x++;
+
+                            if (x == SpaceInvaders.RESOLUTION_WIDTH)
                             {
-                                if (frameBuffer[x, y] == 1)
-                                    SDL.SDL_RenderDrawPoint(_renderer, x, y);
+                                x = 0;
+                                y++;
                             }
+
+                            if (y == SpaceInvaders.RESOLUTION_HEIGHT)
+                                break;
                         }
+
+                        SDL.SDL_RenderDrawPoints(_renderer, pixels.ToArray(), pixels.Count);
                     }
 
                     SDL.SDL_RenderPresent(_renderer);

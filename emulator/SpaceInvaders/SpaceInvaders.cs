@@ -107,6 +107,7 @@ namespace JustinCredible.SIEmulator
             };
 
             _thread = new Thread(new ThreadStart(Loop));
+            _thread.Name = "Emulator Loop";
             _thread.Start();
         }
 
@@ -174,41 +175,56 @@ namespace JustinCredible.SIEmulator
             }
         }
 
+        // For Debugging
+        // private int _totalCycles = 0;
+        // private int _totalSteps = 0;
+
         private void Loop()
         {
-            var cycles = _cpu.Step();
-
-            _cyclesSinceLastInterrupt += cycles;
-
-            if (_cyclesSinceLastInterrupt >= _cyclesPerInterrupt)
+            while (true)
             {
-                if (_cpu.InterruptsEnabled)
+                var cycles = _cpu.Step();
+
+                // _totalSteps++;
+                // _totalCycles += cycles;
+
+                _cyclesSinceLastInterrupt += cycles;
+
+                if (_cyclesSinceLastInterrupt >= _cyclesPerInterrupt)
                 {
-                    _cpu.StepInterrupt(_nextInterrupt);
-
-                    if (_nextInterrupt == Interrupt.One)
+                    if (_cpu.InterruptsEnabled)
                     {
-                        // CRT electron beam is at the middle of the screen (approximately).
+                        // If we're going to run an interrupt handler, ensure interrupts are disabled.
+                        // This ensures we don't interrupt the interrupt handler. The program ROM will
+                        // re-enable the interrupts manually.
+                        _cpu.InterruptsEnabled = false;
 
-                        _nextInterrupt = Interrupt.Two;
-                    }
-                    else if (_nextInterrupt == Interrupt.Two)
-                    {
-                        // CRT electron beam reached the end (V-Blank).
+                        _cpu.StepInterrupt(_nextInterrupt);
 
-                        if (OnRender != null)
+                        if (_nextInterrupt == Interrupt.One)
                         {
-                            Array.Copy(_cpu.Memory, 0x2400, _renderEventArgs.FrameBuffer, 0, FRAME_BUFFER_SIZE);
-                            OnRender(_renderEventArgs);
+                            // CRT electron beam is at the middle of the screen (approximately).
+
+                            _nextInterrupt = Interrupt.Two;
                         }
+                        else if (_nextInterrupt == Interrupt.Two)
+                        {
+                            // CRT electron beam reached the end (V-Blank).
 
-                        _nextInterrupt = Interrupt.One;
+                            if (OnRender != null)
+                            {
+                                Array.Copy(_cpu.Memory, 0x2400, _renderEventArgs.FrameBuffer, 0, FRAME_BUFFER_SIZE);
+                                OnRender(_renderEventArgs);
+                            }
+
+                            _nextInterrupt = Interrupt.One;
+                        }
+                        else
+                            throw new Exception($"Unexpected next interrupt: {_nextInterrupt}.");
                     }
-                    else
-                        throw new Exception($"Unexpected next interrupt: {_nextInterrupt}.");
-                }
 
-                _cyclesSinceLastInterrupt = 0;
+                    _cyclesSinceLastInterrupt = 0;
+                }
             }
         }
     }

@@ -1701,6 +1701,7 @@ namespace JustinCredible.SIEmulator
             var originalOpcodeByte = Memory[returnAddress];
             var originalOpcode = Opcodes.Lookup[originalOpcodeByte];
 
+            /* Commenting out for now; interrupt handlers will return to arbitrary addresses.
             // Sanity check.
             if (!_expectedOpcodesToReturnTo.Contains(originalOpcodeByte))
             {
@@ -1709,6 +1710,7 @@ namespace JustinCredible.SIEmulator
                 var originalOpcodeByteFormatted = String.Format("0x{0:X2}", originalOpcodeByte);
                 throw new Exception($"The RET at {programCounterFormatted} is attempting to return to {addressFormatted} which contains opcode {originalOpcode.Instruction} ({originalOpcodeByteFormatted}), but RET is expecting to only return to a CALL or RST opcode.");
             }
+            */
 
             // The statement we're jumping back to is the original CALL or RST statement.
             // We don't want to execute it again, so set the program counter to skip past.

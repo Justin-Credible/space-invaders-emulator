@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Threading;
 using Microsoft.Extensions.CommandLineUtils;
 
 namespace JustinCredible.SIEmulator
@@ -16,7 +14,7 @@ namespace JustinCredible.SIEmulator
         private static bool _guiClosed = false;
 
         // Used to pass data from the emulator thread's loop to the GUI loop.
-        private static byte[,] _frameBuffer;
+        private static byte[] _frameBuffer;
         private static bool _renderFrameNextTick = false;
 
         // Used to pass data from the GUI event loop to the emulator thread's loop.
@@ -61,22 +59,20 @@ namespace JustinCredible.SIEmulator
 
             command.OnExecute(() =>
             {
-                byte[] rom;
+                if (String.IsNullOrWhiteSpace(romPathArg.Value))
+                    throw new Exception("A directory containing invaders.e though .h files is required.");
 
-                // TODO: Read directory of ROM files.
-                if (File.Exists(romPathArg.Value))
-                    rom = System.IO.File.ReadAllBytes(romPathArg.Value);
-                else
-                    throw new Exception($"Could not locate a ROM file at path {romPathArg.Value}");
+                if (!Directory.Exists(romPathArg.Value))
+                    throw new Exception($"Could not locate a directory at path {romPathArg.Value}");
+
+                var rom = ReadRomFiles(romPathArg.Value);
 
                 var gui = new GUI();
                 gui.Initialize("Space Invaders Emulator", SpaceInvaders.RESOLUTION_WIDTH, SpaceInvaders.RESOLUTION_HEIGHT, 10, 10);
                 gui.OnTick += GUI_OnTick;
 
-                // TODO: Glue Program; initialize SpaceInvaders class here instead of the CPU core.
-                // TODO: Get ROM file path via standard File > Open dialog if one not specified
-                // via the command line arguments.
                 _game = new SpaceInvaders();
+                _game.OnRender += SpaceInvaders_OnRender;
                 _game.Start(rom);
 
                 gui.StartLoop();
@@ -85,6 +81,43 @@ namespace JustinCredible.SIEmulator
 
                 return 0;
             });
+        }
+
+        private static byte[] ReadRomFiles(string directoryPath)
+        {
+            var hPath = Path.Join(directoryPath, "invaders.h");
+            var gPath = Path.Join(directoryPath, "invaders.g");
+            var fPath = Path.Join(directoryPath, "invaders.f");
+            var ePath = Path.Join(directoryPath, "invaders.e");
+
+            if (!File.Exists(hPath))
+                throw new Exception($"Could not locate {hPath}");
+
+            if (!File.Exists(gPath))
+                throw new Exception($"Could not locate {gPath}");
+
+            if (!File.Exists(fPath))
+                throw new Exception($"Could not locate {fPath}");
+
+            if (!File.Exists(ePath))
+                throw new Exception($"Could not locate {ePath}");
+
+            // TODO: Checksums?
+
+            var bytes = new List<byte>();
+
+            bytes.AddRange(File.ReadAllBytes(hPath));
+            bytes.AddRange(File.ReadAllBytes(gPath));
+            bytes.AddRange(File.ReadAllBytes(fPath));
+            bytes.AddRange(File.ReadAllBytes(ePath));
+
+            return bytes.ToArray();
+        }
+
+        private static void SpaceInvaders_OnRender(RenderEventArgs eventArgs)
+        {
+            _frameBuffer = eventArgs.FrameBuffer;
+            _renderFrameNextTick = true;
         }
 
         private static void GUI_OnTick(GUITickEventArgs eventArgs)
@@ -97,7 +130,6 @@ namespace JustinCredible.SIEmulator
                 eventArgs.ShouldRender = true;
                 _renderFrameNextTick = false;
             }
-
         }
     }
 }

@@ -15,7 +15,7 @@ namespace JustinCredible.SIEmulator
         public SDL.SDL_Keycode? KeyDown { get; set; }
 
         // In
-        public byte[,] FrameBuffer { get; set; }
+        public byte[] FrameBuffer { get; set; }
         public bool ShouldRender { get; set; }
         public bool ShouldQuit { get; set; }
     }
