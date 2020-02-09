@@ -48,6 +48,7 @@ namespace JustinCredible.I8080Disassembler
 
             var outputOption = command.Option("-o|--output", "The path to the to output file.", CommandOptionType.SingleValue);
             var includeAddressOption = command.Option("-a|--address", "Include addresses in the disassembly.", CommandOptionType.NoValue);
+            var includePseudocodeOption = command.Option("-p|--pseudocode", "Include pseudocode in the disassembly (a comment on each line).", CommandOptionType.NoValue);
 
             command.OnExecute(() =>
             {
@@ -77,7 +78,7 @@ namespace JustinCredible.I8080Disassembler
 
                 Console.WriteLine("Disassembling ROM...");
 
-                var disassembly = Disassembler.Disassemble(rom, includeAddressOption.HasValue());
+                var disassembly = Disassembler.Disassemble(rom, includeAddressOption.HasValue(), includePseudocodeOption.HasValue());
 
                 Console.WriteLine("Disassembly complete!");
 

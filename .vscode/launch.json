@@ -10,9 +10,22 @@
             "request": "launch",
             "preLaunchTask": "build emulator",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/emulator/bin/Debug/netcoreapp2.2/emulator.dll",
+            "program": "${workspaceFolder}/emulator/bin/Debug/netcoreapp3.1/emulator.dll",
             "args": [],
             "cwd": "${workspaceFolder}/emulator",
+            // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
+            "name": ".NET Core Launch (disassembler)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build disassembler",
+            // If you have changed target frameworks, make sure to update the program path.
+            "program": "${workspaceFolder}/disassembler/bin/Debug/netcoreapp3.1/disassembler.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/disassembler",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",
             "stopAtEntry": false
