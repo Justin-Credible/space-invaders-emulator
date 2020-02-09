@@ -1,6 +1,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using JustinCredible.I8080Disassembler;
@@ -71,6 +72,7 @@ namespace JustinCredible.SIEmulator
         private RenderEventArgs _renderEventArgs;
 
         private Thread _thread;
+        private bool _cancelled = false;
 
         // Intel 8080
         private CPU _cpu;
@@ -85,6 +87,10 @@ namespace JustinCredible.SIEmulator
         private double _cyclesPerInterrupt = Math.Floor(Convert.ToDouble(CPU_MHZ / 60 / 2));
         private int _cyclesSinceLastInterrupt = 0;
         private Interrupt _nextInterrupt;
+
+        // To keep the emulated CPU from running too fast, we use a stopwatch and count cycles.
+        private Stopwatch _cpuStopWatch = new Stopwatch();
+        private int _cycleCount = 0;
 
         // TODO: Implement I/O ports
         // TODO: Implement audio event emitter
@@ -118,6 +124,7 @@ namespace JustinCredible.SIEmulator
                 FrameBuffer = new byte[FRAME_BUFFER_SIZE],
             };
 
+            _cancelled = false;
             _thread = new Thread(new ThreadStart(HardwareLoop));
             _thread.Name = "Emulator: Hardware Loop";
             _thread.Start();
@@ -128,9 +135,7 @@ namespace JustinCredible.SIEmulator
             if (_thread == null)
                 throw new Exception("Emulator cannot be stopped because it wasn't running.");
 
-            _thread.Abort();
-            _cpu = null;
-            _thread = null;
+            _cancelled = true;
         }
 
         /**
@@ -287,7 +292,10 @@ namespace JustinCredible.SIEmulator
          */
         private void HardwareLoop()
         {
-            while (true)
+            _cpuStopWatch.Start();
+            _cycleCount = 0;
+
+            while (!_cancelled)
             {
                 // Record the current address.
                 if (Debug)
@@ -301,11 +309,35 @@ namespace JustinCredible.SIEmulator
                 // Step the CPU to execute the next instruction.
                 var cycles = _cpu.Step();
 
+                // Keep track of the number of cycles to see if we need to throttle the CPU.
+                _cycleCount += cycles;
+
                 // Keep track of the total number of steps (instructions) and cycles ellapsed.
                 if (Debug)
                 {
                     _totalSteps++;
                     _totalCycles += cycles;
+
+                    // Used to slow down the emulation to watch the renderer.
+                    // if (_totalCycles % 1000 == 0)
+                    //     System.Threading.Thread.Sleep(10);
+                }
+
+                // Throttle the CPU emulation if needed.
+                if (_cycleCount >= (CPU_MHZ/60))
+                {
+                    _cpuStopWatch.Stop();
+
+                    if (_cpuStopWatch.Elapsed.TotalMilliseconds < 16.6)
+                    {
+                        var sleepForMs = 16.6 - _cpuStopWatch.Elapsed.TotalMilliseconds;
+
+                        if (sleepForMs >= 1)
+                            System.Threading.Thread.Sleep((int)sleepForMs);
+                    }
+
+                    _cycleCount = 0;
+                    _cpuStopWatch.Restart();
                 }
 
                 // Keep track of the number of cycles since the last interrupt occurred.
@@ -352,6 +384,9 @@ namespace JustinCredible.SIEmulator
                     _cyclesSinceLastInterrupt = 0;
                 }
             }
+
+            _cpu = null;
+            _thread = null;
         }
     }
 }
