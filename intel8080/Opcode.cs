@@ -6,13 +6,14 @@ namespace JustinCredible.Intel8080
      */
     public class Opcode
     {
-        public Opcode(byte code, int size, string instruction, int cycles, int? alternateCycles = null)
+        public Opcode(byte code, int size, string instruction, int cycles, int? alternateCycles = null, string pseudocode = null)
         {
             Code = code;
             Size = size;
             Instruction = instruction;
             Cycles = cycles;
             AlternateCycles = alternateCycles;
+            Pseudocode = pseudocode;
         }
 
         public byte Code { get; set; }
@@ -20,5 +21,6 @@ namespace JustinCredible.Intel8080
         public string Instruction { get; set; }
         public int Cycles { get; set; }
         public int? AlternateCycles { get; set; }
+        public string Pseudocode { get; set; }
     }
 }
