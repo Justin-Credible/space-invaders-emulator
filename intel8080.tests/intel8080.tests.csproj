@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\emulator\emulator.csproj" />
+    <ProjectReference Include="..\intel8080\intel8080.csproj" />
   </ItemGroup>
 
 </Project>
