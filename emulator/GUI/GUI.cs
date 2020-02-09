@@ -25,8 +25,8 @@ namespace JustinCredible.SIEmulator
             _window = SDL.SDL_CreateWindow(title,
                 SDL.SDL_WINDOWPOS_CENTERED,
                 SDL.SDL_WINDOWPOS_CENTERED,
-                width,
-                height,
+                (int)(width * scaleX),
+                (int)(height * scaleY),
                 SDL.SDL_WindowFlags.SDL_WINDOW_RESIZABLE
             );
 
@@ -97,42 +97,60 @@ namespace JustinCredible.SIEmulator
                 // amount of opcodes (ticks) we can execute.
                 if (tickEventArgs.ShouldRender)
                 {
-                    // Clear the screen.
-                    SDL.SDL_SetRenderDrawColor(_renderer, 0, 0, 0, 0);
-                    SDL.SDL_RenderClear(_renderer);
-
                     // Render screen from the updated the frame buffer.
-
-                    SDL.SDL_SetRenderDrawColor(_renderer, 255, 255, 255, 255);
+                    // NOTE: The electron beam scans from left to right, starting in the upper left corner
+                    // of the CRT when it is in 4:3 (landscape), which is how the framebuffer is stored.
+                    // However, since the CRT in the cabinet is rotated left (-90 degrees) to show the game
+                    // in 3:4 (portrait) we need to perform the rotation of points below by starting in the
+                    // bottom left corner of the window and drawing upwards, ending on the top right.
 
                     var frameBuffer = tickEventArgs.FrameBuffer;
 
                     if (frameBuffer != null)
                     {
+                        // Clear the screen.
+                        SDL.SDL_SetRenderDrawColor(_renderer, 0, 0, 0, 0);
+                        SDL.SDL_RenderClear(_renderer);
+
                         var bits = new System.Collections.BitArray(frameBuffer);
 
-                        var pixels = new List<SDL_Point>();
-
                         var x = 0;
-                        var y = 0;
+                        var y = SpaceInvaders.RESOLUTION_WIDTH - 1;
 
                         for (var i = 0; i < bits.Length; i++)
                         {
-                            pixels.Add(new SDL_Point() { x = x, y = y });
-
-                            x++;
-
-                            if (x == SpaceInvaders.RESOLUTION_WIDTH)
+                            if (bits[i])
                             {
-                                x = 0;
-                                y++;
+                                // The CRT is black/white and the framebuffer is 1-bit per pixel.
+                                // A transparent overlay added "colors" to areas of the CRT. These
+                                // are the approximate y locations of each area/color of the overlay:
+                                // • 0-18: White
+                                // • 18-72: Green
+                                // • 73-224: White
+                                // • 225-254: Red
+
+                                if (y >= 182 && y <= 222)
+                                    SDL.SDL_SetRenderDrawColor(_renderer, 0, 255, 0, 255); // Green
+                                else if (y >= 0 && y <= 31)
+                                    SDL.SDL_SetRenderDrawColor(_renderer, 255, 0, 0, 255); // Red
+                                else
+                                    SDL.SDL_SetRenderDrawColor(_renderer, 255, 255, 255, 255); // White
+
+                                SDL.SDL_RenderDrawPoint(_renderer, x, y);
                             }
 
-                            if (y == SpaceInvaders.RESOLUTION_HEIGHT)
-                                break;
-                        }
+                            y--;
 
-                        SDL.SDL_RenderDrawPoints(_renderer, pixels.ToArray(), pixels.Count);
+                            if (y == -1)
+                            {
+                                y = SpaceInvaders.RESOLUTION_WIDTH - 1;
+                                x++;
+                            }
+
+                            if (x == SpaceInvaders.RESOLUTION_HEIGHT)
+                                break;
+
+                        }
                     }
 
                     SDL.SDL_RenderPresent(_renderer);
