@@ -12,6 +12,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.CommandLineUtils" Version="1.1.1" />
     <ProjectReference Include="..\intel8080\intel8080.csproj" />
+    <ProjectReference Include="..\disassembler\disassembler.csproj" />
   </ItemGroup>
 
 </Project>

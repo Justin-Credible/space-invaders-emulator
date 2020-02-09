@@ -1,7 +1,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading;
+using JustinCredible.I8080Disassembler;
 using JustinCredible.Intel8080;
 
 namespace JustinCredible.SIEmulator
@@ -129,6 +131,101 @@ namespace JustinCredible.SIEmulator
             _thread.Abort();
             _cpu = null;
             _thread = null;
+        }
+
+        /**
+         * Prints last n instructions that were executed up to MAX_ADDRESS_HISTORY.
+         * Useful when a debugger is attached. Only works when Debug is true.
+         */
+        public void PrintRecentInstructions(int count = 10)
+        {
+            if (!Debug)
+                return;
+
+            var output = new StringBuilder();
+
+            if (count > _addressHistory.Count)
+                count = _addressHistory.Count;
+
+            var startIndex = _addressHistory.Count - count;
+
+            for (var i = startIndex; i < _addressHistory.Count; i++)
+            {
+                var address = _addressHistory[i];
+
+                // Edge case for being able to print instruction history when we've jumped outside
+                // of the allowable memory locations.
+                if (address >= _cpu.Memory.Length)
+                {
+                    var addressDisplay = String.Format("0x{0:X4}", address);
+                    output.AppendLine($"[IndexOutOfRange: {addressDisplay}]");
+                    continue;
+                }
+
+                var instruction = Disassembler.Disassemble(_cpu.Memory, address, out _, true, true);
+                output.AppendLine(instruction);
+            }
+
+            Console.WriteLine(output.ToString());
+        }
+
+        /**
+         * Used to print the disassembly of memory locations before and after the given address.
+         * Useful when a debugger is attached.
+         */
+        public void PrintMemory(UInt16 address, int beforeCount = 10, int afterCount = 10)
+        {
+            var output = new StringBuilder();
+
+            // Ensure the start and end locations are within range.
+            var start = (address - beforeCount < 0) ? 0 : (address - beforeCount);
+            var end = (address + afterCount >= _cpu.Memory.Length) ? _cpu.Memory.Length - 1 : (address + afterCount);
+
+            for (var i = start; i < end; i++)
+            {
+                var addressIndex = (UInt16)i;
+
+                // If this is the current address location, add an arrow pointing to it.
+                output.Append(address == addressIndex ? "---->\t" : "\t");
+
+                // Disasemble the opcode and print it.
+                var instruction = Disassembler.Disassemble(_cpu.Memory, addressIndex, out int instructionLength, true, true);
+                output.AppendLine(instruction);
+
+                // If the opcode is larger than a single byte, we don't want to print subsequent
+                // bytes as opcodes, so here we print the next address locations as the byte value
+                // in parentheses, and then increment so we can skip disassembly of the data.
+                if (instructionLength == 3)
+                {
+                    var upper = _cpu.Memory[addressIndex + 2] << 8;
+                    var lower = _cpu.Memory[addressIndex + 1];
+                    var combined = (UInt16)(upper | lower);
+                    var dataFormatted = String.Format("0x{0:X4}", combined);
+                    var address1Formatted = String.Format("0x{0:X4}", addressIndex+1);
+                    var address2Formatted = String.Format("0x{0:X4}", addressIndex+2);
+                    output.AppendLine($"\t{address1Formatted}\t(D16: {dataFormatted})");
+                    output.AppendLine($"\t{address2Formatted}\t");
+                    i += 2;
+                }
+                else if (instructionLength == 2)
+                {
+                    var dataFormatted = String.Format("0x{0:X2}", _cpu.Memory[addressIndex+1]);
+                    var addressFormatted = String.Format("0x{0:X4}", addressIndex+1);
+                    output.AppendLine($"\t{addressFormatted}\t(D8: {dataFormatted}");
+                    i++;
+                }
+            }
+
+            Console.WriteLine(output.ToString());
+        }
+
+        /**
+         * Used to print the disassembly of the memory locations around where the program counter is pointing.
+         * Useful when a debugger is attached.
+         */
+        public void PrintCurrentExecution(int beforeCount = 10, int afterCount = 10)
+        {
+            PrintMemory(_cpu.ProgramCounter, beforeCount, afterCount);
         }
 
         /**

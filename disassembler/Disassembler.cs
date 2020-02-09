@@ -50,9 +50,6 @@ namespace JustinCredible.I8080Disassembler
             }
             else if (opcode.Size == 3)
             {
-                var next1 = rom[address + 1];
-                var next2 = rom[address + 2];
-
                 var upper = rom[address + 2] << 8;
                 var lower = rom[address + 1];
                 var dataOrAddress = (UInt16)(upper | lower);
