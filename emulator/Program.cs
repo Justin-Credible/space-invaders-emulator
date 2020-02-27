@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.Extensions.CommandLineUtils;
 
@@ -18,6 +19,8 @@ namespace JustinCredible.SIEmulator
 
         // Used to pass data from the GUI event loop to the emulator thread's loop.
         private static Dictionary<byte, bool> _keys = null;
+
+        #region CLI / Entrypoint
 
         public static void Main(string[] args)
         {
@@ -57,6 +60,8 @@ namespace JustinCredible.SIEmulator
             var romPathArg = command.Argument("[ROM path]", "The path to a directory containing the Space Invaders ROM set to load.");
 
             var debugOption = command.Option("-d|--debug", "Run in debug mode; enables internal statistics and logs useful when debugging.", CommandOptionType.NoValue);
+            var breakOption = command.Option("-b|--break", "Used with debug, will break at the given address and allow single stepping opcode execution (e.g. --break 0x0248)", CommandOptionType.MultipleValue);
+            var annotationsPathOption = command.Option("-a|--annotations", "Used with debug, a path to a text file containing memory address annotations for interactive debugging (line format: 0x1234 .... ; Annotation)", CommandOptionType.SingleValue);
 
             command.OnExecute(() =>
             {
@@ -84,8 +89,45 @@ namespace JustinCredible.SIEmulator
                 _game = new SpaceInvaders();
                 _game.OnRender += SpaceInvaders_OnRender;
 
+                #region Set Debugging Flags
+
                 if (debugOption.HasValue())
+                {
                     _game.Debug = true;
+
+                    if (breakOption.HasValue())
+                    {
+                        var addresses = new List<UInt16>();
+
+                        foreach (var addressString in breakOption.Values)
+                        {
+                            UInt16 address = Convert.ToUInt16(addressString, 16);
+                            addresses.Add(address);
+                        }
+
+                        _game.BreakAtAddresses = addresses;
+                    }
+
+                    if (annotationsPathOption.HasValue())
+                    {
+                        var annotationsFilePath = annotationsPathOption.Value();
+
+                        if (!File.Exists(annotationsFilePath))
+                            throw new Exception($"Could not locate an annotations file at path {annotationsFilePath}");
+
+                        try
+                        {
+                            var annotations = ParseAnnotationsFile(annotationsFilePath);
+                            _game.Annotations = annotations;
+                        }
+                        catch (Exception ex)
+                        {
+                            throw new Exception($"Error parsing annotations file.", ex);
+                        }
+                    }
+                }
+
+                #endregion
 
                 // Start the emulation; this occurs in a seperate thread and
                 // therefore this call is non-blocking.
@@ -104,6 +146,10 @@ namespace JustinCredible.SIEmulator
                 return 0;
             });
         }
+
+        #endregion
+
+        #region CLI Helpers
 
         private static byte[] ReadRomFiles(string directoryPath)
         {
@@ -136,6 +182,47 @@ namespace JustinCredible.SIEmulator
             return bytes.ToArray();
         }
 
+        private static Dictionary<UInt16, String> ParseAnnotationsFile(string path)
+        {
+            var annotations = new Dictionary<UInt16, String>();
+
+            var lines = File.ReadAllLines(path);
+
+            foreach (var line in lines)
+            {
+                if (line.Length < 5)
+                    continue;
+
+                var addressRegEx = new Regex("^[0-9A-F]{4}$");
+
+                try
+                {
+                    var addressString = line.Substring(0, 4);
+
+                    if (!addressRegEx.IsMatch(addressString))
+                        continue;
+
+                    var address = Convert.ToUInt16(addressString, 16);
+
+                    var parts = line.Split(";");
+
+                    annotations.Add(address, parts[1]);
+                }
+                catch
+                {
+                    // Do nothing; the annotation file can vary wildly with new lines,
+                    // lines that are just comments, labels, etc. We only care about a
+                    // parsable memory address and if that line has a comment at the end.
+                }
+            }
+
+            return annotations;
+        }
+
+        #endregion
+
+        #region Glue Methods - Connects the emulator and SDL/renderer threads
+
         /**
          * Fired when the emulator has a full frame to be rendered.
          * This should occur at approximately 60hz.
@@ -161,5 +248,7 @@ namespace JustinCredible.SIEmulator
                 _renderFrameNextTick = false;
             }
         }
+
+        #endregion
     }
 }

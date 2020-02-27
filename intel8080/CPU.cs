@@ -146,12 +146,18 @@ namespace JustinCredible.Intel8080
             var regH = String.Format("0x{0:X2}", Registers.H);
             var regL = String.Format("0x{0:X2}", Registers.L);
 
+            var valueAtDE = String.Format("0x{0:X2}", Memory[Registers.DE]);
+            var valueAtHL = String.Format("0x{0:X2}", Memory[Registers.HL]);
+
             Console.WriteLine($"Opcode: {opcode}");
+            Console.WriteLine();
             Console.WriteLine($"PC: {pc}\tSP: {sp}");
-            Console.WriteLine($"A: {regA}\tB: {regB}\tC: {regC}\tD: {regD}");
-            Console.WriteLine($"E: {regE}\tH: {regH}\tL: {regL}");
-            Console.WriteLine($"Zero: {Flags.Zero}\tSign: {Flags.Sign}\tParity: {Flags.Parity}");
-            Console.WriteLine($"Carry: {Flags.Carry}\tAuxillary Carry: {Flags.AuxCarry}");
+            Console.WriteLine();
+            Console.WriteLine($"A: {regA}\t\tB: {regB}\t\tC: {regC}");
+            Console.WriteLine($"D: {regD}\t\tE: {regE}\t\tH: {regH}\t\tL: {regL}");
+            Console.WriteLine($"(DE): {valueAtHL}\t\t\t(HL): {valueAtHL}");
+            Console.WriteLine();
+            Console.WriteLine($"Zero: {Flags.Zero}\tSign: {Flags.Sign}\tParity: {Flags.Parity}\tCarry: {Flags.Carry}\tAux Carry: {Flags.AuxCarry}");
         }
 
         /** Executes the given interrupt RST instruction and returns the number of cycles it took to execute. */

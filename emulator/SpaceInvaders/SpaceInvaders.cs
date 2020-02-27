@@ -59,13 +59,45 @@ namespace JustinCredible.SIEmulator
             EnableDiagnosticsMode = false,
         };
 
-        public bool Debug { get; set; }
+        #region Debugging etc
+
+        /**
+         * Enables debugging statistics and features.
+         */
+        public bool Debug { get; set; } = false;
+
+        /**
+         * When Debug=true, the program will break at these addresses and allow the user to perform
+         * interactive debugging via the console.
+         */
+        public List<UInt16> BreakAtAddresses { get; set; }
+
+        /**
+         * Indicates if we're stingle stepping through opcodes/instructions using the interactive
+         * debugger when Debug=true.
+         */
+        private bool _singleStepping = false;
+
+        /**
+         * For use by the interactive debugger when Debug=true. If true, indicates that the disassembly
+         * should be annotated with the values in the Annotations dictionary. If false, the diassembler
+         * will annotate each line with a pseudocode comment instead.
+         */
+        private bool _showAnnotatedDisassembly = false;
+
+        /**
+         * The annotations to be used when Debug=true and _showAnnotatedDisassembly=true. It is a map
+         * of memory addresses to string annotation values.
+         */
+        public Dictionary<UInt16, String> Annotations { get; set; }
 
         // For Debugging; updated when Debug = true
         private int _totalCycles = 0;
         private int _totalSteps = 0;
         private List<UInt16> _addressHistory = new List<UInt16>();
         private static readonly int MAX_ADDRESS_HISTORY = 100;
+
+        #endregion
 
         public delegate void RenderEvent(RenderEventArgs e);
         public event RenderEvent OnRender;
@@ -178,7 +210,7 @@ namespace JustinCredible.SIEmulator
          * Used to print the disassembly of memory locations before and after the given address.
          * Useful when a debugger is attached.
          */
-        public void PrintMemory(UInt16 address, int beforeCount = 10, int afterCount = 10)
+        public void PrintMemory(UInt16 address, bool annotate = false, int beforeCount = 10, int afterCount = 10)
         {
             var output = new StringBuilder();
 
@@ -193,9 +225,22 @@ namespace JustinCredible.SIEmulator
                 // If this is the current address location, add an arrow pointing to it.
                 output.Append(address == addressIndex ? "---->\t" : "\t");
 
+                // If we're showing annotations, then don't show the pseudocode.
+                var emitPseudocode = !_showAnnotatedDisassembly;
+
                 // Disasemble the opcode and print it.
-                var instruction = Disassembler.Disassemble(_cpu.Memory, addressIndex, out int instructionLength, true, true);
-                output.AppendLine(instruction);
+                var instruction = Disassembler.Disassemble(_cpu.Memory, addressIndex, out int instructionLength, true, emitPseudocode);
+                output.Append(instruction);
+
+                // If we're showing annotations, attempt to look up the annotation for this address.
+                if (_showAnnotatedDisassembly && Annotations != null)
+                {
+                    var annotation = Annotations.ContainsKey(addressIndex) ? Annotations[addressIndex] : null;
+                    output.Append("\t\t; ");
+                    output.Append(annotation == null ? "???" : annotation);
+                }
+
+                output.AppendLine();
 
                 // If the opcode is larger than a single byte, we don't want to print subsequent
                 // bytes as opcodes, so here we print the next address locations as the byte value
@@ -216,7 +261,7 @@ namespace JustinCredible.SIEmulator
                 {
                     var dataFormatted = String.Format("0x{0:X2}", _cpu.Memory[addressIndex+1]);
                     var addressFormatted = String.Format("0x{0:X4}", addressIndex+1);
-                    output.AppendLine($"\t{addressFormatted}\t(D8: {dataFormatted}");
+                    output.AppendLine($"\t{addressFormatted}\t(D8: {dataFormatted})");
                     i++;
                 }
             }
@@ -228,9 +273,9 @@ namespace JustinCredible.SIEmulator
          * Used to print the disassembly of the memory locations around where the program counter is pointing.
          * Useful when a debugger is attached.
          */
-        public void PrintCurrentExecution(int beforeCount = 10, int afterCount = 10)
+        public void PrintCurrentExecution(bool annotate = false, int beforeCount = 10, int afterCount = 10)
         {
-            PrintMemory(_cpu.ProgramCounter, beforeCount, afterCount);
+            PrintMemory(_cpu.ProgramCounter, annotate, beforeCount, afterCount);
         }
 
         /**
@@ -297,20 +342,73 @@ namespace JustinCredible.SIEmulator
 
             while (!_cancelled)
             {
-                // Record the current address.
+                #region Interactive Debugging
+
                 if (Debug)
                 {
+                    // Record the current address.
+
                     _addressHistory.Add(_cpu.ProgramCounter);
 
                     if (_addressHistory.Count >= MAX_ADDRESS_HISTORY)
                         _addressHistory.RemoveAt(0);
+
+                    // See if we need to break based on a given address.
+                    if (BreakAtAddresses != null && BreakAtAddresses.Contains(_cpu.ProgramCounter))
+                        _singleStepping = true;
+
+                    // If we need to break, print out the CPU state and wait for a keypress.
+                    if (_singleStepping)
+                    {
+                        // Print debug information and wait for user input via the console (key press).
+                        while (true)
+                        {
+                            Console.WriteLine("-------------------------------------------------------------------");
+                            Console.WriteLine($" Total Steps/Opcodes: {_totalSteps}\tCPU Cycles: {_totalCycles}");
+                            Console.WriteLine();
+                            _cpu.PrintDebugSummary();
+                            Console.WriteLine();
+                            PrintCurrentExecution(_showAnnotatedDisassembly);
+                            Console.WriteLine();
+
+                            Console.WriteLine(" F5 = Continue    F10 = Step    F11 = Toggle Annotated Disassembly    F12 = Print List 10 Opcodes");
+                            var key = Console.ReadKey(); // Blocking
+
+                            // Handle console input.
+                            if (key.Key == ConsoleKey.F5) // Continue
+                            {
+                                _singleStepping = false;
+                                break; // Break out of input loop
+                            }
+                            else if (key.Key == ConsoleKey.F10) // Step
+                            {
+                                break; // Break out of input loop
+                            }
+                            else if (key.Key == ConsoleKey.F11) // Toggle Annotated Disassembly
+                            {
+                                _showAnnotatedDisassembly = !_showAnnotatedDisassembly;
+                            }
+                            else if (key.Key == ConsoleKey.F12) // Print List 10 Opcodes
+                            {
+                                Console.WriteLine("-------------------------------------------------------------------");
+                                Console.WriteLine();
+                                Console.WriteLine(" Last 10 Opcodes: ");
+                                Console.WriteLine();
+                                PrintRecentInstructions(10);
+                            }
+                        }
+                    }
                 }
+
+                #endregion
 
                 // Step the CPU to execute the next instruction.
                 var cycles = _cpu.Step();
 
                 // Keep track of the number of cycles to see if we need to throttle the CPU.
                 _cycleCount += cycles;
+
+                #region Debugging Stats
 
                 // Keep track of the total number of steps (instructions) and cycles ellapsed.
                 if (Debug)
@@ -322,6 +420,8 @@ namespace JustinCredible.SIEmulator
                     // if (_totalCycles % 1000 == 0)
                     //     System.Threading.Thread.Sleep(10);
                 }
+
+                #endregion
 
                 // Throttle the CPU emulation if needed.
                 if (_cycleCount >= (CPU_MHZ/60))
