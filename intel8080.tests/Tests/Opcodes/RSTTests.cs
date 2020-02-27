@@ -63,7 +63,7 @@ namespace JustinCredible.Intel8080.Tests
             Assert.Equal(0x271E, state.StackPointer);
             Assert.Equal(0xFF, state.Memory[0x2720]);
             Assert.Equal(0x00, state.Memory[0x271F]);
-            Assert.Equal(0x40, state.Memory[0x271E]);
+            Assert.Equal(0x41, state.Memory[0x271E]);
             Assert.Equal(0xFF, state.Memory[0x271D]);
 
             AssertFlagsFalse(state);
@@ -143,17 +143,17 @@ namespace JustinCredible.Intel8080.Tests
             Assert.Equal(0x2720, state.StackPointer);
             Assert.Equal(0xFF, state.Memory[0x2720]);
             Assert.Equal(0x00, state.Memory[0x271F]);
-            Assert.Equal(0x45, state.Memory[0x271E]);
+            Assert.Equal(0x46, state.Memory[0x271E]);
             Assert.Equal(0x00, state.Memory[0x271D]);
-            Assert.Equal(0x30, state.Memory[0x271C]);
+            Assert.Equal(0x31, state.Memory[0x271C]);
             Assert.Equal(0x00, state.Memory[0x271B]);
-            Assert.Equal(0x38, state.Memory[0x271A]);
+            Assert.Equal(0x39, state.Memory[0x271A]);
             Assert.Equal(0xFF, state.Memory[0x2719]);
 
             AssertFlagsFalse(state);
 
             Assert.Equal(23, state.Iterations);
-            Assert.Equal(7 + (8*11) + (8*10) + (6*7), state.Cycles);
+            Assert.Equal(7 + (11 * 8) + (10 * 8) + (7 * 6), state.Cycles);
             Assert.Equal(0x46, state.ProgramCounter);
         }
     }

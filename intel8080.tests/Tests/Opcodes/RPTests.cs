@@ -49,8 +49,8 @@ namespace JustinCredible.Intel8080.Tests
             Assert.Equal(0x02, state.Memory[0x271E]);
             Assert.Equal(0xFF, state.Memory[0x271D]);
 
-            Assert.Equal(2, state.Iterations);
-            Assert.Equal(7 + 11, state.Cycles);
+            Assert.Equal(3, state.Iterations);
+            Assert.Equal(7 + 11 + 4, state.Cycles);
             Assert.Equal(0x0003, state.ProgramCounter);
         }
 

@@ -37,7 +37,7 @@ namespace JustinCredible.Intel8080.Tests
             Assert.Equal(0x271E, state.StackPointer);
             Assert.Equal(0xFF, state.Memory[0x2720]);
             Assert.Equal(0x00, state.Memory[0x271F]);
-            Assert.Equal(0x02, state.Memory[0x271E]);
+            Assert.Equal(0x05, state.Memory[0x271E]);
             Assert.Equal(0xFF, state.Memory[0x271D]);
 
             AssertFlagsFalse(state);
@@ -93,7 +93,7 @@ namespace JustinCredible.Intel8080.Tests
             Assert.Equal(0x2720, state.StackPointer);
             Assert.Equal(0xFF, state.Memory[0x2720]);
             Assert.Equal(0x00, state.Memory[0x271F]);
-            Assert.Equal(0x0A, state.Memory[0x271E]);
+            Assert.Equal(0x0D, state.Memory[0x271E]);
             Assert.Equal(0xFF, state.Memory[0x271D]);
 
             AssertFlagsFalse(state);
