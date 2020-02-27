@@ -61,38 +61,6 @@ namespace JustinCredible.Intel8080
         /** Fired when the IN instruction is encountered. */
         public event DeviceReadEvent OnDeviceRead;
 
-        /**
-         * Used for a sanity check when executing the RET opcode.
-         * These are the only opcodes we're expecting to return to.
-         */
-        private readonly List<byte> _expectedOpcodesToReturnTo = new List<byte>()
-        {
-            Opcodes.CALL.Code,
-            Opcodes.CALL2.Code,
-            Opcodes.CALL3.Code,
-            Opcodes.CALL4.Code,
-
-            Opcodes.CM.Code,
-            Opcodes.CPE.Code,
-            Opcodes.CC.Code,
-            Opcodes.CZ.Code,
-            Opcodes.CP.Code,
-            Opcodes.CPO.Code,
-            Opcodes.CNC.Code,
-            Opcodes.CNZ.Code,
-
-            Opcodes.RST_0.Code,
-            Opcodes.RST_1.Code,
-            Opcodes.RST_2.Code,
-            Opcodes.RST_3.Code,
-            Opcodes.RST_4.Code,
-            Opcodes.RST_5.Code,
-            Opcodes.RST_6.Code,
-            Opcodes.RST_7.Code,
-
-            Opcodes.NOP.Code, // Technically only should be required for unit tests.
-        };
-
         public CPU(CPUConfig config)
         {
             Config = config;
@@ -146,8 +114,8 @@ namespace JustinCredible.Intel8080
             var regH = String.Format("0x{0:X2}", Registers.H);
             var regL = String.Format("0x{0:X2}", Registers.L);
 
-            var valueAtDE = String.Format("0x{0:X2}", Memory[Registers.DE]);
-            var valueAtHL = String.Format("0x{0:X2}", Memory[Registers.HL]);
+            var valueAtDE = Registers.DE >= Memory.Length ? "N/A" : String.Format("0x{0:X2}", Memory[Registers.DE]);
+            var valueAtHL = Registers.HL >= Memory.Length ? "N/A" : String.Format("0x{0:X2}", Memory[Registers.HL]);
 
             Console.WriteLine($"Opcode: {opcode}");
             Console.WriteLine();
@@ -166,21 +134,29 @@ namespace JustinCredible.Intel8080
             switch (id)
             {
                 case Interrupt.Zero:
-                    return Step(Opcodes.RST_0.Code);
+                    ExecuteCALL(0x000, ProgramCounter);
+                    return Opcodes.RST_0.Cycles;
                 case Interrupt.One:
-                    return Step(Opcodes.RST_1.Code);
+                    ExecuteCALL(0x0008, ProgramCounter);
+                    return Opcodes.RST_1.Cycles;
                 case Interrupt.Two:
-                    return Step(Opcodes.RST_2.Code);
+                    ExecuteCALL(0x0010, ProgramCounter);
+                    return Opcodes.RST_2.Cycles;
                 case Interrupt.Three:
-                    return Step(Opcodes.RST_3.Code);
+                    ExecuteCALL(0x0018, ProgramCounter);
+                    return Opcodes.RST_3.Cycles;
                 case Interrupt.Four:
-                    return Step(Opcodes.RST_4.Code);
+                    ExecuteCALL(0x0020, ProgramCounter);
+                    return Opcodes.RST_4.Cycles;
                 case Interrupt.Five:
-                    return Step(Opcodes.RST_5.Code);
+                    ExecuteCALL(0x0028, ProgramCounter);
+                    return Opcodes.RST_5.Cycles;
                 case Interrupt.Six:
-                    return Step(Opcodes.RST_6.Code);
+                    ExecuteCALL(0x0030, ProgramCounter);
+                    return Opcodes.RST_6.Cycles;
                 case Interrupt.Seven:
-                    return Step(Opcodes.RST_7.Code);
+                    ExecuteCALL(0x0038, ProgramCounter);
+                    return Opcodes.RST_7.Cycles;
                 default:
                     throw new Exception($"Unhandled interrupt ID: {id}");
             }
@@ -1268,7 +1244,7 @@ namespace JustinCredible.Intel8080
                     case OpcodeBytes.CALL3:
                     case OpcodeBytes.CALL4:
                     {
-                        ExecuteCALL();
+                        ExecuteCALL(opcode);
 
                         // Don't increment the program counter because we just updated it to
                         // the given address.
@@ -1282,7 +1258,7 @@ namespace JustinCredible.Intel8080
                     {
                         if (Flags.Sign)
                         {
-                            ExecuteCALL();
+                            ExecuteCALL(opcode);
                             incrementProgramCounter = false;
                         }
                         else
@@ -1296,7 +1272,7 @@ namespace JustinCredible.Intel8080
                     {
                         if (Flags.Parity)
                         {
-                            ExecuteCALL();
+                            ExecuteCALL(opcode);
                             incrementProgramCounter = false;
                         }
                         else
@@ -1310,7 +1286,7 @@ namespace JustinCredible.Intel8080
                     {
                         if (Flags.Carry)
                         {
-                            ExecuteCALL();
+                            ExecuteCALL(opcode);
                             incrementProgramCounter = false;
                         }
                         else
@@ -1324,7 +1300,7 @@ namespace JustinCredible.Intel8080
                     {
                         if (Flags.Zero)
                         {
-                            ExecuteCALL();
+                            ExecuteCALL(opcode);
                             incrementProgramCounter = false;
                         }
                         else
@@ -1338,7 +1314,7 @@ namespace JustinCredible.Intel8080
                     {
                         if (!Flags.Sign)
                         {
-                            ExecuteCALL();
+                            ExecuteCALL(opcode);
                             incrementProgramCounter = false;
                         }
                         else
@@ -1352,7 +1328,7 @@ namespace JustinCredible.Intel8080
                     {
                         if (!Flags.Parity)
                         {
-                            ExecuteCALL();
+                            ExecuteCALL(opcode);
                             incrementProgramCounter = false;
                         }
                         else
@@ -1366,7 +1342,7 @@ namespace JustinCredible.Intel8080
                     {
                         if (!Flags.Carry)
                         {
-                            ExecuteCALL();
+                            ExecuteCALL(opcode);
                             incrementProgramCounter = false;
                         }
                         else
@@ -1380,7 +1356,7 @@ namespace JustinCredible.Intel8080
                     {
                         if (!Flags.Zero)
                         {
-                            ExecuteCALL();
+                            ExecuteCALL(opcode);
                             incrementProgramCounter = false;
                         }
                         else
@@ -1524,37 +1500,68 @@ namespace JustinCredible.Intel8080
                 #region Restart (interrupt handlers) instructions
 
                     case OpcodeBytes.RST_0:
-                        ExecuteCALL(0x0000);
+                    {
+                        var returnAddress = (UInt16)(ProgramCounter + opcode.Size);
+                        ExecuteCALL(0x0000, returnAddress);
                         incrementProgramCounter = false;
                         break;
+                    }
+
                     case OpcodeBytes.RST_1:
-                        ExecuteCALL(0x0008);
+                    {
+                        var returnAddress = (UInt16)(ProgramCounter + opcode.Size);
+                        ExecuteCALL(0x0008, returnAddress);
                         incrementProgramCounter = false;
                         break;
+                    }
+
                     case OpcodeBytes.RST_2:
-                        ExecuteCALL(0x0010);
+                    {
+                        var returnAddress = (UInt16)(ProgramCounter + opcode.Size);
+                        ExecuteCALL(0x0010, returnAddress);
                         incrementProgramCounter = false;
                         break;
+                    }
+
                     case OpcodeBytes.RST_3:
-                        ExecuteCALL(0x0018);
+                    {
+                        var returnAddress = (UInt16)(ProgramCounter + opcode.Size);
+                        ExecuteCALL(0x0018, returnAddress);
                         incrementProgramCounter = false;
                         break;
+                    }
+
                     case OpcodeBytes.RST_4:
-                        ExecuteCALL(0x0020);
+                    {
+                        var returnAddress = (UInt16)(ProgramCounter + opcode.Size);
+                        ExecuteCALL(0x0020, returnAddress);
                         incrementProgramCounter = false;
                         break;
+                    }
+
                     case OpcodeBytes.RST_5:
-                        ExecuteCALL(0x0028);
+                    {
+                        var returnAddress = (UInt16)(ProgramCounter + opcode.Size);
+                        ExecuteCALL(0x0028, returnAddress);
                         incrementProgramCounter = false;
                         break;
+                    }
+
                     case OpcodeBytes.RST_6:
-                        ExecuteCALL(0x0030);
+                    {
+                        var returnAddress = (UInt16)(ProgramCounter + opcode.Size);
+                        ExecuteCALL(0x0030, returnAddress);
                         incrementProgramCounter = false;
                         break;
+                    }
+
                     case OpcodeBytes.RST_7:
-                        ExecuteCALL(0x0038);
+                    {
+                        var returnAddress = (UInt16)(ProgramCounter + opcode.Size);
+                        ExecuteCALL(0x0038, returnAddress);
                         incrementProgramCounter = false;
                         break;
+                    }
 
                 #endregion
 
@@ -1647,22 +1654,22 @@ namespace JustinCredible.Intel8080
             ProgramCounter = address;
         }
 
-        private void ExecuteCALL()
+        private void ExecuteCALL(Opcode opcode)
         {
+            var returnAddress = (UInt16)(ProgramCounter + opcode.Size);
+
             var upper = Memory[ProgramCounter + 2] << 8;
             var lower = Memory[ProgramCounter + 1];
             var address = (UInt16)(upper | lower);
 
-            ExecuteCALL(address);
+            ExecuteCALL(address, returnAddress);
         }
 
-        private void ExecuteCALL(UInt16 address)
+        private void ExecuteCALL(UInt16 address, UInt16 returnAddress)
         {
-            // The return address will be the current location of the program counter.
             // We need to break this into two bytes so we can push it onto the stack.
-            var returnAddress = ProgramCounter;
-            var returnAddressUpper = (byte)((ProgramCounter & 0xFF00) >> 8);
-            var returnAddressLower = (byte)(ProgramCounter & 0x00FF);
+            var returnAddressUpper = (byte)((returnAddress & 0xFF00) >> 8);
+            var returnAddressLower = (byte)(returnAddress & 0x00FF);
 
             // Push the return address onto the stack.
             Memory[StackPointer - 1] = returnAddressUpper;
@@ -1704,23 +1711,7 @@ namespace JustinCredible.Intel8080
             StackPointer++;
             StackPointer++;
 
-            var originalOpcodeByte = Memory[returnAddress];
-            var originalOpcode = Opcodes.Lookup[originalOpcodeByte];
-
-            /* Commenting out for now; interrupt handlers will return to arbitrary addresses.
-            // Sanity check.
-            if (!_expectedOpcodesToReturnTo.Contains(originalOpcodeByte))
-            {
-                var programCounterFormatted = String.Format("0x{0:X4}", ProgramCounter);
-                var addressFormatted = String.Format("0x{0:X4}", returnAddress);
-                var originalOpcodeByteFormatted = String.Format("0x{0:X2}", originalOpcodeByte);
-                throw new Exception($"The RET at {programCounterFormatted} is attempting to return to {addressFormatted} which contains opcode {originalOpcode.Instruction} ({originalOpcodeByteFormatted}), but RET is expecting to only return to a CALL or RST opcode.");
-            }
-            */
-
-            // The statement we're jumping back to is the original CALL or RST statement.
-            // We don't want to execute it again, so set the program counter to skip past.
-            ProgramCounter = (UInt16)(returnAddress + originalOpcode.Size);
+            ProgramCounter = returnAddress;
         }
 
         private void ExecuteMOV(Register dest, Register source)
