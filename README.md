@@ -16,11 +16,22 @@ I started using the codebase from my [CHIP-8 emulator](https://github.com/Justin
   - [ ] I/O ports
   - [X] Shift register port
   - [ ] Audio
-  - [ ] Framebuffer
+  - [X] Framebuffer
 - [ ] GUI / "Glue" Program
   - [X] CLI arguments parser
-  - [ ] Read ROM files
-  - [ ] SDL loop
+  - [X] Read ROM files
+  - [X] SDL loop
   - [ ] Read input keys
   - [ ] Play audio
-  - [ ] Render framebuffer
+  - [X] Render framebuffer
+- [X] Debugging Tools
+  - [X] Break during gameplay
+  - [X] Break on specified addresses
+  - [X] Interactive debugger (step/continue)
+  - [X] Rewind / Reverse Step
+  - [X] Save/Load State
+  - [X] Disassembly with annotations
+- [ ] Cleanup
+  - [ ] Fix/update comments
+  - [ ] Fix comment blocks to use C# style
+  - [ ] Proper readme
