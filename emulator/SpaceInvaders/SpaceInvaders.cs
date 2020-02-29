@@ -2,7 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using JustinCredible.I8080Disassembler;
 using JustinCredible.Intel8080;
@@ -31,7 +33,16 @@ namespace JustinCredible.SIEmulator
         private static readonly CPUConfig _cpuConfig = new CPUConfig()
         {
             // 16 KB of RAM
-            MemorySize = 16 * 1024,
+            // MemorySize = 16 * 1024,
+
+            // HACK: Add an extra kilobyte of RAM so that we don't get a crash trying to read outside
+            // of memory. This happens in the DrawSprite: routine at 0x15D3, specifically:
+            //    0x15DE	MOV M,A		; (HL) <- A
+            // when HL = 0x4017 which is 2-3 times through the loop. This occurs in attract mode right
+            // before the alien comes from the right side of the screen to flip over the upside down
+            // Y character in the "PLAY" text. Address $4000 and above is a RAM mirror, so maybe it's
+            // okay to allow reads from there? Or maybe I just have a bug elsewhere.
+            MemorySize = 17 * 1024,
 
             /**
              * This is the memory layout specific to Space Invaders:
@@ -48,10 +59,10 @@ namespace JustinCredible.SIEmulator
              * 
              * $4000-:       RAM mirror
              * 
-             * TODO: Allow writes to 0x4000 - 0x6000 (RAM mirror)?
+             * TODO: Allow reads/writes to 0x4000 - 0x6000 (RAM mirror)?
              */
             WriteableMemoryStart = 0x2000,
-            WriteableMemoryEnd = 0x3FFFF,
+            WriteableMemoryEnd = 0x3FFF,
 
             // Interrupts are initially disabled, and will be enabled by the program ROM when ready.
             InterruptsEnabled = false,
@@ -61,16 +72,38 @@ namespace JustinCredible.SIEmulator
 
         #region Debugging etc
 
+        private static readonly int MAX_ADDRESS_HISTORY = 100;
+        private static readonly int MAX_REWIND_HISTORY = 20;
+
+        private int _totalCycles = 0;
+        private int _totalSteps = 0;
+
         /**
          * Enables debugging statistics and features.
          */
         public bool Debug { get; set; } = false;
 
         /**
+         * When Debug=true, stores the last MAX_ADDRESS_HISTORY values of the program counter.
+         */
+        private List<UInt16> _addressHistory = new List<UInt16>();
+
+        /**
          * When Debug=true, the program will break at these addresses and allow the user to perform
          * interactive debugging via the console.
          */
         public List<UInt16> BreakAtAddresses { get; set; }
+
+        /**
+         * When Debug=true, allows for single reverse-stepping in the interactive debugging console.
+         */
+        public bool RewindEnabled { get; set; } = false;
+
+        /**
+         * When Debug=true and RewindEnabled=true, stores sufficient state of the CPU and emulator
+         * to allow for stepping backwards to each state of the system.
+         */
+        private List<EmulatorState> _executionHistory = new List<EmulatorState>();
 
         /**
          * Indicates if we're stingle stepping through opcodes/instructions using the interactive
@@ -90,12 +123,6 @@ namespace JustinCredible.SIEmulator
          * of memory addresses to string annotation values.
          */
         public Dictionary<UInt16, String> Annotations { get; set; }
-
-        // For Debugging; updated when Debug = true
-        private int _totalCycles = 0;
-        private int _totalSteps = 0;
-        private List<UInt16> _addressHistory = new List<UInt16>();
-        private static readonly int MAX_ADDRESS_HISTORY = 100;
 
         #endregion
 
@@ -129,7 +156,7 @@ namespace JustinCredible.SIEmulator
         // TODO: Implement framebuffer emitter
         // TODO: Implement input handler
 
-        public void Start(byte[] rom)
+        public void Start(byte[] rom, EmulatorState state = null)
         {
             if (_thread != null)
                 throw new Exception("Emulator cannot be started because it was already running.");
@@ -156,6 +183,9 @@ namespace JustinCredible.SIEmulator
                 FrameBuffer = new byte[FRAME_BUFFER_SIZE],
             };
 
+            if (state != null)
+                LoadState(state);
+
             _cancelled = false;
             _thread = new Thread(new ThreadStart(HardwareLoop));
             _thread.Name = "Emulator: Hardware Loop";
@@ -168,6 +198,26 @@ namespace JustinCredible.SIEmulator
                 throw new Exception("Emulator cannot be stopped because it wasn't running.");
 
             _cancelled = true;
+        }
+
+        public void Break()
+        {
+            if (Debug)
+                _singleStepping = true;
+        }
+
+        public void PrintDebugSummary(bool showAnnotatedDisassembly = false)
+        {
+            Console.WriteLine("-------------------------------------------------------------------");
+
+            if (Debug)
+                Console.WriteLine($" Total Steps/Opcodes: {_totalSteps}\tCPU Cycles: {_totalCycles}");
+
+            Console.WriteLine();
+            _cpu.PrintDebugSummary();
+            Console.WriteLine();
+            PrintCurrentExecution(showAnnotatedDisassembly);
+            Console.WriteLine();
         }
 
         /**
@@ -340,153 +390,291 @@ namespace JustinCredible.SIEmulator
             _cpuStopWatch.Start();
             _cycleCount = 0;
 
-            while (!_cancelled)
+            try
             {
-                #region Interactive Debugging
-
-                if (Debug)
+                while (!_cancelled)
                 {
-                    // Record the current address.
+                    // Handle all the debug tasks that need to happen before we execute an instruction.
+                    if (Debug)
+                        HandleDebugFeaturesPreStep();
 
-                    _addressHistory.Add(_cpu.ProgramCounter);
+                    // Step the CPU to execute the next instruction.
+                    var cycles = _cpu.Step();
 
-                    if (_addressHistory.Count >= MAX_ADDRESS_HISTORY)
-                        _addressHistory.RemoveAt(0);
+                    // Keep track of the number of cycles to see if we need to throttle the CPU.
+                    _cycleCount += cycles;
 
-                    // See if we need to break based on a given address.
-                    if (BreakAtAddresses != null && BreakAtAddresses.Contains(_cpu.ProgramCounter))
-                        _singleStepping = true;
+                    // Handle all the debug tasks that need to happen after we execute an instruction.
+                    if (Debug)
+                        HandleDebugFeaturesPostStep(cycles);
 
-                    // If we need to break, print out the CPU state and wait for a keypress.
-                    if (_singleStepping)
+                    // Throttle the CPU emulation if needed.
+                    if (_cycleCount >= (CPU_MHZ/60))
                     {
-                        // Print debug information and wait for user input via the console (key press).
-                        while (true)
+                        _cpuStopWatch.Stop();
+
+                        if (_cpuStopWatch.Elapsed.TotalMilliseconds < 16.6)
                         {
-                            Console.WriteLine("-------------------------------------------------------------------");
-                            Console.WriteLine($" Total Steps/Opcodes: {_totalSteps}\tCPU Cycles: {_totalCycles}");
-                            Console.WriteLine();
-                            _cpu.PrintDebugSummary();
-                            Console.WriteLine();
-                            PrintCurrentExecution(_showAnnotatedDisassembly);
-                            Console.WriteLine();
+                            var sleepForMs = 16.6 - _cpuStopWatch.Elapsed.TotalMilliseconds;
 
-                            Console.WriteLine(" F5 = Continue    F10 = Step    F11 = Toggle Annotated Disassembly    F12 = Print List 10 Opcodes");
-                            var key = Console.ReadKey(); // Blocking
-
-                            // Handle console input.
-                            if (key.Key == ConsoleKey.F5) // Continue
-                            {
-                                _singleStepping = false;
-                                break; // Break out of input loop
-                            }
-                            else if (key.Key == ConsoleKey.F10) // Step
-                            {
-                                break; // Break out of input loop
-                            }
-                            else if (key.Key == ConsoleKey.F11) // Toggle Annotated Disassembly
-                            {
-                                _showAnnotatedDisassembly = !_showAnnotatedDisassembly;
-                            }
-                            else if (key.Key == ConsoleKey.F12) // Print List 10 Opcodes
-                            {
-                                Console.WriteLine("-------------------------------------------------------------------");
-                                Console.WriteLine();
-                                Console.WriteLine(" Last 10 Opcodes: ");
-                                Console.WriteLine();
-                                PrintRecentInstructions(10);
-                            }
+                            if (sleepForMs >= 1)
+                                System.Threading.Thread.Sleep((int)sleepForMs);
                         }
-                    }
-                }
 
-                #endregion
-
-                // Step the CPU to execute the next instruction.
-                var cycles = _cpu.Step();
-
-                // Keep track of the number of cycles to see if we need to throttle the CPU.
-                _cycleCount += cycles;
-
-                #region Debugging Stats
-
-                // Keep track of the total number of steps (instructions) and cycles ellapsed.
-                if (Debug)
-                {
-                    _totalSteps++;
-                    _totalCycles += cycles;
-
-                    // Used to slow down the emulation to watch the renderer.
-                    // if (_totalCycles % 1000 == 0)
-                    //     System.Threading.Thread.Sleep(10);
-                }
-
-                #endregion
-
-                // Throttle the CPU emulation if needed.
-                if (_cycleCount >= (CPU_MHZ/60))
-                {
-                    _cpuStopWatch.Stop();
-
-                    if (_cpuStopWatch.Elapsed.TotalMilliseconds < 16.6)
-                    {
-                        var sleepForMs = 16.6 - _cpuStopWatch.Elapsed.TotalMilliseconds;
-
-                        if (sleepForMs >= 1)
-                            System.Threading.Thread.Sleep((int)sleepForMs);
+                        _cycleCount = 0;
+                        _cpuStopWatch.Restart();
                     }
 
-                    _cycleCount = 0;
-                    _cpuStopWatch.Restart();
+                    // See if it's time to fire a CPU interrupt or not.
+                    HandleInterrupts(cycles);
                 }
-
-                // Keep track of the number of cycles since the last interrupt occurred.
-                _cyclesSinceLastInterrupt += cycles;
-
-                // Determine if it's time for the video hardware to fire an interrupt.
-                if (_cyclesSinceLastInterrupt >= _cyclesPerInterrupt)
-                {
-                    // If interrupts are enabled, then handle them, otherwise do nothing.
-                    if (_cpu.InterruptsEnabled)
-                    {
-                        // If we're going to run an interrupt handler, ensure interrupts are disabled.
-                        // This ensures we don't interrupt the interrupt handler. The program ROM will
-                        // re-enable the interrupts manually.
-                        _cpu.InterruptsEnabled = false;
-
-                        // Execute the handler for the interrupt.
-                        _cpu.StepInterrupt(_nextInterrupt);
-
-                        // The video hardware alternates between these two interrupts.
-                        if (_nextInterrupt == Interrupt.One)
-                        {
-                            // CRT electron beam is at the middle of the screen (approximately).
-
-                            _nextInterrupt = Interrupt.Two;
-                        }
-                        else if (_nextInterrupt == Interrupt.Two)
-                        {
-                            // CRT electron beam reached the end (V-Blank).
-
-                            if (OnRender != null)
-                            {
-                                Array.Copy(_cpu.Memory, 0x2400, _renderEventArgs.FrameBuffer, 0, FRAME_BUFFER_SIZE);
-                                OnRender(_renderEventArgs);
-                            }
-
-                            _nextInterrupt = Interrupt.One;
-                        }
-                        else
-                            throw new Exception($"Unexpected next interrupt: {_nextInterrupt}.");
-                    }
-
-                    // Reset the count so we can count up again.
-                    _cyclesSinceLastInterrupt = 0;
-                }
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine("-------------------------------------------------------------------");
+                Console.WriteLine("An exception occurred during emulation!");
+                PrintDebugSummary(_showAnnotatedDisassembly);
+                Console.WriteLine("-------------------------------------------------------------------");
+                throw exception;
             }
 
             _cpu = null;
             _thread = null;
+        }
+
+        private void HandleInterrupts(int cyclesElapsed)
+        {
+            // Keep track of the number of cycles since the last interrupt occurred.
+            _cyclesSinceLastInterrupt += cyclesElapsed;
+
+            // Determine if it's time for the video hardware to fire an interrupt.
+            if (_cyclesSinceLastInterrupt < _cyclesPerInterrupt)
+                return;
+
+            // If interrupts are enabled, then handle them, otherwise do nothing.
+            if (_cpu.InterruptsEnabled)
+            {
+                // If we're going to run an interrupt handler, ensure interrupts are disabled.
+                // This ensures we don't interrupt the interrupt handler. The program ROM will
+                // re-enable the interrupts manually.
+                _cpu.InterruptsEnabled = false;
+
+                // Execute the handler for the interrupt.
+                _cpu.StepInterrupt(_nextInterrupt);
+
+                // The video hardware alternates between these two interrupts.
+                if (_nextInterrupt == Interrupt.One)
+                {
+                    // CRT electron beam is at the middle of the screen (approximately).
+
+                    _nextInterrupt = Interrupt.Two;
+                }
+                else if (_nextInterrupt == Interrupt.Two)
+                {
+                    // CRT electron beam reached the end (V-Blank).
+
+                    if (OnRender != null)
+                    {
+                        Array.Copy(_cpu.Memory, 0x2400, _renderEventArgs.FrameBuffer, 0, FRAME_BUFFER_SIZE);
+                        OnRender(_renderEventArgs);
+                    }
+
+                    _nextInterrupt = Interrupt.One;
+                }
+                else
+                    throw new Exception($"Unexpected next interrupt: {_nextInterrupt}.");
+            }
+
+            // Reset the count so we can count up again.
+            _cyclesSinceLastInterrupt = 0;
+        }
+
+        private void HandleDebugFeaturesPreStep()
+        {
+            // Record the current address.
+
+            _addressHistory.Add(_cpu.ProgramCounter);
+
+            if (_addressHistory.Count >= MAX_ADDRESS_HISTORY)
+                _addressHistory.RemoveAt(0);
+
+            // See if we need to break based on a given address.
+            if (BreakAtAddresses != null && BreakAtAddresses.Contains(_cpu.ProgramCounter))
+                _singleStepping = true;
+
+            // If we need to break, print out the CPU state and wait for a keypress.
+            if (_singleStepping)
+            {
+                // Print debug information and wait for user input via the console (key press).
+                while (true)
+                {
+                    Console.WriteLine("-------------------------------------------------------------------");
+                    PrintDebugSummary(_showAnnotatedDisassembly);
+
+                    var rewindPrompt = "";
+
+                    if (RewindEnabled && _executionHistory.Count > 0)
+                        rewindPrompt = "F9 = Step Backward    ";
+
+                    Console.WriteLine($"  F1 = Save State    F2 = Load State    F4 = Edit Breakpoints");
+                    Console.WriteLine($"  F5 = Continue    {rewindPrompt}F10 = Step");
+                    Console.WriteLine("  F11 = Toggle Annotated Disassembly    F12 = Print Last 30 Opcodes");
+                    var key = Console.ReadKey(); // Blocking
+
+                    // Handle console input.
+                    if (key.Key == ConsoleKey.F1) // Save State
+                    {
+                        var state = SaveState();
+                        var json = JsonSerializer.Serialize<EmulatorState>(state);
+
+                        Console.WriteLine(" Enter file name/path to write save state...");
+                        var filename = Console.ReadLine();
+
+                        File.WriteAllText(filename, json);
+
+                        Console.WriteLine("  State Saved!");
+                    }
+                    else if (key.Key == ConsoleKey.F2) // Load State
+                    {
+                        Console.WriteLine(" Enter file name/path to read save state...");
+                        var filename = Console.ReadLine();
+
+                        var json = File.ReadAllText(filename);
+
+                        var state = JsonSerializer.Deserialize<EmulatorState>(json);
+                        LoadState(state);
+
+                        Console.WriteLine("  State Loaded!");
+                    }
+                    else if (key.Key == ConsoleKey.F4) // Edit Breakpoints
+                    {
+                        if (BreakAtAddresses == null)
+                            BreakAtAddresses = new List<ushort>();
+
+                        while (true)
+                        {
+                            Console.WriteLine();
+                            Console.WriteLine("Current break point addressess:");
+
+                            if (BreakAtAddresses.Count == 0)
+                            {
+                                Console.Write(" (none)");
+                            }
+                            else
+                            {
+                                foreach (var breakAtAddress in BreakAtAddresses)
+                                    Console.WriteLine(String.Format(" • 0x{0:X4}", breakAtAddress));
+                            }
+
+                            Console.WriteLine("  Enter an address to toggle breakpoint (e.g. '0x1234<ENTER>') or leave empty and press <ENTER> to stop editing breakpoints...");
+                            var addressString = Console.ReadLine();
+
+                            if (String.IsNullOrWhiteSpace(addressString))
+                                break; // Break out of input loop
+
+                            var address = Convert.ToUInt16(addressString, 16);
+
+                            if (BreakAtAddresses.Contains(address))
+                                BreakAtAddresses.Remove(address);
+                            else
+                                BreakAtAddresses.Add(address);
+                        }
+                    }
+                    else if (key.Key == ConsoleKey.F5) // Continue
+                    {
+                        _singleStepping = false;
+                        break; // Break out of input loop
+                    }
+                    else if (RewindEnabled && _executionHistory.Count > 0 && key.Key == ConsoleKey.F9) // Step Backward
+                    {
+                        var state = _executionHistory[_executionHistory.Count - 1];
+                        _executionHistory.RemoveAt(_executionHistory.Count - 1);
+
+                        LoadState(state);
+                        _cyclesSinceLastInterrupt -= state.LastCyclesExecuted.Value;
+                    }
+                    else if (key.Key == ConsoleKey.F10) // Step
+                    {
+                        break; // Break out of input loop
+                    }
+                    else if (key.Key == ConsoleKey.F11) // Toggle Annotated Disassembly
+                    {
+                        _showAnnotatedDisassembly = !_showAnnotatedDisassembly;
+                    }
+                    else if (key.Key == ConsoleKey.F12) // Print List 10 Opcodes
+                    {
+                        Console.WriteLine("-------------------------------------------------------------------");
+                        Console.WriteLine();
+                        Console.WriteLine(" Last 30 Opcodes: ");
+                        Console.WriteLine();
+                        PrintRecentInstructions(30);
+                    }
+                }
+            }
+        }
+
+        private void HandleDebugFeaturesPostStep(int cyclesElapsed)
+        {
+            // Keep track of the total number of steps (instructions) and cycles ellapsed.
+            _totalSteps++;
+            _totalCycles += cyclesElapsed;
+
+            // Used to slow down the emulation to watch the renderer.
+            // if (_totalCycles % 1000 == 0)
+            //     System.Threading.Thread.Sleep(10);
+
+            if (RewindEnabled)
+            {
+                if (_executionHistory.Count >= MAX_REWIND_HISTORY)
+                    _executionHistory.RemoveAt(0);
+
+                var state = SaveState();
+                state.LastCyclesExecuted = cyclesElapsed;
+
+                _executionHistory.Add(state);
+            }
+        }
+
+        private EmulatorState SaveState()
+        {
+            return new EmulatorState()
+            {
+                Registers = new CPURegisters()
+                {
+                    A = _cpu.Registers.A,
+                    B = _cpu.Registers.B,
+                    C = _cpu.Registers.C,
+                    D = _cpu.Registers.D,
+                    E = _cpu.Registers.E,
+                    H = _cpu.Registers.H,
+                    L = _cpu.Registers.L,
+                },
+                Flags = new ConditionFlags()
+                {
+                    Zero = _cpu.Flags.Zero,
+                    Sign = _cpu.Flags.Sign,
+                    Parity = _cpu.Flags.Parity,
+                    Carry = _cpu.Flags.Carry,
+                    AuxCarry = _cpu.Flags.AuxCarry,
+                },
+                ProgramCounter = _cpu.ProgramCounter,
+                StackPointer = _cpu.StackPointer,
+                InterruptsEnabled = _cpu.InterruptsEnabled,
+                Memory = _cpu.Memory.Clone() as byte[],
+                TotalCycles = _totalCycles,
+                TotalSteps = _totalSteps,
+            };
+        }
+
+        private void LoadState(EmulatorState state)
+        {
+            _cpu.Registers = state.Registers;
+            _cpu.Flags = state.Flags;
+            _cpu.ProgramCounter = state.ProgramCounter;
+            _cpu.StackPointer = state.StackPointer;
+            _cpu.Memory = state.Memory;
+            _totalCycles = state.TotalCycles;
+            _totalSteps = state.TotalSteps;
         }
     }
 }

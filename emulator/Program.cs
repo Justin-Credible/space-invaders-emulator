@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.Extensions.CommandLineUtils;
@@ -59,8 +60,10 @@ namespace JustinCredible.SIEmulator
 
             var romPathArg = command.Argument("[ROM path]", "The path to a directory containing the Space Invaders ROM set to load.");
 
+            var loadStateOption = command.Option("-l|--loadState", "Loads an emulator save state from the given path.", CommandOptionType.SingleValue);
             var debugOption = command.Option("-d|--debug", "Run in debug mode; enables internal statistics and logs useful when debugging.", CommandOptionType.NoValue);
             var breakOption = command.Option("-b|--break", "Used with debug, will break at the given address and allow single stepping opcode execution (e.g. --break 0x0248)", CommandOptionType.MultipleValue);
+            var rewindOption = command.Option("-r|--rewind", "Used with debug, allows for single stepping in reverse to rewind opcode execution.", CommandOptionType.NoValue);
             var annotationsPathOption = command.Option("-a|--annotations", "Used with debug, a path to a text file containing memory address annotations for interactive debugging (line format: 0x1234 .... ; Annotation)", CommandOptionType.SingleValue);
 
             command.OnExecute(() =>
@@ -89,6 +92,17 @@ namespace JustinCredible.SIEmulator
                 _game = new SpaceInvaders();
                 _game.OnRender += SpaceInvaders_OnRender;
 
+                // If the path to a save state was specified to be loaded, deserialize
+                // it from disk and ensure it gets passed into the emulator on start.
+
+                EmulatorState state = null;
+
+                if (loadStateOption.HasValue())
+                {
+                    var json = File.ReadAllText(loadStateOption.Value());
+                    state = JsonSerializer.Deserialize<EmulatorState>(json);
+                }
+
                 #region Set Debugging Flags
 
                 if (debugOption.HasValue())
@@ -107,6 +121,9 @@ namespace JustinCredible.SIEmulator
 
                         _game.BreakAtAddresses = addresses;
                     }
+
+                    if (rewindOption.HasValue())
+                        _game.RewindEnabled = true;
 
                     if (annotationsPathOption.HasValue())
                     {
@@ -131,7 +148,7 @@ namespace JustinCredible.SIEmulator
 
                 // Start the emulation; this occurs in a seperate thread and
                 // therefore this call is non-blocking.
-                _game.Start(rom);
+                _game.Start(rom, state);
 
                 // Starts the event loop for the user interface; this occurs on
                 // the same thread and is a blocking call. Once this method returns
@@ -240,6 +257,11 @@ namespace JustinCredible.SIEmulator
         private static void GUI_OnTick(GUITickEventArgs eventArgs)
         {
             _keys = eventArgs.Keys;
+
+            // If the PAUSE key was pressed (e.g. CTRL/CMD+BREAK), invoke the
+            // interactive debugger.
+            if (_game.Debug && eventArgs.ShouldBreak)
+                _game.Break();
 
             if (_renderFrameNextTick)
             {

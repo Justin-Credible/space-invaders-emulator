@@ -14,6 +14,9 @@ namespace JustinCredible.SIEmulator
         // The keycode for a key that was pressed down _on this event loop tick only_.
         public SDL.SDL_Keycode? KeyDown { get; set; }
 
+        // The Break/Pause key was pressed; if debugging, the emulator should break execution.
+        public bool ShouldBreak { get; set; } = false;
+
         // In
         public byte[] FrameBuffer { get; set; }
         public bool ShouldRender { get; set; }

@@ -15,7 +15,7 @@ namespace JustinCredible.Intel8080
         public bool Finished { get; private set; }
 
         /** The addressable memory; can include RAM and ROM. See CPUConfig. */
-        public byte[] Memory { get; private set; }
+        public byte[] Memory { get; set; }
 
         /** The primary CPU registers. */
         public CPURegisters Registers { get; set; }

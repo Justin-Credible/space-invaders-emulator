@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using SDL2;
 
 namespace JustinCredible.SIEmulator
 {

@@ -63,6 +63,7 @@ namespace JustinCredible.SIEmulator
                 stopwatch.Restart();
 
                 tickEventArgs.KeyDown = null;
+                tickEventArgs.ShouldBreak = false;
 
                 while (SDL.SDL_PollEvent(out sdlEvent) != 0)
                 {
@@ -76,6 +77,10 @@ namespace JustinCredible.SIEmulator
                         case SDL.SDL_EventType.SDL_KEYDOWN:
                             tickEventArgs.KeyDown = sdlEvent.key.keysym.sym;
                             UpdateKeys(tickEventArgs.Keys, sdlEvent.key.keysym.sym, true);
+
+                            if (sdlEvent.key.keysym.sym == SDL.SDL_Keycode.SDLK_PAUSE)
+                                tickEventArgs.ShouldBreak = true;
+
                             break;
 
                         case SDL.SDL_EventType.SDL_KEYUP:
