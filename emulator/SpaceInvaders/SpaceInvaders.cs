@@ -62,7 +62,8 @@ namespace JustinCredible.SIEmulator
              * TODO: Allow reads/writes to 0x4000 - 0x6000 (RAM mirror)?
              */
             WriteableMemoryStart = 0x2000,
-            WriteableMemoryEnd = 0x3FFF,
+            // WriteableMemoryEnd = 0x3FFF,
+            WriteableMemoryEnd = 0x4400, // HACK: Allow writes in RAM mirror area up to 17K; see hack above.
 
             // Interrupts are initially disabled, and will be enabled by the program ROM when ready.
             InterruptsEnabled = false,
