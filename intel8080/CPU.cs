@@ -308,7 +308,8 @@ namespace JustinCredible.Intel8080
 
                     /** Decimal Adjust Accumulator */
                     case OpcodeBytes.DAA:
-                        throw new NotImplementedException("The DAA instruction is not implemented.");
+                        ExecuteDAA();
+                        break;
 
                 #endregion
 
@@ -1627,6 +1628,56 @@ namespace JustinCredible.Intel8080
             return elapsedCycles;
         }
 
+        private void ExecuteDAA()
+        {
+            // Decimal Adjust Accumulator
+            // This occurs in two steps below. Step descriptions are taken directly
+            // from the 8080 Programmers Manual. See the manual for more details on
+            // the instruction and how it can be used.
+
+            // Step 1:
+            // If the least significant four bits of the accumulator represents a number
+            // greater than 9, or if the Auxiliary Carry bit is equal to one, the accumulator
+            // is incremented by six. Otherwise, no incrementing occurs.
+
+            // If a carry out of the least significant four bits occurs during Step (1),
+            // the Auxiliary Carry bit is set; otherwise it is reset.
+
+            var newAuxCarryValue = false;
+
+            int lsb = Registers.A & 0x0F;
+
+            if (lsb > 9 || Flags.AuxCarry)
+            {
+                Registers.A += 6;
+                newAuxCarryValue = lsb >= 9;
+            }
+
+            // Step 2:
+            // If the most significant four bits of the accumulator now represent a number
+            // greater than 9, or if the normal carry bit is equal to one, the most significant
+            // four bits of the accumulator are incremented by six. Otherwise, no incrementing occurs.
+
+            // If a carry out of the most significant four bits occurs during Step (2). the normal
+            // Carry bit is set; otherwise, it is unaffected.
+
+            var newCarryValue = false;
+
+            int msb = (Registers.A & 0xF0) >> 4;
+
+            if (msb > 9 || Flags.Carry)
+            {
+                newCarryValue = msb >= 9;
+                msb += 6;
+
+                var newValue = ((msb << 4) & 0xF0) | (Registers.A & 0x0F);
+                Registers.A = (byte)newValue;
+            }
+
+            // Update the condition flags.
+            SetFlags(newCarryValue, Registers.A, newAuxCarryValue);
+        }
+
         private void ExecuteJMP()
         {
             var upper = Memory[ProgramCounter + 2] << 8;
@@ -1873,15 +1924,13 @@ namespace JustinCredible.Intel8080
             Registers.A = (byte)result;
         }
 
-        private void SetFlags(bool carry, byte result)
+        private void SetFlags(bool carry, byte result, bool auxCarry = false)
         {
             Flags.Carry = carry;
             Flags.Zero = result == 0;
             Flags.Sign = (result & 0b10000000) == 0b10000000;
             Flags.Parity = CalculateParityBit((byte)result);
-
-            // TODO: Space Invaders doesn't use this, so skip for now.
-            // Flags.AuxCarry = ???
+            Flags.AuxCarry = auxCarry;
         }
 
         private bool CalculateParityBit(byte value)
