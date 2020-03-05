@@ -8,8 +8,17 @@ namespace JustinCredible.SIEmulator
     {
         // Out
 
-        // The state of the mapped keys; up or down; pre-mapped to emulator keys.
-        public Dictionary<byte, bool> Keys { get; set; }
+        // The state of the buttons/switches; true = pressed, false = not pressed.
+        public bool ButtonP1Left { get; set; } = false;
+        public bool ButtonP1Right { get; set; } = false;
+        public bool ButtonP1Fire { get; set; } = false;
+        public bool ButtonP2Left { get; set; } = false;
+        public bool ButtonP2Right { get; set; } = false;
+        public bool ButtonP2Fire { get; set; } = false;
+        public bool ButtonStart1P { get; set; } = false;
+        public bool ButtonStart2P { get; set; } = false;
+        public bool ButtonCredit { get; set; } = false;
+        public bool ButtonTilt { get; set; } = false;
 
         // The keycode for a key that was pressed down _on this event loop tick only_.
         public SDL.SDL_Keycode? KeyDown { get; set; }

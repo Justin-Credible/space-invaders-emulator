@@ -14,12 +14,11 @@ namespace JustinCredible.SIEmulator
 
         private static SpaceInvaders _game;
 
-        // Used to pass data from the emulator thread's loop to the GUI loop.
+        // Used to pass data from the emulator thread's loop to the GUI loop: the
+        // framebuffer to be rendered and a flag indicating if a frame should be
+        // rendered or not (to avoid rendering the same frame multiple times).
         private static byte[] _frameBuffer;
         private static bool _renderFrameNextTick = false;
-
-        // Used to pass data from the GUI event loop to the emulator thread's loop.
-        private static Dictionary<byte, bool> _keys = null;
 
         #region CLI / Entrypoint
 
@@ -256,7 +255,16 @@ namespace JustinCredible.SIEmulator
          */
         private static void GUI_OnTick(GUITickEventArgs eventArgs)
         {
-            _keys = eventArgs.Keys;
+            _game.ButtonP1Left = eventArgs.ButtonP1Left;
+            _game.ButtonP1Right = eventArgs.ButtonP1Right;
+            _game.ButtonP1Fire = eventArgs.ButtonP1Fire;
+            _game.ButtonP2Left = eventArgs.ButtonP2Left;
+            _game.ButtonP2Right = eventArgs.ButtonP2Right;
+            _game.ButtonP2Fire = eventArgs.ButtonP2Fire;
+            _game.ButtonStart1P = eventArgs.ButtonStart1P;
+            _game.ButtonStart2P = eventArgs.ButtonStart2P;
+            _game.ButtonCredit = eventArgs.ButtonCredit;
+            _game.ButtonTilt = eventArgs.ButtonTilt;
 
             // If the PAUSE key was pressed (e.g. CTRL/CMD+BREAK), invoke the
             // interactive debugger.

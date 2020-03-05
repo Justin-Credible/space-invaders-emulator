@@ -13,7 +13,7 @@ I started using the codebase from my [CHIP-8 emulator](https://github.com/Justin
 - [ ] Space Invaders specific hardware
   - [X] CPU loop
   - [X] Interrupt generator
-  - [ ] I/O ports
+  - [X] I/O ports
   - [X] Shift register port
   - [ ] Audio
   - [X] Framebuffer
@@ -21,7 +21,7 @@ I started using the codebase from my [CHIP-8 emulator](https://github.com/Justin
   - [X] CLI arguments parser
   - [X] Read ROM files
   - [X] SDL loop
-  - [ ] Read input keys
+  - [X] Read input keys
   - [ ] Play audio
   - [X] Render framebuffer
 - [X] Debugging Tools

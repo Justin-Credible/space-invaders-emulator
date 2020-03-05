@@ -53,7 +53,6 @@ namespace JustinCredible.SIEmulator
             // Structure used to pass data to and from the OnTick handlers. We initialize it once
             // outside of the loop to avoid eating a ton of memory putting GC into a tailspin.
             var tickEventArgs = new GUITickEventArgs();
-            tickEventArgs.Keys = GetEmptyKeyDictionary();
 
             // The SDL event polled for in each iteration of the loop.
             SDL.SDL_Event sdlEvent;
@@ -76,7 +75,7 @@ namespace JustinCredible.SIEmulator
 
                         case SDL.SDL_EventType.SDL_KEYDOWN:
                             tickEventArgs.KeyDown = sdlEvent.key.keysym.sym;
-                            UpdateKeys(tickEventArgs.Keys, sdlEvent.key.keysym.sym, true);
+                            UpdateKeys(tickEventArgs, sdlEvent.key.keysym.sym, true);
 
                             if (sdlEvent.key.keysym.sym == SDL.SDL_Keycode.SDLK_PAUSE)
                                 tickEventArgs.ShouldBreak = true;
@@ -84,7 +83,7 @@ namespace JustinCredible.SIEmulator
                             break;
 
                         case SDL.SDL_EventType.SDL_KEYUP:
-                            UpdateKeys(tickEventArgs.Keys, sdlEvent.key.keysym.sym, false);
+                            UpdateKeys(tickEventArgs, sdlEvent.key.keysym.sym, false);
                             break;
                     }
                 }
@@ -134,7 +133,7 @@ namespace JustinCredible.SIEmulator
                                 // • 73-224: White
                                 // • 225-254: Red
 
-                                if (y >= 182 && y <= 222)
+                                if (y >= 182 && y <= 223)
                                     SDL.SDL_SetRenderDrawColor(_renderer, 0, 255, 0, 255); // Green
                                 else if (y >= 0 && y <= 31)
                                     SDL.SDL_SetRenderDrawColor(_renderer, 255, 0, 0, 255); // Red
@@ -175,81 +174,39 @@ namespace JustinCredible.SIEmulator
             }
         }
 
-        private Dictionary<byte, bool> GetEmptyKeyDictionary()
+        private void UpdateKeys(GUITickEventArgs tickEventArgs, SDL.SDL_Keycode keycode, bool isDown)
         {
-            var dictionary = new Dictionary<byte, bool>();
-
-            for (var i = 0; i < 16; i++)
-                dictionary.Add((byte)i, false);
-
-            return dictionary;
-        }
-
-        private void UpdateKeys(Dictionary<byte, bool> keys, SDL.SDL_Keycode keycode, bool isDown)
-        {
-            // Used mapping from here: http://www.multigesture.net/articles/how-to-write-an-emulator-chip-8-interpreter/
-            // TODO: Make mapping configurable.
-
-            // Keypad                   Keyboard
-            // +-+-+-+-+                +-+-+-+-+
-            // |1|2|3|C|                |1|2|3|4|
-            // +-+-+-+-+                +-+-+-+-+
-            // |4|5|6|D|                |Q|W|E|R|
-            // +-+-+-+-+       =>       +-+-+-+-+
-            // |7|8|9|E|                |A|S|D|F|
-            // +-+-+-+-+                +-+-+-+-+
-            // |A|0|B|F|                |Z|X|C|V|
-            // +-+-+-+-+                +-+-+-+-+
-
             switch (keycode)
             {
-                case SDL.SDL_Keycode.SDLK_1:
-                    keys[0x01] = isDown;
+                case SDL.SDL_Keycode.SDLK_LEFT:
+                    tickEventArgs.ButtonP1Left = isDown;
                     break;
-                case SDL.SDL_Keycode.SDLK_2:
-                    keys[0x02] = isDown;
+                case SDL.SDL_Keycode.SDLK_RIGHT:
+                    tickEventArgs.ButtonP1Right = isDown;
                     break;
-                case SDL.SDL_Keycode.SDLK_3:
-                    keys[0x03] = isDown;
-                    break;
-                case SDL.SDL_Keycode.SDLK_4:
-                    keys[0x0C] = isDown;
-                    break;
-                case SDL.SDL_Keycode.SDLK_q:
-                    keys[0x04] = isDown;
-                    break;
-                case SDL.SDL_Keycode.SDLK_w:
-                    keys[0x05] = isDown;
-                    break;
-                case SDL.SDL_Keycode.SDLK_e:
-                    keys[0x06] = isDown;
-                    break;
-                case SDL.SDL_Keycode.SDLK_r:
-                    keys[0x0D] = isDown;
+                case SDL.SDL_Keycode.SDLK_SPACE:
+                    tickEventArgs.ButtonP1Fire = isDown;
                     break;
                 case SDL.SDL_Keycode.SDLK_a:
-                    keys[0x07] = isDown;
-                    break;
-                case SDL.SDL_Keycode.SDLK_s:
-                    keys[0x08] = isDown;
+                    tickEventArgs.ButtonP2Left = isDown;
                     break;
                 case SDL.SDL_Keycode.SDLK_d:
-                    keys[0x09] = isDown;
+                    tickEventArgs.ButtonP2Right = isDown;
                     break;
-                case SDL.SDL_Keycode.SDLK_f:
-                    keys[0x0E] = isDown;
+                case SDL.SDL_Keycode.SDLK_p:
+                    tickEventArgs.ButtonP2Fire = isDown;
                     break;
-                case SDL.SDL_Keycode.SDLK_z:
-                    keys[0x0A] = isDown;
+                case SDL.SDL_Keycode.SDLK_1:
+                    tickEventArgs.ButtonStart1P = isDown;
                     break;
-                case SDL.SDL_Keycode.SDLK_x:
-                    keys[0x00] = isDown;
+                case SDL.SDL_Keycode.SDLK_2:
+                    tickEventArgs.ButtonStart2P = isDown;
                     break;
-                case SDL.SDL_Keycode.SDLK_c:
-                    keys[0x0B] = isDown;
+                case SDL.SDL_Keycode.SDLK_5:
+                    tickEventArgs.ButtonCredit = isDown;
                     break;
-                case SDL.SDL_Keycode.SDLK_v:
-                    keys[0x0F] = isDown;
+                case SDL.SDL_Keycode.SDLK_t:
+                    tickEventArgs.ButtonTilt = isDown;
                     break;
             }
         }

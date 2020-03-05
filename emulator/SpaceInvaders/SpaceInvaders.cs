@@ -152,6 +152,28 @@ namespace JustinCredible.SIEmulator
         private Stopwatch _cpuStopWatch = new Stopwatch();
         private int _cycleCount = 0;
 
+        #region Dip Switches
+
+        public StartingShipsSetting StartingShips { get; set; } = StartingShipsSetting.Three;
+        public ExtraLifeAtSetting ExtraLifeAt { get; set; } = ExtraLifeAtSetting.Points1000;
+
+        #endregion
+
+        #region Buttons
+
+        public bool ButtonP1Left { get; set; } = false;
+        public bool ButtonP1Right { get; set; } = false;
+        public bool ButtonP1Fire { get; set; } = false;
+        public bool ButtonP2Left { get; set; } = false;
+        public bool ButtonP2Right { get; set; } = false;
+        public bool ButtonP2Fire { get; set; } = false;
+        public bool ButtonStart1P { get; set; } = false;
+        public bool ButtonStart2P { get; set; } = false;
+        public bool ButtonCredit { get; set; } = false;
+        public bool ButtonTilt { get; set; } = false;
+
+        #endregion
+
         // TODO: Implement I/O ports
         // TODO: Implement audio event emitter
         // TODO: Implement framebuffer emitter
@@ -337,12 +359,98 @@ namespace JustinCredible.SIEmulator
             // http://computerarcheology.com/Arcade/SpaceInvaders/Hardware.html
             switch (deviceID)
             {
-                // Inputs - Ports 0-2
+                // Port 0
+                //  bit 0 DIP4 (Seems to be self-test-request read at power up)
+                //  bit 1 Always 1
+                //  bit 2 Always 1
+                //  bit 3 Always 1
+                //  bit 4 Fire
+                //  bit 5 Left
+                //  bit 6 Right
+                //  bit 7 ? tied to demux port 7 ?
                 case 0x00:
+                    return 0b01110000;
+
+                // Port 1
+                //  bit 0 = CREDIT (1 if deposit)
+                //  bit 1 = 2P start (1 if pressed)
+                //  bit 2 = 1P start (1 if pressed)
+                //  bit 3 = Always 1
+                //  bit 4 = 1P shot (1 if pressed)
+                //  bit 5 = 1P left (1 if pressed)
+                //  bit 6 = 1P right (1 if pressed)
+                //  bit 7 = Not connected
                 case 0x01:
+                {
+                    int value = 0b00001000;
+
+                    if (ButtonCredit)
+                        value = value | 0b00000001;
+
+                    if (ButtonStart2P)
+                        value = value | 0b00000010;
+
+                    if (ButtonStart1P)
+                        value = value | 0b00000100;
+
+                    if (ButtonP1Fire)
+                        value = value | 0b00010000;
+
+                    if (ButtonP1Left)
+                        value = value | 0b00100000;
+
+                    if (ButtonP1Right)
+                        value = value | 0b01000000;
+
+                    return (byte)value;
+                }
+
+                // Port 2
+                //  bit 0 = DIP3 00 = 3 ships  10 = 5 ships
+                //  bit 1 = DIP5 01 = 4 ships  11 = 6 ships
+                //  bit 2 = Tilt
+                //  bit 3 = DIP6 0 = extra ship at 1500, 1 = extra ship at 1000
+                //  bit 4 = P2 shot (1 if pressed)
+                //  bit 5 = P2 left (1 if pressed)
+                //  bit 6 = P2 right (1 if pressed)
+                //  bit 7 = DIP7 Coin info displayed in demo screen 0=ON
                 case 0x02:
-                    // TODO
-                    return 0x00;
+                {
+                    int value = 0b00000000;
+
+                    switch (StartingShips)
+                    {
+                        case StartingShipsSetting.Six:
+                            value = value | 0b00000011;
+                            break;
+                        case StartingShipsSetting.Five:
+                            value = value | 0b00000010;
+                            break;
+                        case StartingShipsSetting.Four:
+                            value = value | 0b00000001;
+                            break;
+                        case StartingShipsSetting.Three:
+                        default:
+                            break;
+                    }
+
+                    if (ButtonTilt)
+                        value = value | 0b00000100;
+
+                    if (ExtraLifeAt == ExtraLifeAtSetting.Points1000)
+                        value = value | 0b00001000;
+
+                    if (ButtonP2Fire)
+                        value = value | 0b00010000;
+
+                    if (ButtonP2Left)
+                        value = value | 0b00100000;
+
+                    if (ButtonP2Right)
+                        value = value | 0b01000000;
+
+                    return (byte)value;
+                }
 
                 // Shift Register - Read
                 case 0x03:
@@ -375,6 +483,9 @@ namespace JustinCredible.SIEmulator
                 case 0x03: // Sounds
                 case 0x05: // Sounds
                     // TODO
+                    break;
+
+                case 0x06: // Watchdog
                     break;
 
                 default:
