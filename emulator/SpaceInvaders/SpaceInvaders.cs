@@ -155,7 +155,7 @@ namespace JustinCredible.SIEmulator
         #region Dip Switches
 
         public StartingShipsSetting StartingShips { get; set; } = StartingShipsSetting.Three;
-        public ExtraLifeAtSetting ExtraLifeAt { get; set; } = ExtraLifeAtSetting.Points1000;
+        public ExtraShipAtSetting ExtraShipAt { get; set; } = ExtraShipAtSetting.Points1000;
 
         #endregion
 
@@ -437,7 +437,7 @@ namespace JustinCredible.SIEmulator
                     if (ButtonTilt)
                         value = value | 0b00000100;
 
-                    if (ExtraLifeAt == ExtraLifeAtSetting.Points1000)
+                    if (ExtraShipAt == ExtraShipAtSetting.Points1000)
                         value = value | 0b00001000;
 
                     if (ButtonP2Fire)

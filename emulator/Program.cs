@@ -59,7 +59,9 @@ namespace JustinCredible.SIEmulator
 
             var romPathArg = command.Argument("[ROM path]", "The path to a directory containing the Space Invaders ROM set to load.");
 
-            var loadStateOption = command.Option("-l|--loadState", "Loads an emulator save state from the given path.", CommandOptionType.SingleValue);
+            var shipsOption = command.Option("-ss|--starting-ships", "Specify the number of ships the player starts with; 3 (default), 4, 5, or 6.", CommandOptionType.SingleValue);
+            var extraShipOption = command.Option("-es|--extra-ship", "Specify the number points needed to get an extra ship; 1000 (default) or 1500.", CommandOptionType.SingleValue);
+            var loadStateOption = command.Option("-l|--load-state", "Loads an emulator save state from the given path.", CommandOptionType.SingleValue);
             var debugOption = command.Option("-d|--debug", "Run in debug mode; enables internal statistics and logs useful when debugging.", CommandOptionType.NoValue);
             var breakOption = command.Option("-b|--break", "Used with debug, will break at the given address and allow single stepping opcode execution (e.g. --break 0x0248)", CommandOptionType.MultipleValue);
             var rewindOption = command.Option("-r|--rewind", "Used with debug, allows for single stepping in reverse to rewind opcode execution.", CommandOptionType.NoValue);
@@ -90,6 +92,46 @@ namespace JustinCredible.SIEmulator
                 // handler so receive the framebuffer to be rendered.
                 _game = new SpaceInvaders();
                 _game.OnRender += SpaceInvaders_OnRender;
+
+                #region Set Game Options
+
+                if (shipsOption.HasValue())
+                {
+                    switch (shipsOption.Value())
+                    {
+                        case "6":
+                            _game.StartingShips = StartingShipsSetting.Six;
+                            break;
+                        case "5":
+                            _game.StartingShips = StartingShipsSetting.Five;
+                            break;
+                        case "4":
+                            _game.StartingShips = StartingShipsSetting.Four;
+                            break;
+                        case "3":
+                            _game.StartingShips = StartingShipsSetting.Three;
+                            break;
+                        default:
+                            throw new ArgumentException("Invaild value specified via --starting-ships command line option.");
+                    }
+                }
+
+                if (extraShipOption.HasValue())
+                {
+                    switch (extraShipOption.Value())
+                    {
+                        case "1000":
+                            _game.ExtraShipAt = ExtraShipAtSetting.Points1000;
+                            break;
+                        case "1500":
+                            _game.ExtraShipAt = ExtraShipAtSetting.Points1500;
+                            break;
+                        default:
+                            throw new ArgumentException("Invaild value specified via --extra-ship command line option.");
+                    }
+                }
+
+                #endregion
 
                 // If the path to a save state was specified to be loaded, deserialize
                 // it from disk and ensure it gets passed into the emulator on start.
