@@ -15,10 +15,13 @@ namespace JustinCredible.SIEmulator
         private static SpaceInvaders _game;
 
         // Used to pass data from the emulator thread's loop to the GUI loop: the
-        // framebuffer to be rendered and a flag indicating if a frame should be
-        // rendered or not (to avoid rendering the same frame multiple times).
+        // framebuffer to be rendered and sounds effects to be played with matching
+        // flags indicating if a frame/sfx should be rendered/played or not on the
+        // next GUI event loop tick (to avoid rendering the same frame multiple times).
         private static byte[] _frameBuffer;
         private static bool _renderFrameNextTick = false;
+        private static List<SoundEffect> _soundEffects = new List<SoundEffect>();
+        private static bool _playSoundNextTick = false;
 
         #region CLI / Entrypoint
 
@@ -92,6 +95,7 @@ namespace JustinCredible.SIEmulator
                 // handler so receive the framebuffer to be rendered.
                 _game = new SpaceInvaders();
                 _game.OnRender += SpaceInvaders_OnRender;
+                _game.OnSound += SpaceInvaders_OnSound;
 
                 #region Set Game Options
 
@@ -292,6 +296,15 @@ namespace JustinCredible.SIEmulator
         }
 
         /**
+         * Fired when the emulator needs to play a sound.
+         */
+        private static void SpaceInvaders_OnSound(SoundEventArgs eventArgs)
+        {
+            _soundEffects.Add(eventArgs.SoundEffect);
+            _playSoundNextTick = true;
+        }
+
+        /**
          * Fired when the GUI event loop "ticks". This provides an opportunity
          * to receive user input as well as send the framebuffer to be rendered.
          */
@@ -318,6 +331,14 @@ namespace JustinCredible.SIEmulator
                 eventArgs.FrameBuffer = _frameBuffer;
                 eventArgs.ShouldRender = true;
                 _renderFrameNextTick = false;
+            }
+
+            if (_playSoundNextTick)
+            {
+                eventArgs.ShouldPlaySounds = true;
+                eventArgs.SoundEffects.AddRange(_soundEffects);
+                _soundEffects.Clear();
+                _playSoundNextTick = false;
             }
         }
 

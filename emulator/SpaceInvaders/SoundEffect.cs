@@ -4,7 +4,8 @@ namespace JustinCredible.SIEmulator
 {
     public enum SoundEffect
     {
-        UFO,
+        UFO_Start,
+        UFO_Stop,
         UFOHit,
         Shot,
         InvaderKilled,

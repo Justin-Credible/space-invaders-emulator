@@ -131,6 +131,10 @@ namespace JustinCredible.SIEmulator
         public event RenderEvent OnRender;
         private RenderEventArgs _renderEventArgs;
 
+        private SoundEventArgs _soundEventArgs = new SoundEventArgs();
+        public delegate void SoundEvent(SoundEventArgs e);
+        public event SoundEvent OnSound;
+
         private Thread _thread;
         private bool _cancelled = false;
 
@@ -481,8 +485,11 @@ namespace JustinCredible.SIEmulator
                     break;
 
                 case 0x03: // Sounds
+                    HandleSoundEffects(0x03, data);
+                    break;
+
                 case 0x05: // Sounds
-                    // TODO
+                    HandleSoundEffects(0x05, data);
                     break;
 
                 case 0x06: // Watchdog
@@ -492,6 +499,92 @@ namespace JustinCredible.SIEmulator
                     Console.WriteLine($"WARNING: An OUT/Write for port {deviceID} (value: {data}) is not implemented.");
                     break;
             }
+        }
+
+        private byte _device3WriteLastData = 0x00;
+        private byte _device5WriteLastData = 0x00;
+
+        /**
+         * Handles playing sound effects given the device ID and data written by the CPU. This emits an
+         * event with the name of the sound effect to be played. Normally, the bits are held at 1 for
+         * the duration of the sound effect and then flip back to 0 when complete. This method handles
+         * this case and only emits sound effect events if the bit flips from 0 to 1. It also handles
+         * the special case for the UFO sound effect which repeats until the UFO disappears.
+         */
+        private void HandleSoundEffects(int deviceID, byte data)
+        {
+            if (OnSound == null)
+                return;
+
+            if (deviceID == 0x03) // Port 3
+            {
+                if ((_device3WriteLastData & 0b00000001) == 0 && (data & 0b00000001) == 0b00000001) // Bit 0 - UFO - Start repeating sound
+                {
+                    _soundEventArgs.SoundEffect = SoundEffect.UFO_Start;
+                    OnSound(_soundEventArgs);
+                }
+                else if ((_device3WriteLastData & 0b00000001) == 1 && (data & 0b00000001) == 0b00000000) // Bit 0 - UFO - Stop repeating sound
+                {
+                    _soundEventArgs.SoundEffect = SoundEffect.UFO_Stop;
+                    OnSound(_soundEventArgs);
+                }
+
+                if ((_device3WriteLastData & 0b00000010) == 0 && (data & 0b00000010) == 0b00000010) // Bit 1 - Shot
+                {
+                    _soundEventArgs.SoundEffect = SoundEffect.Shot;
+                    OnSound(_soundEventArgs);
+                }
+
+                if ((_device3WriteLastData & 0b00000100) == 0 && (data & 0b00000100) == 0b00000100) // Bit 2 - Player Died
+                {
+                    _soundEventArgs.SoundEffect = SoundEffect.PlayerDied;
+                    OnSound(_soundEventArgs);
+                }
+
+                if ((_device3WriteLastData & 0b00001000) == 0 && (data & 0b00001000) == 0b00001000) // Bit 3 - Invader Killed
+                {
+                    _soundEventArgs.SoundEffect = SoundEffect.InvaderKilled;
+                    OnSound(_soundEventArgs);
+                }
+
+                _device3WriteLastData = data;
+            }
+            else if (deviceID == 0x05) // Port 5
+            {
+                if ((_device3WriteLastData & 0b00000001) == 0 && (data & 0b00000001) == 0b00000001) // Bit 0 - Invader Movement 1
+                {
+                    _soundEventArgs.SoundEffect = SoundEffect.InvaderMove1;
+                    OnSound(_soundEventArgs);
+                }
+
+                if ((_device3WriteLastData & 0b00000010) == 0 && (data & 0b00000010) == 0b00000010) // Bit 1 - Invader Movement 2
+                {
+                    _soundEventArgs.SoundEffect = SoundEffect.InvaderMove2;
+                    OnSound(_soundEventArgs);
+                }
+
+                if ((_device3WriteLastData & 0b00000100) == 0 && (data & 0b00000100) == 0b00000100) // Bit 2 - Invader Movement 3
+                {
+                    _soundEventArgs.SoundEffect = SoundEffect.InvaderMove3;
+                    OnSound(_soundEventArgs);
+                }
+
+                if ((_device3WriteLastData & 0b00001000) == 0 && (data & 0b00001000) == 0b00001000) // Bit 3 - Invader Movement 4
+                {
+                    _soundEventArgs.SoundEffect = SoundEffect.InvaderMove4;
+                    OnSound(_soundEventArgs);
+                }
+
+                if ((_device3WriteLastData & 0b00010000) == 0 && (data & 0b00010000) == 0b00010000) // Bit 4 - UFO Hit
+                {
+                    _soundEventArgs.SoundEffect = SoundEffect.UFOHit;
+                    OnSound(_soundEventArgs);
+                }
+
+                _device5WriteLastData = data;
+            }
+            else
+                throw new Exception("Unexpected device ID for sound effect: " + deviceID);
         }
 
         /**

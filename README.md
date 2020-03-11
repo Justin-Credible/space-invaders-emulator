@@ -10,12 +10,12 @@ I started using the codebase from my [CHIP-8 emulator](https://github.com/Justin
   - [X] I/O
   - [X] Unit Tests (600+!)
   - [X] Integration Test (cpudiag.bin) 🎉
-- [ ] Space Invaders specific hardware
+- [X] Space Invaders specific hardware
   - [X] CPU loop
   - [X] Interrupt generator
   - [X] I/O ports
   - [X] Shift register port
-  - [ ] Audio
+  - [X] Audio
   - [X] Framebuffer
 - [ ] GUI / "Glue" Program
   - [X] CLI arguments parser

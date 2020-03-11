@@ -91,6 +91,8 @@ namespace JustinCredible.SIEmulator
                 // Update the event arguments that will be sent with the event handler.
 
                 tickEventArgs.ShouldRender = false;
+                tickEventArgs.ShouldPlaySounds = false;
+                tickEventArgs.SoundEffects.Clear();
 
                 // Delegate out to the event handler so work can be done.
                 if (OnTick != null)
@@ -99,7 +101,7 @@ namespace JustinCredible.SIEmulator
                 // We only want to re-render if the frame buffer has changed since last time because
                 // the SDL_RenderPresent method is relatively expensive and massively slows down the
                 // amount of opcodes (ticks) we can execute.
-                if (tickEventArgs.ShouldRender)
+                if (tickEventArgs.ShouldRender && tickEventArgs.FrameBuffer != null)
                 {
                     // Render screen from the updated the frame buffer.
                     // NOTE: The electron beam scans from left to right, starting in the upper left corner
@@ -108,56 +110,58 @@ namespace JustinCredible.SIEmulator
                     // in 3:4 (portrait) we need to perform the rotation of points below by starting in the
                     // bottom left corner of the window and drawing upwards, ending on the top right.
 
-                    var frameBuffer = tickEventArgs.FrameBuffer;
+                    // Clear the screen.
+                    SDL.SDL_SetRenderDrawColor(_renderer, 0, 0, 0, 0);
+                    SDL.SDL_RenderClear(_renderer);
 
-                    if (frameBuffer != null)
+                    var bits = new System.Collections.BitArray(tickEventArgs.FrameBuffer);
+
+                    var x = 0;
+                    var y = SpaceInvaders.RESOLUTION_WIDTH - 1;
+
+                    for (var i = 0; i < bits.Length; i++)
                     {
-                        // Clear the screen.
-                        SDL.SDL_SetRenderDrawColor(_renderer, 0, 0, 0, 0);
-                        SDL.SDL_RenderClear(_renderer);
-
-                        var bits = new System.Collections.BitArray(frameBuffer);
-
-                        var x = 0;
-                        var y = SpaceInvaders.RESOLUTION_WIDTH - 1;
-
-                        for (var i = 0; i < bits.Length; i++)
+                        if (bits[i])
                         {
-                            if (bits[i])
-                            {
-                                // The CRT is black/white and the framebuffer is 1-bit per pixel.
-                                // A transparent overlay added "colors" to areas of the CRT. These
-                                // are the approximate y locations of each area/color of the overlay:
-                                // • 0-18: White
-                                // • 18-72: Green
-                                // • 73-224: White
-                                // • 225-254: Red
+                            // The CRT is black/white and the framebuffer is 1-bit per pixel.
+                            // A transparent overlay added "colors" to areas of the CRT. These
+                            // are the approximate y locations of each area/color of the overlay:
+                            // • 0-18: White
+                            // • 18-72: Green
+                            // • 73-224: White
+                            // • 225-254: Red
 
-                                if (y >= 182 && y <= 223)
-                                    SDL.SDL_SetRenderDrawColor(_renderer, 0, 255, 0, 255); // Green
-                                else if (y >= 0 && y <= 31)
-                                    SDL.SDL_SetRenderDrawColor(_renderer, 255, 0, 0, 255); // Red
-                                else
-                                    SDL.SDL_SetRenderDrawColor(_renderer, 255, 255, 255, 255); // White
+                            if (y >= 182 && y <= 223)
+                                SDL.SDL_SetRenderDrawColor(_renderer, 0, 255, 0, 255); // Green
+                            else if (y >= 0 && y <= 31)
+                                SDL.SDL_SetRenderDrawColor(_renderer, 255, 0, 0, 255); // Red
+                            else
+                                SDL.SDL_SetRenderDrawColor(_renderer, 255, 255, 255, 255); // White
 
-                                SDL.SDL_RenderDrawPoint(_renderer, x, y);
-                            }
-
-                            y--;
-
-                            if (y == -1)
-                            {
-                                y = SpaceInvaders.RESOLUTION_WIDTH - 1;
-                                x++;
-                            }
-
-                            if (x == SpaceInvaders.RESOLUTION_HEIGHT)
-                                break;
-
+                            SDL.SDL_RenderDrawPoint(_renderer, x, y);
                         }
+
+                        y--;
+
+                        if (y == -1)
+                        {
+                            y = SpaceInvaders.RESOLUTION_WIDTH - 1;
+                            x++;
+                        }
+
+                        if (x == SpaceInvaders.RESOLUTION_HEIGHT)
+                            break;
                     }
 
                     SDL.SDL_RenderPresent(_renderer);
+                }
+
+                if (tickEventArgs.ShouldPlaySounds
+                    && tickEventArgs.SoundEffects != null)
+                {
+                    // TODO: Use SDL to play sound effects here.
+                    foreach (var effect in tickEventArgs.SoundEffects)
+                        Console.WriteLine("Play SFX: " + effect.ToString());
                 }
 
                 // See if we need to delay to keep locked to ~ TARGET_FPS FPS.

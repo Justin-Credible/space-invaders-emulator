@@ -29,6 +29,8 @@ namespace JustinCredible.SIEmulator
         // In
         public byte[] FrameBuffer { get; set; }
         public bool ShouldRender { get; set; }
+        public bool ShouldPlaySounds { get; set; }
+        public List<SoundEffect> SoundEffects { get; set; } = new List<SoundEffect>();
         public bool ShouldQuit { get; set; }
     }
 }
