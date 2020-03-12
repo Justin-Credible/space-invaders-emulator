@@ -17,12 +17,12 @@ I started using the codebase from my [CHIP-8 emulator](https://github.com/Justin
   - [X] Shift register port
   - [X] Audio
   - [X] Framebuffer
-- [ ] GUI / "Glue" Program
+- [X] GUI / "Glue" Program
   - [X] CLI arguments parser
   - [X] Read ROM files
   - [X] SDL loop
   - [X] Read input keys
-  - [ ] Play audio
+  - [X] Play audio
   - [X] Render framebuffer
 - [X] Debugging Tools
   - [X] Break during gameplay

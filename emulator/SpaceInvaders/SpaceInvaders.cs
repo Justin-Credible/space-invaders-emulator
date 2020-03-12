@@ -13,6 +13,8 @@ namespace JustinCredible.SIEmulator
 {
     public class SpaceInvaders
     {
+        #region Constants
+
         // The Intel 8080 for Space Invadiers is clocked at 2MHz.
         private const int CPU_MHZ = 2000000;
 
@@ -28,6 +30,31 @@ namespace JustinCredible.SIEmulator
         // => 7,168 bytes or 7 KB for the frame buffer. This is pulled from the video RAM
         // portion which is at $2400-$3fff.
         private const int FRAME_BUFFER_SIZE = 1024 * 7;
+
+        #endregion
+
+        #region Events
+
+        // Fired when a frame is ready to be rendered.
+        public delegate void RenderEvent(RenderEventArgs e);
+        public event RenderEvent OnRender;
+        private RenderEventArgs _renderEventArgs;
+
+        // Fired when a sound effect should be played.
+        public delegate void SoundEvent(SoundEventArgs e);
+        public event SoundEvent OnSound;
+        private SoundEventArgs _soundEventArgs;
+
+        #endregion
+
+        #region Hardware
+
+        // The thread on which we'll run the hardware emulation loop.
+        private Thread _thread;
+
+        // Indicates if a stop was requested via the Stop() method. Used to break out of the hardware
+        // loop in the thread and stop execution.
+        private bool _cancelled = false;
 
         // The configuration of the Intel 8080 CPU specifically for Space Invaders.
         private static readonly CPUConfig _cpuConfig = new CPUConfig()
@@ -71,7 +98,56 @@ namespace JustinCredible.SIEmulator
             EnableDiagnosticsMode = false,
         };
 
-        #region Debugging etc
+        // Intel 8080
+        private CPU _cpu;
+
+        // Dedicated Shift Hardware
+        private ShiftRegister _shiftRegister;
+
+        // The game's video hardware generates runs at 60hz. It generates two interrupts @ 60hz. Interrupt
+        // #1 the middle of a frame and interrupt #2 at the end (vblank). To simulate this, we'll calculate
+        // the number of cycles we're expecting between each of these interrupts. While this is not entirely
+        // accurate, it is close enough for the game to run as expected.
+        private double _cyclesPerInterrupt = Math.Floor(Convert.ToDouble(CPU_MHZ / 60 / 2));
+        private int _cyclesSinceLastInterrupt = 0;
+        private Interrupt _nextInterrupt;
+
+        // To keep the emulated CPU from running too fast, we use a stopwatch and count cycles.
+        private Stopwatch _cpuStopWatch = new Stopwatch();
+        private int _cycleCount = 0;
+
+        // Holds the last data written by the CPU to ports 3 and 5, which are used for sound effects.
+        // The CPU holds the bits high when the sounds are playing, and then flips low to stop.
+        // For our purposes, we just need to know when the bits flip so we can emit a sound effect
+        // event once for a given sound device write.
+        private byte _device3WriteLastData = 0x00;
+        private byte _device5WriteLastData = 0x00;
+
+        #endregion
+
+        #region Dip Switches
+
+        public StartingShipsSetting StartingShips { get; set; } = StartingShipsSetting.Three;
+        public ExtraShipAtSetting ExtraShipAt { get; set; } = ExtraShipAtSetting.Points1000;
+
+        #endregion
+
+        #region Button State
+
+        public bool ButtonP1Left { get; set; } = false;
+        public bool ButtonP1Right { get; set; } = false;
+        public bool ButtonP1Fire { get; set; } = false;
+        public bool ButtonP2Left { get; set; } = false;
+        public bool ButtonP2Right { get; set; } = false;
+        public bool ButtonP2Fire { get; set; } = false;
+        public bool ButtonStart1P { get; set; } = false;
+        public bool ButtonStart2P { get; set; } = false;
+        public bool ButtonCredit { get; set; } = false;
+        public bool ButtonTilt { get; set; } = false;
+
+        #endregion
+
+        #region Debugging Features
 
         private static readonly int MAX_ADDRESS_HISTORY = 100;
         private static readonly int MAX_REWIND_HISTORY = 20;
@@ -127,62 +203,13 @@ namespace JustinCredible.SIEmulator
 
         #endregion
 
-        public delegate void RenderEvent(RenderEventArgs e);
-        public event RenderEvent OnRender;
-        private RenderEventArgs _renderEventArgs;
+        #region Public Methods
 
-        private SoundEventArgs _soundEventArgs = new SoundEventArgs();
-        public delegate void SoundEvent(SoundEventArgs e);
-        public event SoundEvent OnSound;
-
-        private Thread _thread;
-        private bool _cancelled = false;
-
-        // Intel 8080
-        private CPU _cpu;
-
-        // Dedicated Shift Hardware
-        private ShiftRegister _shiftRegister;
-
-        // The game's video hardware generates runs at 60hz. It generates two interrupts @ 60hz. Interrupt
-        // #1 the middle of a frame and interrupt #2 at the end (vblank). To simulate this, we'll calculate
-        // the number of cycles we're expecting between each of these interrupts. While this is not entirely
-        // accurate, it is close enough for the game to run as expected.
-        private double _cyclesPerInterrupt = Math.Floor(Convert.ToDouble(CPU_MHZ / 60 / 2));
-        private int _cyclesSinceLastInterrupt = 0;
-        private Interrupt _nextInterrupt;
-
-        // To keep the emulated CPU from running too fast, we use a stopwatch and count cycles.
-        private Stopwatch _cpuStopWatch = new Stopwatch();
-        private int _cycleCount = 0;
-
-        #region Dip Switches
-
-        public StartingShipsSetting StartingShips { get; set; } = StartingShipsSetting.Three;
-        public ExtraShipAtSetting ExtraShipAt { get; set; } = ExtraShipAtSetting.Points1000;
-
-        #endregion
-
-        #region Buttons
-
-        public bool ButtonP1Left { get; set; } = false;
-        public bool ButtonP1Right { get; set; } = false;
-        public bool ButtonP1Fire { get; set; } = false;
-        public bool ButtonP2Left { get; set; } = false;
-        public bool ButtonP2Right { get; set; } = false;
-        public bool ButtonP2Fire { get; set; } = false;
-        public bool ButtonStart1P { get; set; } = false;
-        public bool ButtonStart2P { get; set; } = false;
-        public bool ButtonCredit { get; set; } = false;
-        public bool ButtonTilt { get; set; } = false;
-
-        #endregion
-
-        // TODO: Implement I/O ports
-        // TODO: Implement audio event emitter
-        // TODO: Implement framebuffer emitter
-        // TODO: Implement input handler
-
+        /**
+         * Used to start execution of the CPU with the given ROM and optional emulator state.
+         * The emulator's hardware loop will run on a spereate thread, and therefore, this method
+         * is non-blocking.
+         */
         public void Start(byte[] rom, EmulatorState state = null)
         {
             if (_thread != null)
@@ -210,6 +237,8 @@ namespace JustinCredible.SIEmulator
                 FrameBuffer = new byte[FRAME_BUFFER_SIZE],
             };
 
+            _soundEventArgs = new SoundEventArgs();
+
             if (state != null)
                 LoadState(state);
 
@@ -219,6 +248,9 @@ namespace JustinCredible.SIEmulator
             _thread.Start();
         }
 
+        /**
+         * Used to stop execution of the CPU and halt the thread.
+         */
         public void Stop()
         {
             if (_thread == null)
@@ -227,133 +259,19 @@ namespace JustinCredible.SIEmulator
             _cancelled = true;
         }
 
+        /**
+         * Used to stop CPU execution and enable single stepping through opcodes via the interactive
+         * debugger (only when Debug = true).
+         */
         public void Break()
         {
             if (Debug)
                 _singleStepping = true;
         }
 
-        public void PrintDebugSummary(bool showAnnotatedDisassembly = false)
-        {
-            Console.WriteLine("-------------------------------------------------------------------");
+        #endregion
 
-            if (Debug)
-                Console.WriteLine($" Total Steps/Opcodes: {_totalSteps}\tCPU Cycles: {_totalCycles}");
-
-            Console.WriteLine();
-            _cpu.PrintDebugSummary();
-            Console.WriteLine();
-            PrintCurrentExecution(showAnnotatedDisassembly);
-            Console.WriteLine();
-        }
-
-        /**
-         * Prints last n instructions that were executed up to MAX_ADDRESS_HISTORY.
-         * Useful when a debugger is attached. Only works when Debug is true.
-         */
-        public void PrintRecentInstructions(int count = 10)
-        {
-            if (!Debug)
-                return;
-
-            var output = new StringBuilder();
-
-            if (count > _addressHistory.Count)
-                count = _addressHistory.Count;
-
-            var startIndex = _addressHistory.Count - count;
-
-            for (var i = startIndex; i < _addressHistory.Count; i++)
-            {
-                var address = _addressHistory[i];
-
-                // Edge case for being able to print instruction history when we've jumped outside
-                // of the allowable memory locations.
-                if (address >= _cpu.Memory.Length)
-                {
-                    var addressDisplay = String.Format("0x{0:X4}", address);
-                    output.AppendLine($"[IndexOutOfRange: {addressDisplay}]");
-                    continue;
-                }
-
-                var instruction = Disassembler.Disassemble(_cpu.Memory, address, out _, true, true);
-                output.AppendLine(instruction);
-            }
-
-            Console.WriteLine(output.ToString());
-        }
-
-        /**
-         * Used to print the disassembly of memory locations before and after the given address.
-         * Useful when a debugger is attached.
-         */
-        public void PrintMemory(UInt16 address, bool annotate = false, int beforeCount = 10, int afterCount = 10)
-        {
-            var output = new StringBuilder();
-
-            // Ensure the start and end locations are within range.
-            var start = (address - beforeCount < 0) ? 0 : (address - beforeCount);
-            var end = (address + afterCount >= _cpu.Memory.Length) ? _cpu.Memory.Length - 1 : (address + afterCount);
-
-            for (var i = start; i < end; i++)
-            {
-                var addressIndex = (UInt16)i;
-
-                // If this is the current address location, add an arrow pointing to it.
-                output.Append(address == addressIndex ? "---->\t" : "\t");
-
-                // If we're showing annotations, then don't show the pseudocode.
-                var emitPseudocode = !_showAnnotatedDisassembly;
-
-                // Disasemble the opcode and print it.
-                var instruction = Disassembler.Disassemble(_cpu.Memory, addressIndex, out int instructionLength, true, emitPseudocode);
-                output.Append(instruction);
-
-                // If we're showing annotations, attempt to look up the annotation for this address.
-                if (_showAnnotatedDisassembly && Annotations != null)
-                {
-                    var annotation = Annotations.ContainsKey(addressIndex) ? Annotations[addressIndex] : null;
-                    output.Append("\t\t; ");
-                    output.Append(annotation == null ? "???" : annotation);
-                }
-
-                output.AppendLine();
-
-                // If the opcode is larger than a single byte, we don't want to print subsequent
-                // bytes as opcodes, so here we print the next address locations as the byte value
-                // in parentheses, and then increment so we can skip disassembly of the data.
-                if (instructionLength == 3)
-                {
-                    var upper = _cpu.Memory[addressIndex + 2] << 8;
-                    var lower = _cpu.Memory[addressIndex + 1];
-                    var combined = (UInt16)(upper | lower);
-                    var dataFormatted = String.Format("0x{0:X4}", combined);
-                    var address1Formatted = String.Format("0x{0:X4}", addressIndex+1);
-                    var address2Formatted = String.Format("0x{0:X4}", addressIndex+2);
-                    output.AppendLine($"\t{address1Formatted}\t(D16: {dataFormatted})");
-                    output.AppendLine($"\t{address2Formatted}\t");
-                    i += 2;
-                }
-                else if (instructionLength == 2)
-                {
-                    var dataFormatted = String.Format("0x{0:X2}", _cpu.Memory[addressIndex+1]);
-                    var addressFormatted = String.Format("0x{0:X4}", addressIndex+1);
-                    output.AppendLine($"\t{addressFormatted}\t(D8: {dataFormatted})");
-                    i++;
-                }
-            }
-
-            Console.WriteLine(output.ToString());
-        }
-
-        /**
-         * Used to print the disassembly of the memory locations around where the program counter is pointing.
-         * Useful when a debugger is attached.
-         */
-        public void PrintCurrentExecution(bool annotate = false, int beforeCount = 10, int afterCount = 10)
-        {
-            PrintMemory(_cpu.ProgramCounter, annotate, beforeCount, afterCount);
-        }
+        #region CPU Event Handlers
 
         /**
          * Used to handle the CPU's IN instruction; read value from given device ID.
@@ -501,8 +419,123 @@ namespace JustinCredible.SIEmulator
             }
         }
 
-        private byte _device3WriteLastData = 0x00;
-        private byte _device5WriteLastData = 0x00;
+        #endregion
+
+        #region Private Methods: Hardware Loop
+
+        /**
+         * Handles stepping the CPU to execute instructions as well as firing interrupts.
+         */
+        private void HardwareLoop()
+        {
+            _cpuStopWatch.Start();
+            _cycleCount = 0;
+
+            try
+            {
+                while (!_cancelled)
+                {
+                    // Handle all the debug tasks that need to happen before we execute an instruction.
+                    if (Debug)
+                        HandleDebugFeaturesPreStep();
+
+                    // Step the CPU to execute the next instruction.
+                    var cycles = _cpu.Step();
+
+                    // Keep track of the number of cycles to see if we need to throttle the CPU.
+                    _cycleCount += cycles;
+
+                    // Handle all the debug tasks that need to happen after we execute an instruction.
+                    if (Debug)
+                        HandleDebugFeaturesPostStep(cycles);
+
+                    // Throttle the CPU emulation if needed.
+                    if (_cycleCount >= (CPU_MHZ/60))
+                    {
+                        _cpuStopWatch.Stop();
+
+                        if (_cpuStopWatch.Elapsed.TotalMilliseconds < 16.6)
+                        {
+                            var sleepForMs = 16.6 - _cpuStopWatch.Elapsed.TotalMilliseconds;
+
+                            if (sleepForMs >= 1)
+                                System.Threading.Thread.Sleep((int)sleepForMs);
+                        }
+
+                        _cycleCount = 0;
+                        _cpuStopWatch.Restart();
+                    }
+
+                    // See if it's time to fire a CPU interrupt or not.
+                    HandleInterrupts(cycles);
+                }
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine("-------------------------------------------------------------------");
+                Console.WriteLine("An exception occurred during emulation!");
+                PrintDebugSummary(_showAnnotatedDisassembly);
+                Console.WriteLine("-------------------------------------------------------------------");
+                throw exception;
+            }
+
+            _cpu = null;
+            _thread = null;
+        }
+
+        /**
+         * Space Invaders sends two different interrupts, which are driven by the video hardware.
+         * We can use the number of CPU cycles elapsed to roughtly estimate when these interrupts
+         * should fire. If it's time for an interrupt, we disable interrupts and then jump to the
+         * interupt handler. Once the handler completes, we re-enable interrupts and reset the
+         * program counter back to it's original location so the CPU can continue where it left off.
+         */
+        private void HandleInterrupts(int cyclesElapsed)
+        {
+            // Keep track of the number of cycles since the last interrupt occurred.
+            _cyclesSinceLastInterrupt += cyclesElapsed;
+
+            // Determine if it's time for the video hardware to fire an interrupt.
+            if (_cyclesSinceLastInterrupt < _cyclesPerInterrupt)
+                return;
+
+            // If interrupts are enabled, then handle them, otherwise do nothing.
+            if (_cpu.InterruptsEnabled)
+            {
+                // If we're going to run an interrupt handler, ensure interrupts are disabled.
+                // This ensures we don't interrupt the interrupt handler. The program ROM will
+                // re-enable the interrupts manually.
+                _cpu.InterruptsEnabled = false;
+
+                // Execute the handler for the interrupt.
+                _cpu.StepInterrupt(_nextInterrupt);
+
+                // The video hardware alternates between these two interrupts.
+                if (_nextInterrupt == Interrupt.One)
+                {
+                    // CRT electron beam is at the middle of the screen (approximately).
+
+                    _nextInterrupt = Interrupt.Two;
+                }
+                else if (_nextInterrupt == Interrupt.Two)
+                {
+                    // CRT electron beam reached the end (V-Blank).
+
+                    if (OnRender != null)
+                    {
+                        Array.Copy(_cpu.Memory, 0x2400, _renderEventArgs.FrameBuffer, 0, FRAME_BUFFER_SIZE);
+                        OnRender(_renderEventArgs);
+                    }
+
+                    _nextInterrupt = Interrupt.One;
+                }
+                else
+                    throw new Exception($"Unexpected next interrupt: {_nextInterrupt}.");
+            }
+
+            // Reset the count so we can count up again.
+            _cyclesSinceLastInterrupt = 0;
+        }
 
         /**
          * Handles playing sound effects given the device ID and data written by the CPU. This emits an
@@ -588,112 +621,10 @@ namespace JustinCredible.SIEmulator
         }
 
         /**
-         * Handles stepping the CPU to execute instructions as well as firing interrupts.
+         * This method handles all the work that needs to be done when debugging is enabled right before
+         * the CPU executes an opcode. This includes recording CPU stats, address history, and CPU breakpoints,
+         * as well as implements the interactive debugger.
          */
-        private void HardwareLoop()
-        {
-            _cpuStopWatch.Start();
-            _cycleCount = 0;
-
-            try
-            {
-                while (!_cancelled)
-                {
-                    // Handle all the debug tasks that need to happen before we execute an instruction.
-                    if (Debug)
-                        HandleDebugFeaturesPreStep();
-
-                    // Step the CPU to execute the next instruction.
-                    var cycles = _cpu.Step();
-
-                    // Keep track of the number of cycles to see if we need to throttle the CPU.
-                    _cycleCount += cycles;
-
-                    // Handle all the debug tasks that need to happen after we execute an instruction.
-                    if (Debug)
-                        HandleDebugFeaturesPostStep(cycles);
-
-                    // Throttle the CPU emulation if needed.
-                    if (_cycleCount >= (CPU_MHZ/60))
-                    {
-                        _cpuStopWatch.Stop();
-
-                        if (_cpuStopWatch.Elapsed.TotalMilliseconds < 16.6)
-                        {
-                            var sleepForMs = 16.6 - _cpuStopWatch.Elapsed.TotalMilliseconds;
-
-                            if (sleepForMs >= 1)
-                                System.Threading.Thread.Sleep((int)sleepForMs);
-                        }
-
-                        _cycleCount = 0;
-                        _cpuStopWatch.Restart();
-                    }
-
-                    // See if it's time to fire a CPU interrupt or not.
-                    HandleInterrupts(cycles);
-                }
-            }
-            catch (Exception exception)
-            {
-                Console.WriteLine("-------------------------------------------------------------------");
-                Console.WriteLine("An exception occurred during emulation!");
-                PrintDebugSummary(_showAnnotatedDisassembly);
-                Console.WriteLine("-------------------------------------------------------------------");
-                throw exception;
-            }
-
-            _cpu = null;
-            _thread = null;
-        }
-
-        private void HandleInterrupts(int cyclesElapsed)
-        {
-            // Keep track of the number of cycles since the last interrupt occurred.
-            _cyclesSinceLastInterrupt += cyclesElapsed;
-
-            // Determine if it's time for the video hardware to fire an interrupt.
-            if (_cyclesSinceLastInterrupt < _cyclesPerInterrupt)
-                return;
-
-            // If interrupts are enabled, then handle them, otherwise do nothing.
-            if (_cpu.InterruptsEnabled)
-            {
-                // If we're going to run an interrupt handler, ensure interrupts are disabled.
-                // This ensures we don't interrupt the interrupt handler. The program ROM will
-                // re-enable the interrupts manually.
-                _cpu.InterruptsEnabled = false;
-
-                // Execute the handler for the interrupt.
-                _cpu.StepInterrupt(_nextInterrupt);
-
-                // The video hardware alternates between these two interrupts.
-                if (_nextInterrupt == Interrupt.One)
-                {
-                    // CRT electron beam is at the middle of the screen (approximately).
-
-                    _nextInterrupt = Interrupt.Two;
-                }
-                else if (_nextInterrupt == Interrupt.Two)
-                {
-                    // CRT electron beam reached the end (V-Blank).
-
-                    if (OnRender != null)
-                    {
-                        Array.Copy(_cpu.Memory, 0x2400, _renderEventArgs.FrameBuffer, 0, FRAME_BUFFER_SIZE);
-                        OnRender(_renderEventArgs);
-                    }
-
-                    _nextInterrupt = Interrupt.One;
-                }
-                else
-                    throw new Exception($"Unexpected next interrupt: {_nextInterrupt}.");
-            }
-
-            // Reset the count so we can count up again.
-            _cyclesSinceLastInterrupt = 0;
-        }
-
         private void HandleDebugFeaturesPreStep()
         {
             // Record the current address.
@@ -818,6 +749,10 @@ namespace JustinCredible.SIEmulator
             }
         }
 
+        /**
+         * This method handles all the work that needs to be done when debugging is enabled right after
+         * the CPU executes an opcode. This includes recording CPU stats and rewind history.
+         */
         private void HandleDebugFeaturesPostStep(int cyclesElapsed)
         {
             // Keep track of the total number of steps (instructions) and cycles ellapsed.
@@ -840,6 +775,14 @@ namespace JustinCredible.SIEmulator
             }
         }
 
+        #endregion
+
+        #region Private Methods: Save/Load State
+
+        /**
+         * Used to dump the state of the CPU and all fields needed to restore the emulator's
+         * state in order to continue at this execution point later on.
+         */
         private EmulatorState SaveState()
         {
             return new EmulatorState()
@@ -873,6 +816,10 @@ namespace JustinCredible.SIEmulator
             };
         }
 
+        /**
+         * Used to restore the state of the CPU and restore all fields to allow the emulator
+         * to continue execution from a previously saved state.
+         */
         private void LoadState(EmulatorState state)
         {
             _cpu.Registers = state.Registers;
@@ -886,5 +833,133 @@ namespace JustinCredible.SIEmulator
             _cyclesSinceLastInterrupt = state.CyclesSinceLastInterrupt;
             _nextInterrupt = state.NextInterrupt;
         }
+
+        #endregion
+
+        #region Private Methods: Debugging & Diagnostics
+
+        private void PrintDebugSummary(bool showAnnotatedDisassembly = false)
+        {
+            Console.WriteLine("-------------------------------------------------------------------");
+
+            if (Debug)
+                Console.WriteLine($" Total Steps/Opcodes: {_totalSteps}\tCPU Cycles: {_totalCycles}");
+
+            Console.WriteLine();
+            _cpu.PrintDebugSummary();
+            Console.WriteLine();
+            PrintCurrentExecution(showAnnotatedDisassembly);
+            Console.WriteLine();
+        }
+
+        /**
+         * Prints last n instructions that were executed up to MAX_ADDRESS_HISTORY.
+         * Useful when a debugger is attached. Only works when Debug is true.
+         */
+        private void PrintRecentInstructions(int count = 10)
+        {
+            if (!Debug)
+                return;
+
+            var output = new StringBuilder();
+
+            if (count > _addressHistory.Count)
+                count = _addressHistory.Count;
+
+            var startIndex = _addressHistory.Count - count;
+
+            for (var i = startIndex; i < _addressHistory.Count; i++)
+            {
+                var address = _addressHistory[i];
+
+                // Edge case for being able to print instruction history when we've jumped outside
+                // of the allowable memory locations.
+                if (address >= _cpu.Memory.Length)
+                {
+                    var addressDisplay = String.Format("0x{0:X4}", address);
+                    output.AppendLine($"[IndexOutOfRange: {addressDisplay}]");
+                    continue;
+                }
+
+                var instruction = Disassembler.Disassemble(_cpu.Memory, address, out _, true, true);
+                output.AppendLine(instruction);
+            }
+
+            Console.WriteLine(output.ToString());
+        }
+
+        /**
+         * Used to print the disassembly of memory locations before and after the given address.
+         * Useful when a debugger is attached.
+         */
+        private void PrintMemory(UInt16 address, bool annotate = false, int beforeCount = 10, int afterCount = 10)
+        {
+            var output = new StringBuilder();
+
+            // Ensure the start and end locations are within range.
+            var start = (address - beforeCount < 0) ? 0 : (address - beforeCount);
+            var end = (address + afterCount >= _cpu.Memory.Length) ? _cpu.Memory.Length - 1 : (address + afterCount);
+
+            for (var i = start; i < end; i++)
+            {
+                var addressIndex = (UInt16)i;
+
+                // If this is the current address location, add an arrow pointing to it.
+                output.Append(address == addressIndex ? "---->\t" : "\t");
+
+                // If we're showing annotations, then don't show the pseudocode.
+                var emitPseudocode = !_showAnnotatedDisassembly;
+
+                // Disasemble the opcode and print it.
+                var instruction = Disassembler.Disassemble(_cpu.Memory, addressIndex, out int instructionLength, true, emitPseudocode);
+                output.Append(instruction);
+
+                // If we're showing annotations, attempt to look up the annotation for this address.
+                if (_showAnnotatedDisassembly && Annotations != null)
+                {
+                    var annotation = Annotations.ContainsKey(addressIndex) ? Annotations[addressIndex] : null;
+                    output.Append("\t\t; ");
+                    output.Append(annotation == null ? "???" : annotation);
+                }
+
+                output.AppendLine();
+
+                // If the opcode is larger than a single byte, we don't want to print subsequent
+                // bytes as opcodes, so here we print the next address locations as the byte value
+                // in parentheses, and then increment so we can skip disassembly of the data.
+                if (instructionLength == 3)
+                {
+                    var upper = _cpu.Memory[addressIndex + 2] << 8;
+                    var lower = _cpu.Memory[addressIndex + 1];
+                    var combined = (UInt16)(upper | lower);
+                    var dataFormatted = String.Format("0x{0:X4}", combined);
+                    var address1Formatted = String.Format("0x{0:X4}", addressIndex+1);
+                    var address2Formatted = String.Format("0x{0:X4}", addressIndex+2);
+                    output.AppendLine($"\t{address1Formatted}\t(D16: {dataFormatted})");
+                    output.AppendLine($"\t{address2Formatted}\t");
+                    i += 2;
+                }
+                else if (instructionLength == 2)
+                {
+                    var dataFormatted = String.Format("0x{0:X2}", _cpu.Memory[addressIndex+1]);
+                    var addressFormatted = String.Format("0x{0:X4}", addressIndex+1);
+                    output.AppendLine($"\t{addressFormatted}\t(D8: {dataFormatted})");
+                    i++;
+                }
+            }
+
+            Console.WriteLine(output.ToString());
+        }
+
+        /**
+         * Used to print the disassembly of the memory locations around where the program counter is pointing.
+         * Useful when a debugger is attached.
+         */
+        private void PrintCurrentExecution(bool annotate = false, int beforeCount = 10, int afterCount = 10)
+        {
+            PrintMemory(_cpu.ProgramCounter, annotate, beforeCount, afterCount);
+        }
+
+        #endregion
     }
 }
