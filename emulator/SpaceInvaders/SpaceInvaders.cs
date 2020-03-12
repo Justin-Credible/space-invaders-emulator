@@ -868,6 +868,8 @@ namespace JustinCredible.SIEmulator
                 Memory = _cpu.Memory.Clone() as byte[],
                 TotalCycles = _totalCycles,
                 TotalSteps = _totalSteps,
+                CyclesSinceLastInterrupt = _cyclesSinceLastInterrupt,
+                NextInterrupt = _nextInterrupt,
             };
         }
 
@@ -877,9 +879,12 @@ namespace JustinCredible.SIEmulator
             _cpu.Flags = state.Flags;
             _cpu.ProgramCounter = state.ProgramCounter;
             _cpu.StackPointer = state.StackPointer;
+            _cpu.InterruptsEnabled = state.InterruptsEnabled;
             _cpu.Memory = state.Memory;
             _totalCycles = state.TotalCycles;
             _totalSteps = state.TotalSteps;
+            _cyclesSinceLastInterrupt = state.CyclesSinceLastInterrupt;
+            _nextInterrupt = state.NextInterrupt;
         }
     }
 }

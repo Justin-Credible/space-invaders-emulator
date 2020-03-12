@@ -13,6 +13,8 @@ namespace JustinCredible.SIEmulator
         public byte[] Memory { get; set; }
         public int TotalCycles { get; set; }
         public int TotalSteps { get; set; }
+        public Interrupt NextInterrupt { get; set; }
+        public int CyclesSinceLastInterrupt { get; set; }
 
         public int? LastCyclesExecuted { get; set; }
     }
