@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using SDL2;
-using static SDL2.SDL;
 
 namespace JustinCredible.SIEmulator
 {
@@ -11,16 +10,23 @@ namespace JustinCredible.SIEmulator
         private IntPtr _window = IntPtr.Zero;
         private IntPtr _renderer = IntPtr.Zero;
         private int _targetFPS = 15;
+        private Dictionary<SoundEffect, IntPtr> soundEffects = null;
 
         public delegate void TickEvent(GUITickEventArgs e);
         public event TickEvent OnTick;
 
+        const int AUDIO_CHANNEL_COMMON = 0;
+        const int AUDIO_CHANNEL_INVADER_MOVEMENT = 1;
+        const int AUDIO_CHANNEL_UFO = 2;
+        const int AUDIO_INFINITE_LOOP = -1;
+        const int AUDIO_NO_LOOP = 0;
+
         public void Initialize(string title, int width = 640, int height = 480, float scaleX = 1, float scaleY = 1, int targetFPS = 60)
         {
-            var initResult = SDL.SDL_Init(SDL.SDL_INIT_VIDEO);
+            var initResult = SDL.SDL_Init(SDL.SDL_INIT_VIDEO | SDL.SDL_INIT_AUDIO);
 
-            if (initResult < 0)
-                throw new Exception(String.Format("Failure while initializing SDL. Error: {0}", SDL.SDL_GetError()));
+            if (initResult != 0)
+                throw new Exception(String.Format("Failure while initializing SDL. SDL Error: {0}", SDL.SDL_GetError()));
 
             _window = SDL.SDL_CreateWindow(title,
                 SDL.SDL_WINDOWPOS_CENTERED,
@@ -41,6 +47,40 @@ namespace JustinCredible.SIEmulator
             SDL.SDL_RenderSetScale(_renderer, scaleX, scaleY);
 
             _targetFPS = targetFPS;
+        }
+
+        public void InitializeAudio(Dictionary<SoundEffect, String> soundEffectsFiles = null)
+        {
+            var audioRate = 22050; // 22.05KHz
+            var audioFormat = SDL.AUDIO_S16SYS; // Unsigned 16-bit samples in the system's byte order
+            var audioChannels = 1; // Mono
+            var audioBuffers = 4096;
+
+            var openAudioResult = SDL_mixer.Mix_OpenAudio(audioRate, audioFormat, audioChannels, audioBuffers);
+
+            if (openAudioResult != 0)
+                throw new Exception(String.Format("Failure while opening SDL audio mixer. SDL Error: {0}", SDL.SDL_GetError()));
+
+            // We'll use 3 channels; see AUDIO_CHANNEL constants.
+            var allocateChannelsResult = SDL_mixer.Mix_AllocateChannels(3);
+
+            if (allocateChannelsResult == 0)
+                throw new Exception(String.Format("Failure while allocating SDL audio mixer channels. SDL Error: {0}", SDL.SDL_GetError()));
+
+            soundEffects = new Dictionary<SoundEffect, IntPtr>();
+
+            foreach (var entry in soundEffectsFiles)
+            {
+                var sfx = entry.Key;
+                var filePath = entry.Value;
+
+                var pointer = SDL_mixer.Mix_LoadWAV(filePath);
+
+                if (pointer == null)
+                    throw new Exception(String.Format("Error loading sound {0}. SDL Error: {1}", sfx, SDL.SDL_GetError()));
+
+                soundEffects.Add(sfx, pointer);
+            }
         }
 
         public void StartLoop()
@@ -156,12 +196,51 @@ namespace JustinCredible.SIEmulator
                     SDL.SDL_RenderPresent(_renderer);
                 }
 
-                if (tickEventArgs.ShouldPlaySounds
+                // Handle playing sound effects.
+                if (soundEffects != null
+                    && tickEventArgs.ShouldPlaySounds
                     && tickEventArgs.SoundEffects != null)
                 {
-                    // TODO: Use SDL to play sound effects here.
-                    foreach (var effect in tickEventArgs.SoundEffects)
-                        Console.WriteLine("Play SFX: " + effect.ToString());
+                    foreach (var sfx in tickEventArgs.SoundEffects)
+                    {
+                        var pointer = soundEffects[sfx];
+
+                        // Result of Mix_PlayChannel, which indicates the channel the sound is playing on.
+                        // -1 indicates an error.
+                        var playChannelResult = -1;
+
+                        switch (sfx)
+                        {
+                            // The UFO sound effect loops until the UFO disappears or is destroyed.
+                            case SoundEffect.UFO_Start:
+                                playChannelResult = SDL_mixer.Mix_PlayChannel(AUDIO_CHANNEL_UFO, pointer, AUDIO_INFINITE_LOOP);
+                                break;
+
+                            case SoundEffect.UFO_Stop:
+                            {
+                                SDL_mixer.Mix_Pause(AUDIO_CHANNEL_UFO);
+
+                                // Mix_Pause doesn't return a channel or error code. Ensure we don't leave as -1.
+                                playChannelResult = AUDIO_CHANNEL_UFO;
+
+                                break;
+                            }
+
+                            case SoundEffect.InvaderMove1:
+                            case SoundEffect.InvaderMove2:
+                            case SoundEffect.InvaderMove3:
+                            case SoundEffect.InvaderMove4:
+                                playChannelResult = SDL_mixer.Mix_PlayChannel(AUDIO_CHANNEL_INVADER_MOVEMENT, pointer, AUDIO_NO_LOOP);
+                                break;
+
+                            default:
+                                playChannelResult = SDL_mixer.Mix_PlayChannel(AUDIO_CHANNEL_COMMON, pointer, AUDIO_NO_LOOP);
+                                break;
+                        }
+
+                        if (playChannelResult == -1)
+                            Console.WriteLine("Error playing sound effect {0}. SDL Error: {1}", sfx, SDL.SDL_GetError());
+                    }
                 }
 
                 // See if we need to delay to keep locked to ~ TARGET_FPS FPS.
@@ -222,6 +301,17 @@ namespace JustinCredible.SIEmulator
 
             if (_window != IntPtr.Zero)
                 SDL.SDL_DestroyWindow(_window);
+
+            if (soundEffects != null)
+            {
+                foreach (var entry in soundEffects)
+                {
+                    var pointer = entry.Value;
+                    SDL_mixer.Mix_FreeChunk(pointer);
+                }
+
+                SDL_mixer.Mix_CloseAudio();
+            }
         }
     }
 }

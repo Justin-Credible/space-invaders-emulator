@@ -62,6 +62,7 @@ namespace JustinCredible.SIEmulator
 
             var romPathArg = command.Argument("[ROM path]", "The path to a directory containing the Space Invaders ROM set to load.");
 
+            var sfxOption = command.Option("-sfx|--sound-effects", "The path to a directory containing the WAV sound effects to be used.", CommandOptionType.SingleValue);
             var shipsOption = command.Option("-ss|--starting-ships", "Specify the number of ships the player starts with; 3 (default), 4, 5, or 6.", CommandOptionType.SingleValue);
             var extraShipOption = command.Option("-es|--extra-ship", "Specify the number points needed to get an extra ship; 1000 (default) or 1500.", CommandOptionType.SingleValue);
             var loadStateOption = command.Option("-l|--load-state", "Loads an emulator save state from the given path.", CommandOptionType.SingleValue);
@@ -90,6 +91,10 @@ namespace JustinCredible.SIEmulator
                 var gui = new GUI();
                 gui.Initialize("Space Invaders Emulator", SpaceInvaders.RESOLUTION_HEIGHT, SpaceInvaders.RESOLUTION_WIDTH, 2, 2);
                 gui.OnTick += GUI_OnTick;
+
+                // Initialize sound effects if the sfx option was passed.
+                if (sfxOption.HasValue())
+                    gui.InitializeAudio(GetSoundEffects(sfxOption.Value()));
 
                 // Initialize the Space Invaders hardware/emulator and wire an event
                 // handler so receive the framebuffer to be rendered.
@@ -242,6 +247,66 @@ namespace JustinCredible.SIEmulator
             bytes.AddRange(File.ReadAllBytes(ePath));
 
             return bytes.ToArray();
+        }
+
+        private static Dictionary<SoundEffect, string> GetSoundEffects(string path)
+        {
+            // TODO: Checksums?
+
+            if (!Directory.Exists(path))
+                throw new Exception($"Could not locate sound effects directory: {path}");
+
+            var sfxInvaderKilledPath = Path.Join(path, "invaderkilled.wav");
+            var sfxInvaderMove1Path = Path.Join(path, "invadermove1.wav");
+            var sfxInvaderMove2Path = Path.Join(path, "invadermove2.wav");
+            var sfxInvaderMove3Path = Path.Join(path, "invadermove3.wav");
+            var sfxInvaderMove4Path = Path.Join(path, "invadermove4.wav");
+            var sfxPlayerDiedPath = Path.Join(path, "playerdied.wav");
+            var sfxShotPath = Path.Join(path, "shot.wav");
+            var sfxUfoPath = Path.Join(path, "ufo.wav");
+            var sfxUfoHitPath = Path.Join(path, "ufohit.wav");
+
+            if (!File.Exists(sfxInvaderKilledPath))
+                throw new Exception($"Could not locate sound effect: {sfxInvaderKilledPath}");
+
+            if (!File.Exists(sfxInvaderMove1Path))
+                throw new Exception($"Could not locate sound effect: {sfxInvaderMove1Path}");
+
+            if (!File.Exists(sfxInvaderMove2Path))
+                throw new Exception($"Could not locate sound effect: {sfxInvaderMove2Path}");
+
+            if (!File.Exists(sfxInvaderMove3Path))
+                throw new Exception($"Could not locate sound effect: {sfxInvaderMove3Path}");
+
+            if (!File.Exists(sfxInvaderMove4Path))
+                throw new Exception($"Could not locate sound effect: {sfxInvaderMove4Path}");
+
+            if (!File.Exists(sfxPlayerDiedPath))
+                throw new Exception($"Could not locate sound effect: {sfxPlayerDiedPath}");
+
+            if (!File.Exists(sfxShotPath))
+                throw new Exception($"Could not locate sound effect: {sfxShotPath}");
+
+            if (!File.Exists(sfxUfoPath))
+                throw new Exception($"Could not locate sound effect: {sfxUfoPath}");
+
+            if (!File.Exists(sfxUfoHitPath))
+                throw new Exception($"Could not locate sound effect: {sfxUfoHitPath}");
+
+            var soundEffects = new Dictionary<SoundEffect, string>();
+
+            soundEffects.Add(SoundEffect.InvaderKilled, sfxInvaderKilledPath);
+            soundEffects.Add(SoundEffect.InvaderMove1, sfxInvaderMove1Path);
+            soundEffects.Add(SoundEffect.InvaderMove2, sfxInvaderMove2Path);
+            soundEffects.Add(SoundEffect.InvaderMove3, sfxInvaderMove3Path);
+            soundEffects.Add(SoundEffect.InvaderMove4, sfxInvaderMove4Path);
+            soundEffects.Add(SoundEffect.PlayerDied, sfxPlayerDiedPath);
+            soundEffects.Add(SoundEffect.Shot, sfxShotPath);
+            soundEffects.Add(SoundEffect.UFO_Start, sfxUfoPath);
+            soundEffects.Add(SoundEffect.UFO_Stop, sfxUfoPath);
+            soundEffects.Add(SoundEffect.UFOHit, sfxUfoHitPath);
+
+            return soundEffects;
         }
 
         private static Dictionary<UInt16, String> ParseAnnotationsFile(string path)
