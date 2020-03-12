@@ -11,6 +11,10 @@ using JustinCredible.Intel8080;
 
 namespace JustinCredible.SIEmulator
 {
+    /**
+     * An implementation of the Space Invaders hardware for emulation; this includes the
+     * Intel 8080 CPU instance, shift hardware, interrupts, debugger, and hardware loop.
+     */
     public class SpaceInvaders
     {
         #region Constants

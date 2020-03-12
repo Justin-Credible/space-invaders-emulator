@@ -5,23 +5,61 @@ using SDL2;
 
 namespace JustinCredible.SIEmulator
 {
+    /**
+     * The "platform" code which handles creating of the GUI window to show graphics,
+     * play sounds, and receive keyboard input. Implemented with the SDL2 and SDL2_mixer
+     * libraries.
+     */
     class GUI : IDisposable
     {
+        #region Constants
+
+        // We'll use three channels for audio, with dedicated channels
+        // for the enemy movement and UFO, which are the most common
+        // SFX that play simultaneously.
+        private const int AUDIO_CHANNEL_COMMON = 0;
+        private const int AUDIO_CHANNEL_INVADER_MOVEMENT = 1;
+        private const int AUDIO_CHANNEL_UFO = 2;
+
+        // Constants for use with SDL_mixer.
+        private const int AUDIO_INFINITE_LOOP = -1;
+        private const int AUDIO_NO_LOOP = 0;
+
+        #endregion
+
+        #region Instance Variables
+
+        // References to SDL resources.
         private IntPtr _window = IntPtr.Zero;
         private IntPtr _renderer = IntPtr.Zero;
-        private int _targetFPS = 15;
+
+        // Used to throttle the GUI event loop so we don't fire the OnTick event
+        // more than needed. During each tick we can send key presses as well as
+        // receive a framebuffer and play sound effects.
+        private int _targetTicksHz = 60;
+
+        // A map of sound effects enums to the in-memory sound buffers.
         private Dictionary<SoundEffect, IntPtr> soundEffects = null;
 
+        #endregion
+
+        #region Events
+
+        // Fired when the SDL event loop "ticks" which is ~60hz. This allows us to send out
+        // the keys that were pressed, as well as optionally receive a framebuffer to be
+        // rendered in the window or sound effects to be played.
         public delegate void TickEvent(GUITickEventArgs e);
         public event TickEvent OnTick;
 
-        const int AUDIO_CHANNEL_COMMON = 0;
-        const int AUDIO_CHANNEL_INVADER_MOVEMENT = 1;
-        const int AUDIO_CHANNEL_UFO = 2;
-        const int AUDIO_INFINITE_LOOP = -1;
-        const int AUDIO_NO_LOOP = 0;
+        #endregion
 
-        public void Initialize(string title, int width = 640, int height = 480, float scaleX = 1, float scaleY = 1, int targetFPS = 60)
+        #region Public Methods
+
+        /**
+         * Used to initialize the GUI by creating a window using SDL. This window is where the framebuffer
+         * will be rendered. This method must be called before any other methods.
+         */
+        public void Initialize(string title, int width = 640, int height = 480, float scaleX = 1, float scaleY = 1, int targetTicskHz = 60)
         {
             var initResult = SDL.SDL_Init(SDL.SDL_INIT_VIDEO | SDL.SDL_INIT_AUDIO);
 
@@ -46,15 +84,19 @@ namespace JustinCredible.SIEmulator
 
             SDL.SDL_RenderSetScale(_renderer, scaleX, scaleY);
 
-            _targetFPS = targetFPS;
+            _targetTicksHz = targetTicskHz;
         }
 
+        /**
+         * Used to initialize audio using SDL and SDL_mixer. This handles loading the sound effect WAV
+         * files from disk and initializing the audio channels.
+         */
         public void InitializeAudio(Dictionary<SoundEffect, String> soundEffectsFiles = null)
         {
             var audioRate = 22050; // 22.05KHz
             var audioFormat = SDL.AUDIO_S16SYS; // Unsigned 16-bit samples in the system's byte order
             var audioChannels = 1; // Mono
-            var audioBuffers = 4096;
+            var audioBuffers = 4096; // 4KB
 
             var openAudioResult = SDL_mixer.Mix_OpenAudio(audioRate, audioFormat, audioChannels, audioBuffers);
 
@@ -83,11 +125,20 @@ namespace JustinCredible.SIEmulator
             }
         }
 
+        /**
+         * Used to start the GUI event loop using the SDL window to poll for events. When an event is
+         * received, the keyboard state is read and the OnTick event is fired. After the event completes
+         * a frame and/or audio can be rendered/played based on the values set in the OnTick event args.
+         * 
+         * This is a BLOCKING call; the event loop will continue to be polled until (1) the user uses
+         * the platform specific key combination or GUI action to close the window or (2) the OnTick
+         * event arguments has ShouldQuit set to true.
+         */
         public void StartLoop()
         {
             // Used to keep track of the time elapsed in each loop iteration. This is used to
             // notify the OnTick handlers so they can update their simulation, as well as throttle
-            // the update loop to 60hz if needed.
+            // the update loop to targetTicskHz if needed.
             var stopwatch = new Stopwatch();
 
             // Structure used to pass data to and from the OnTick handlers. We initialize it once
@@ -108,7 +159,7 @@ namespace JustinCredible.SIEmulator
                 {
                     switch (sdlEvent.type)
                     {
-                        // e.g. Command + Q
+                        // e.g. Command + Q, ALT+F4, or clicking X...
                         case SDL.SDL_EventType.SDL_QUIT:
                             // Break out of the SDL event loop, which will close the program.
                             return;
@@ -117,6 +168,8 @@ namespace JustinCredible.SIEmulator
                             tickEventArgs.KeyDown = sdlEvent.key.keysym.sym;
                             UpdateKeys(tickEventArgs, sdlEvent.key.keysym.sym, true);
 
+                            // If the break/pause key is pressed, set a flag indicating the
+                            // emulator's should activate the interactive debugger.
                             if (sdlEvent.key.keysym.sym == SDL.SDL_Keycode.SDLK_PAUSE)
                                 tickEventArgs.ShouldBreak = true;
 
@@ -139,8 +192,7 @@ namespace JustinCredible.SIEmulator
                     OnTick(tickEventArgs);
 
                 // We only want to re-render if the frame buffer has changed since last time because
-                // the SDL_RenderPresent method is relatively expensive and massively slows down the
-                // amount of opcodes (ticks) we can execute.
+                // the SDL_RenderPresent method is relatively expensive.
                 if (tickEventArgs.ShouldRender && tickEventArgs.FrameBuffer != null)
                 {
                     // Render screen from the updated the frame buffer.
@@ -243,11 +295,11 @@ namespace JustinCredible.SIEmulator
                     }
                 }
 
-                // See if we need to delay to keep locked to ~ TARGET_FPS FPS.
+                // See if we need to delay to keep locked to ~ targetTicskHz.
 
-                if (stopwatch.Elapsed.TotalMilliseconds < (1000 / _targetFPS))
+                if (stopwatch.Elapsed.TotalMilliseconds < (1000 / _targetTicksHz))
                 {
-                    var delay = (1000 / _targetFPS) - stopwatch.Elapsed.TotalMilliseconds;
+                    var delay = (1000 / _targetTicksHz) - stopwatch.Elapsed.TotalMilliseconds;
                     SDL.SDL_Delay((uint)delay);
                 }
 
@@ -256,6 +308,33 @@ namespace JustinCredible.SIEmulator
                     return;
             }
         }
+
+        /**
+         * Used to cleanup after the SDL resources.
+         */
+        public void Dispose()
+        {
+            if (_renderer != IntPtr.Zero)
+                SDL.SDL_DestroyRenderer(_renderer);
+
+            if (_window != IntPtr.Zero)
+                SDL.SDL_DestroyWindow(_window);
+
+            if (soundEffects != null)
+            {
+                foreach (var entry in soundEffects)
+                {
+                    var pointer = entry.Value;
+                    SDL_mixer.Mix_FreeChunk(pointer);
+                }
+
+                SDL_mixer.Mix_CloseAudio();
+            }
+        }
+
+        #endregion
+
+        #region Private Methods
 
         private void UpdateKeys(GUITickEventArgs tickEventArgs, SDL.SDL_Keycode keycode, bool isDown)
         {
@@ -294,24 +373,6 @@ namespace JustinCredible.SIEmulator
             }
         }
 
-        public void Dispose()
-        {
-            if (_renderer != IntPtr.Zero)
-                SDL.SDL_DestroyRenderer(_renderer);
-
-            if (_window != IntPtr.Zero)
-                SDL.SDL_DestroyWindow(_window);
-
-            if (soundEffects != null)
-            {
-                foreach (var entry in soundEffects)
-                {
-                    var pointer = entry.Value;
-                    SDL_mixer.Mix_FreeChunk(pointer);
-                }
-
-                SDL_mixer.Mix_CloseAudio();
-            }
-        }
+        #endregion
     }
 }

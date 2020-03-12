@@ -8,10 +8,15 @@ using Microsoft.Extensions.CommandLineUtils;
 
 namespace JustinCredible.SIEmulator
 {
+    /**
+     * The main entry point into the emulator which handles parsing CLI arguments
+     * as well as instantiating and configuring the GUI and SpaceInvaders classes.
+     */
     class Program
     {
         private static CommandLineApplication _app;
 
+        // The emulator!
         private static SpaceInvaders _game;
 
         // Used to pass data from the emulator thread's loop to the GUI loop: the
@@ -80,24 +85,25 @@ namespace JustinCredible.SIEmulator
                     throw new Exception($"Could not locate a directory at path {romPathArg.Value}");
 
                 var rom = ReadRomFiles(romPathArg.Value);
+                var sfx = sfxOption.HasValue() ? GetSoundEffects(sfxOption.Value()) : null;
 
                 Thread.CurrentThread.Name = "GUI Loop";
 
                 // Initialize the user interface (window) and wire an event handler
                 // that will handle receiving user input as well as sending the
-                // framebuffer to be rendered. Note that we pass the weidth/height
+                // framebuffer to be rendered. Note that we pass the width/height
                 // parameters backwards on purpose because the CRT screen in the
                 // cabinet is rotated to the left (-90 degrees) for a 3:4 display.
                 var gui = new GUI();
-                gui.Initialize("Space Invaders Emulator", SpaceInvaders.RESOLUTION_HEIGHT, SpaceInvaders.RESOLUTION_WIDTH, 2, 2);
                 gui.OnTick += GUI_OnTick;
+                gui.Initialize("Space Invaders Emulator", SpaceInvaders.RESOLUTION_HEIGHT, SpaceInvaders.RESOLUTION_WIDTH, 2, 2);
 
                 // Initialize sound effects if the sfx option was passed.
-                if (sfxOption.HasValue())
-                    gui.InitializeAudio(GetSoundEffects(sfxOption.Value()));
+                if (sfx != null)
+                    gui.InitializeAudio(sfx);
 
-                // Initialize the Space Invaders hardware/emulator and wire an event
-                // handler so receive the framebuffer to be rendered.
+                // Initialize the Space Invaders hardware/emulator and wire event
+                // handlers to receive the framebuffer/sfx to be rendered/played.
                 _game = new SpaceInvaders();
                 _game.OnRender += SpaceInvaders_OnRender;
                 _game.OnSound += SpaceInvaders_OnSound;
@@ -142,6 +148,8 @@ namespace JustinCredible.SIEmulator
 
                 #endregion
 
+                #region Load State
+
                 // If the path to a save state was specified to be loaded, deserialize
                 // it from disk and ensure it gets passed into the emulator on start.
 
@@ -152,6 +160,8 @@ namespace JustinCredible.SIEmulator
                     var json = File.ReadAllText(loadStateOption.Value());
                     state = JsonSerializer.Deserialize<EmulatorState>(json);
                 }
+
+                #endregion
 
                 #region Set Debugging Flags
 
