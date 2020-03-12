@@ -218,17 +218,13 @@ namespace JustinCredible.SIEmulator
                             // The CRT is black/white and the framebuffer is 1-bit per pixel.
                             // A transparent overlay added "colors" to areas of the CRT. These
                             // are the approximate y locations of each area/color of the overlay:
-                            // • 0-18: White
-                            // • 18-72: Green
-                            // • 73-224: White
-                            // • 225-254: Red
 
                             if (y >= 182 && y <= 223)
-                                SDL.SDL_SetRenderDrawColor(_renderer, 0, 255, 0, 255); // Green
-                            else if (y >= 0 && y <= 31)
-                                SDL.SDL_SetRenderDrawColor(_renderer, 255, 0, 0, 255); // Red
+                                SDL.SDL_SetRenderDrawColor(_renderer, 0, 255, 0, 255); // Green - player and shields
+                            else if (y >= 33 && y <= 55)
+                                SDL.SDL_SetRenderDrawColor(_renderer, 255, 0, 0, 255); // Red - UFO
                             else
-                                SDL.SDL_SetRenderDrawColor(_renderer, 255, 255, 255, 255); // White
+                                SDL.SDL_SetRenderDrawColor(_renderer, 255, 255, 255, 255); // White - Everything else
 
                             SDL.SDL_RenderDrawPoint(_renderer, x, y);
                         }
