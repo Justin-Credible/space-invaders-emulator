@@ -106,7 +106,7 @@ namespace JustinCredible.Intel8080
 
         public void PrintDebugSummary()
         {
-            var opcodeByte = Memory[ProgramCounter];
+            var opcodeByte = ReadMemory(ProgramCounter);
             var opcodeInstruction = Opcodes.Lookup[opcodeByte].Instruction;
 
             var opcode = String.Format("0x{0:X2} {1}", opcodeByte, opcodeInstruction);
@@ -120,8 +120,8 @@ namespace JustinCredible.Intel8080
             var regH = String.Format("0x{0:X2}", Registers.H);
             var regL = String.Format("0x{0:X2}", Registers.L);
 
-            var valueAtDE = Registers.DE >= Memory.Length ? "N/A" : String.Format("0x{0:X2}", Memory[Registers.DE]);
-            var valueAtHL = Registers.HL >= Memory.Length ? "N/A" : String.Format("0x{0:X2}", Memory[Registers.HL]);
+            var valueAtDE = Registers.DE >= Memory.Length ? "N/A" : String.Format("0x{0:X2}", ReadMemory(Registers.DE));
+            var valueAtHL = Registers.HL >= Memory.Length ? "N/A" : String.Format("0x{0:X2}", ReadMemory(Registers.HL));
 
             Console.WriteLine($"Opcode: {opcode}");
             Console.WriteLine();
@@ -176,7 +176,7 @@ namespace JustinCredible.Intel8080
         public int Step()
         {
             // Fetch the next opcode to be executed, as indicated by the program counter.
-            var opcodeByte = Memory[ProgramCounter];
+            var opcodeByte = ReadMemory(ProgramCounter);
 
             return Step(opcodeByte);
         }
@@ -264,9 +264,13 @@ namespace JustinCredible.Intel8080
                             SetFlags(false, Registers.L);
                             break;
                         case OpcodeBytes.INR_M:
-                            Memory[Registers.HL]++;
-                            SetFlags(false, Memory[Registers.HL]);
+                        {
+                            var value = ReadMemory(Registers.HL);
+                            value++;
+                            WriteMemory(Registers.HL, value);
+                            SetFlags(false, ReadMemory(Registers.HL));
                             break;
+                        }
                         case OpcodeBytes.INR_A:
                             Registers.A++;
                             SetFlags(false, Registers.A);
@@ -301,9 +305,13 @@ namespace JustinCredible.Intel8080
                             SetFlags(false, Registers.L);
                             break;
                         case OpcodeBytes.DCR_M:
-                            Memory[Registers.HL]--;
-                            SetFlags(false, Memory[Registers.HL]);
+                        {
+                            var value = ReadMemory(Registers.HL);
+                            value--;
+                            WriteMemory(Registers.HL, value);
+                            SetFlags(false, ReadMemory(Registers.HL));
                             break;
+                        }
                         case OpcodeBytes.DCR_A:
                             Registers.A--;
                             SetFlags(false, Registers.A);
@@ -328,10 +336,10 @@ namespace JustinCredible.Intel8080
                     #region STAX - Store accumulator
 
                         case OpcodeBytes.STAX_B:
-                            Memory[Registers.BC] = Registers.A;
+                            WriteMemory(Registers.BC, Registers.A);
                             break;
                         case OpcodeBytes.STAX_D:
-                            Memory[Registers.DE] = Registers.A;
+                            WriteMemory(Registers.DE, Registers.A);
                             break;
 
                     #endregion
@@ -339,10 +347,10 @@ namespace JustinCredible.Intel8080
                     #region LDAX - Load accumulator
 
                         case OpcodeBytes.LDAX_B:
-                            Registers.A = Memory[Registers.BC];
+                            Registers.A = ReadMemory(Registers.BC);
                             break;
                         case OpcodeBytes.LDAX_D:
-                            Registers.A = Memory[Registers.DE];
+                            Registers.A = ReadMemory(Registers.DE);
                             break;
 
                     #endregion
@@ -504,25 +512,25 @@ namespace JustinCredible.Intel8080
                         #region MOV X, M (from memory to register)
 
                         case OpcodeBytes.MOV_B_M:
-                            Registers.B = Memory[Registers.HL];
+                            Registers.B = ReadMemory(Registers.HL);
                             break;
                         case OpcodeBytes.MOV_C_M:
-                            Registers.C = Memory[Registers.HL];
+                            Registers.C = ReadMemory(Registers.HL);
                             break;
                         case OpcodeBytes.MOV_D_M:
-                            Registers.D = Memory[Registers.HL];
+                            Registers.D = ReadMemory(Registers.HL);
                             break;
                         case OpcodeBytes.MOV_E_M:
-                            Registers.E = Memory[Registers.HL];
+                            Registers.E = ReadMemory(Registers.HL);
                             break;
                         case OpcodeBytes.MOV_H_M:
-                            Registers.H = Memory[Registers.HL];
+                            Registers.H = ReadMemory(Registers.HL);
                             break;
                         case OpcodeBytes.MOV_L_M:
-                            Registers.L = Memory[Registers.HL];
+                            Registers.L = ReadMemory(Registers.HL);
                             break;
                         case OpcodeBytes.MOV_A_M:
-                            Registers.A = Memory[Registers.HL];
+                            Registers.A = ReadMemory(Registers.HL);
                             break;
 
                         #endregion
@@ -530,25 +538,25 @@ namespace JustinCredible.Intel8080
                         #region MOV M, X (from register to memory)
 
                         case OpcodeBytes.MOV_M_B:
-                            ExecuteMOVFromRegisterToMemory(Register.B);
+                            WriteMemory(Registers.HL, Registers.B);
                             break;
                         case OpcodeBytes.MOV_M_C:
-                            ExecuteMOVFromRegisterToMemory(Register.C);
+                            WriteMemory(Registers.HL, Registers.C);
                             break;
                         case OpcodeBytes.MOV_M_D:
-                            ExecuteMOVFromRegisterToMemory(Register.D);
+                            WriteMemory(Registers.HL, Registers.D);
                             break;
                         case OpcodeBytes.MOV_M_E:
-                            ExecuteMOVFromRegisterToMemory(Register.E);
+                            WriteMemory(Registers.HL, Registers.E);
                             break;
                         case OpcodeBytes.MOV_M_H:
-                            ExecuteMOVFromRegisterToMemory(Register.H);
+                            WriteMemory(Registers.HL, Registers.H);
                             break;
                         case OpcodeBytes.MOV_M_L:
-                            ExecuteMOVFromRegisterToMemory(Register.L);
+                            WriteMemory(Registers.HL, Registers.L);
                             break;
                         case OpcodeBytes.MOV_M_A:
-                            ExecuteMOVFromRegisterToMemory(Register.A);
+                            WriteMemory(Registers.HL, Registers.A);
                             break;
 
                         #endregion
@@ -580,7 +588,7 @@ namespace JustinCredible.Intel8080
                             ExecuteADD(Registers.L);
                             break;
                         case OpcodeBytes.ADD_M:
-                            ExecuteADD(Memory[Registers.HL]);
+                            ExecuteADD(ReadMemory(Registers.HL));
                             break;
                         case OpcodeBytes.ADD_A:
                             ExecuteADD(Registers.A);
@@ -609,7 +617,7 @@ namespace JustinCredible.Intel8080
                             ExecuteSUB(Registers.L);
                             break;
                         case OpcodeBytes.SUB_M:
-                            ExecuteSUB(Memory[Registers.HL]);
+                            ExecuteSUB(ReadMemory(Registers.HL));
                             break;
                         case OpcodeBytes.SUB_A:
                             ExecuteSUB(Registers.A);
@@ -644,7 +652,7 @@ namespace JustinCredible.Intel8080
                             SetFlags(false, Registers.A);
                             break;
                         case OpcodeBytes.ANA_M:
-                            Registers.A = (byte)(Registers.A & Memory[Registers.HL]);
+                            Registers.A = (byte)(Registers.A & ReadMemory(Registers.HL));
                             SetFlags(false, Registers.A);
                             break;
                         case OpcodeBytes.ANA_A:
@@ -681,7 +689,7 @@ namespace JustinCredible.Intel8080
                             SetFlags(false, Registers.A);
                             break;
                         case OpcodeBytes.ORA_M:
-                            Registers.A = (byte)(Registers.A | Memory[Registers.HL]);
+                            Registers.A = (byte)(Registers.A | ReadMemory(Registers.HL));
                             SetFlags(false, Registers.A);
                             break;
                         case OpcodeBytes.ORA_A:
@@ -712,7 +720,7 @@ namespace JustinCredible.Intel8080
                             ExecuteADD(Registers.L, true);
                             break;
                         case OpcodeBytes.ADC_M:
-                            ExecuteADD(Memory[Registers.HL], true);
+                            ExecuteADD(ReadMemory(Registers.HL), true);
                             break;
                         case OpcodeBytes.ADC_A:
                             ExecuteADD(Registers.A, true);
@@ -741,7 +749,7 @@ namespace JustinCredible.Intel8080
                             ExecuteSUB(Registers.L, true);
                             break;
                         case OpcodeBytes.SBB_M:
-                            ExecuteSUB(Memory[Registers.HL], true);
+                            ExecuteSUB(ReadMemory(Registers.HL), true);
                             break;
                         case OpcodeBytes.SBB_A:
                             ExecuteSUB(Registers.A, true);
@@ -776,7 +784,7 @@ namespace JustinCredible.Intel8080
                             SetFlags(false, Registers.A);
                             break;
                         case OpcodeBytes.XRA_M:
-                            Registers.A = (byte)(Registers.A ^ Memory[Registers.HL]);
+                            Registers.A = (byte)(Registers.A ^ ReadMemory(Registers.HL));
                             SetFlags(false, Registers.A);
                             break;
                         case OpcodeBytes.XRA_A:
@@ -807,7 +815,7 @@ namespace JustinCredible.Intel8080
                             ExecuteSUB(Registers.L, false, false);
                             break;
                         case OpcodeBytes.CMP_M:
-                            ExecuteSUB(Memory[Registers.HL], false, false);
+                            ExecuteSUB(ReadMemory(Registers.HL), false, false);
                             break;
                         case OpcodeBytes.CMP_A:
                             ExecuteSUB(Registers.A, false, false);
@@ -884,23 +892,23 @@ namespace JustinCredible.Intel8080
                     #region PUSH - Push data onto the stack
 
                         case OpcodeBytes.PUSH_B:
-                            Memory[StackPointer - 1] = Registers.B;
-                            Memory[StackPointer - 2] = Registers.C;
+                            WriteMemory(StackPointer - 1, Registers.B);
+                            WriteMemory(StackPointer - 2, Registers.C);
                             StackPointer = (UInt16)(StackPointer - 2);
                             break;
                         case OpcodeBytes.PUSH_D:
-                            Memory[StackPointer - 1] = Registers.D;
-                            Memory[StackPointer - 2] = Registers.E;
+                            WriteMemory(StackPointer - 1, Registers.D);
+                            WriteMemory(StackPointer - 2, Registers.E);
                             StackPointer = (UInt16)(StackPointer - 2);
                             break;
                         case OpcodeBytes.PUSH_H:
-                            Memory[StackPointer - 1] = Registers.H;
-                            Memory[StackPointer - 2] = Registers.L;
+                            WriteMemory(StackPointer - 1, Registers.H);
+                            WriteMemory(StackPointer - 2, Registers.L);
                             StackPointer = (UInt16)(StackPointer - 2);
                             break;
                         case OpcodeBytes.PUSH_PSW:
-                            Memory[StackPointer - 1] = Registers.A;
-                            Memory[StackPointer - 2] = Flags.ToByte();
+                            WriteMemory(StackPointer - 1, Registers.A);
+                            WriteMemory(StackPointer - 2, Flags.ToByte());
                             StackPointer = (UInt16)(StackPointer - 2);
                             break;
 
@@ -909,23 +917,23 @@ namespace JustinCredible.Intel8080
                     #region POP - Pop data off of the stack
 
                         case OpcodeBytes.POP_B:
-                            Registers.B = Memory[StackPointer + 1];
-                            Registers.C = Memory[StackPointer];
+                            Registers.B = ReadMemory(StackPointer + 1);
+                            Registers.C = ReadMemory(StackPointer);
                             StackPointer = (UInt16)(StackPointer + 2);
                             break;
                         case OpcodeBytes.POP_D:
-                            Registers.D = Memory[StackPointer + 1];
-                            Registers.E = Memory[StackPointer];
+                            Registers.D = ReadMemory(StackPointer + 1);
+                            Registers.E = ReadMemory(StackPointer);
                             StackPointer = (UInt16)(StackPointer + 2);
                             break;
                         case OpcodeBytes.POP_H:
-                            Registers.H = Memory[StackPointer + 1];
-                            Registers.L = Memory[StackPointer];
+                            Registers.H = ReadMemory(StackPointer + 1);
+                            Registers.L = ReadMemory(StackPointer);
                             StackPointer = (UInt16)(StackPointer + 2);
                             break;
                         case OpcodeBytes.POP_PSW:
-                            Registers.A = Memory[StackPointer + 1];
-                            Flags.SetFromByte(Memory[StackPointer]);
+                            Registers.A = ReadMemory(StackPointer + 1);
+                            Flags.SetFromByte(ReadMemory(StackPointer));
                             StackPointer = (UInt16)(StackPointer + 2);
                             break;
 
@@ -959,10 +967,10 @@ namespace JustinCredible.Intel8080
                     {
                         var oldL = Registers.L;
                         var oldH = Registers.H;
-                        Registers.L = Memory[StackPointer];
-                        Memory[StackPointer] = oldL;
-                        Registers.H = Memory[StackPointer+1];
-                        Memory[StackPointer+1] = oldH;
+                        Registers.L = ReadMemory(StackPointer);
+                        WriteMemory(StackPointer, oldL);
+                        Registers.H = ReadMemory(StackPointer+1);
+                        WriteMemory(StackPointer+1, oldH);
                         break;
                     }
 
@@ -986,28 +994,28 @@ namespace JustinCredible.Intel8080
                     #region MVI - Move immediate data
 
                         case OpcodeBytes.MVI_B:
-                            Registers.B = Memory[ProgramCounter + 1];
+                            Registers.B = ReadMemory(ProgramCounter + 1);
                             break;
                         case OpcodeBytes.MVI_C:
-                            Registers.C = Memory[ProgramCounter + 1];
+                            Registers.C = ReadMemory(ProgramCounter + 1);
                             break;
                         case OpcodeBytes.MVI_D:
-                            Registers.D = Memory[ProgramCounter + 1];
+                            Registers.D = ReadMemory(ProgramCounter + 1);
                             break;
                         case OpcodeBytes.MVI_E:
-                            Registers.E = Memory[ProgramCounter + 1];
+                            Registers.E = ReadMemory(ProgramCounter + 1);
                             break;
                         case OpcodeBytes.MVI_H:
-                            Registers.H = Memory[ProgramCounter + 1];
+                            Registers.H = ReadMemory(ProgramCounter + 1);
                             break;
                         case OpcodeBytes.MVI_L:
-                            Registers.L = Memory[ProgramCounter + 1];
+                            Registers.L = ReadMemory(ProgramCounter + 1);
                             break;
                         case OpcodeBytes.MVI_M:
-                            ExecuteMOVIToMemory(Memory[ProgramCounter + 1]);
+                            WriteMemory(Registers.HL, ReadMemory(ProgramCounter + 1));
                             break;
                         case OpcodeBytes.MVI_A:
-                            Registers.A = Memory[ProgramCounter + 1];
+                            Registers.A = ReadMemory(ProgramCounter + 1);
                             break;
 
                     #endregion
@@ -1015,21 +1023,21 @@ namespace JustinCredible.Intel8080
                     #region LXI - Load register pair immediate
 
                         case OpcodeBytes.LXI_B:
-                            Registers.B = Memory[ProgramCounter + 2];
-                            Registers.C = Memory[ProgramCounter + 1];
+                            Registers.B = ReadMemory(ProgramCounter + 2);
+                            Registers.C = ReadMemory(ProgramCounter + 1);
                             break;
                         case OpcodeBytes.LXI_D:
-                            Registers.D = Memory[ProgramCounter + 2];
-                            Registers.E = Memory[ProgramCounter + 1];
+                            Registers.D = ReadMemory(ProgramCounter + 2);
+                            Registers.E = ReadMemory(ProgramCounter + 1);
                             break;
                         case OpcodeBytes.LXI_H:
-                            Registers.H = Memory[ProgramCounter + 2];
-                            Registers.L = Memory[ProgramCounter + 1];
+                            Registers.H = ReadMemory(ProgramCounter + 2);
+                            Registers.L = ReadMemory(ProgramCounter + 1);
                             break;
                         case OpcodeBytes.LXI_SP:
                         {
-                            var upper = Memory[ProgramCounter + 2] << 8;
-                            var lower = Memory[ProgramCounter + 1];
+                            var upper = ReadMemory(ProgramCounter + 2) << 8;
+                            var lower = ReadMemory(ProgramCounter + 1);
                             var address = upper | lower;
                             StackPointer = (UInt16)address;
                             break;
@@ -1040,52 +1048,52 @@ namespace JustinCredible.Intel8080
                     // Add immediate to accumulator
                     // A <- A + byte
                     case OpcodeBytes.ADI:
-                        ExecuteADD(Memory[ProgramCounter+1]);
+                        ExecuteADD(ReadMemory(ProgramCounter+1));
                         break;
 
                     // Add immediate to accumulator with carry
                     // A <- A + data + CY
                     case OpcodeBytes.ACI:
-                        ExecuteADD(Memory[ProgramCounter+1], true);
+                        ExecuteADD(ReadMemory(ProgramCounter+1), true);
                         break;
 
                     // Subtract immediate from accumulator
                     // A <- A - data
                     case OpcodeBytes.SUI:
-                        ExecuteSUB(Memory[ProgramCounter+1]);
+                        ExecuteSUB(ReadMemory(ProgramCounter+1));
                         break;
 
                     // Subtract immediate from accumulator with borrow
                     // A <- A - data - CY
                     case OpcodeBytes.SBI:
-                        ExecuteSUB(Memory[ProgramCounter+1], true);
+                        ExecuteSUB(ReadMemory(ProgramCounter+1), true);
                         break;
 
                     // Logical AND immediate with accumulator
                     // A <- A & data
                     case OpcodeBytes.ANI:
-                        Registers.A = (byte)(Registers.A & Memory[ProgramCounter+1]);
+                        Registers.A = (byte)(Registers.A & ReadMemory(ProgramCounter+1));
                         SetFlags(false, Registers.A);
                         break;
 
                     // XOR immediate with accumulator
                     // A <- A ^ data
                     case OpcodeBytes.XRI:
-                        Registers.A = (byte)(Registers.A ^ Memory[ProgramCounter+1]);
+                        Registers.A = (byte)(Registers.A ^ ReadMemory(ProgramCounter+1));
                         SetFlags(false, Registers.A);
                         break;
 
                     // Logical OR immediate with accumulator
                     // A <- A | data
                     case OpcodeBytes.ORI:
-                        Registers.A = (byte)(Registers.A | Memory[ProgramCounter+1]);
+                        Registers.A = (byte)(Registers.A | ReadMemory(ProgramCounter+1));
                         SetFlags(false, Registers.A);
                         break;
 
                     // Compare immediate with accumulator
                     // A - data
                     case OpcodeBytes.CPI:
-                        ExecuteSUB(Memory[ProgramCounter+1], false, false);
+                        ExecuteSUB(ReadMemory(ProgramCounter+1), false, false);
                         break;
 
                 #endregion
@@ -1095,42 +1103,42 @@ namespace JustinCredible.Intel8080
                     // Store accumulator direct
                     case OpcodeBytes.STA:
                     {
-                        var upper = Memory[ProgramCounter + 2] << 8;
-                        var lower = Memory[ProgramCounter + 1];
+                        var upper = ReadMemory(ProgramCounter + 2) << 8;
+                        var lower = ReadMemory(ProgramCounter + 1);
                         var address = upper | lower;
-                        Memory[address] = Registers.A;
+                        WriteMemory(address, Registers.A);
                         break;
                     }
 
                     // Load accumulator direct
                     case OpcodeBytes.LDA:
                     {
-                        var upper = Memory[ProgramCounter + 2] << 8;
-                        var lower = Memory[ProgramCounter + 1];
+                        var upper = ReadMemory(ProgramCounter + 2) << 8;
+                        var lower = ReadMemory(ProgramCounter + 1);
                         var address = upper | lower;
-                        Registers.A = Memory[address];
+                        Registers.A = ReadMemory(address);
                         break;
                     }
 
                     // Store H and L direct
                     case OpcodeBytes.SHLD:
                     {
-                        var upper = Memory[ProgramCounter + 2] << 8;
-                        var lower = Memory[ProgramCounter + 1];
+                        var upper = ReadMemory(ProgramCounter + 2) << 8;
+                        var lower = ReadMemory(ProgramCounter + 1);
                         var address = upper | lower;
-                        Memory[address] = Registers.L;
-                        Memory[address + 1] = Registers.H;
+                        WriteMemory(address, Registers.L);
+                        WriteMemory(address + 1, Registers.H);
                         break;
                     }
 
                     // Load H and L direct
                     case OpcodeBytes.LHLD:
                     {
-                        var upper = Memory[ProgramCounter + 2] << 8;
-                        var lower = Memory[ProgramCounter + 1];
+                        var upper = ReadMemory(ProgramCounter + 2) << 8;
+                        var lower = ReadMemory(ProgramCounter + 1);
                         var address = upper | lower;
-                        Registers.L = Memory[address];
-                        Registers.H = Memory[address + 1];
+                        Registers.L = ReadMemory(address);
+                        Registers.H = ReadMemory(address + 1);
                         break;
                     }
 
@@ -1596,7 +1604,7 @@ namespace JustinCredible.Intel8080
                     case OpcodeBytes.OUT:
                     {
                         if (OnDeviceWrite != null)
-                            OnDeviceWrite(Memory[ProgramCounter + 1], Registers.A);
+                            OnDeviceWrite(ReadMemory(ProgramCounter + 1), Registers.A);
 
                         break;
                     }
@@ -1605,7 +1613,7 @@ namespace JustinCredible.Intel8080
                     case OpcodeBytes.IN:
                     {
                         if (OnDeviceRead != null)
-                            Registers.A = OnDeviceRead(Memory[ProgramCounter + 1]);
+                            Registers.A = OnDeviceRead(ReadMemory(ProgramCounter + 1));
 
                         break;
                     }
@@ -1694,8 +1702,8 @@ namespace JustinCredible.Intel8080
 
         private void ExecuteJMP()
         {
-            var upper = Memory[ProgramCounter + 2] << 8;
-            var lower = Memory[ProgramCounter + 1];
+            var upper = ReadMemory(ProgramCounter + 2) << 8;
+            var lower = ReadMemory(ProgramCounter + 1);
             var address = (UInt16)(upper | lower);
 
             ExecuteJMP(address);
@@ -1723,8 +1731,8 @@ namespace JustinCredible.Intel8080
         {
             var returnAddress = (UInt16)(ProgramCounter + opcode.Size);
 
-            var upper = Memory[ProgramCounter + 2] << 8;
-            var lower = Memory[ProgramCounter + 1];
+            var upper = ReadMemory(ProgramCounter + 2) << 8;
+            var lower = ReadMemory(ProgramCounter + 1);
             var address = (UInt16)(upper | lower);
 
             ExecuteCALL(address, returnAddress);
@@ -1737,8 +1745,8 @@ namespace JustinCredible.Intel8080
             var returnAddressLower = (byte)(returnAddress & 0x00FF);
 
             // Push the return address onto the stack.
-            Memory[StackPointer - 1] = returnAddressUpper;
-            Memory[StackPointer - 2] = returnAddressLower;
+            WriteMemory(StackPointer - 1, returnAddressUpper);
+            WriteMemory(StackPointer - 2, returnAddressLower);
             StackPointer--;
             StackPointer--;
 
@@ -1770,8 +1778,8 @@ namespace JustinCredible.Intel8080
         private void ExecuteRET()
         {
             // Pop the return address off of the stack.
-            var returnAddressUpper = Memory[StackPointer + 1] << 8;
-            var returnAddressLower = Memory[StackPointer];
+            var returnAddressUpper = ReadMemory(StackPointer + 1) << 8;
+            var returnAddressLower = ReadMemory(StackPointer);
             var returnAddress = (UInt16)(returnAddressUpper | returnAddressLower);
             StackPointer++;
             StackPointer++;
@@ -1784,53 +1792,53 @@ namespace JustinCredible.Intel8080
             Registers[dest] = Registers[source];
         }
 
-        private void ExecuteMOVFromRegisterToMemory(Register source)
-        {
-            var address = Registers.HL;
+        // private void ExecuteMOVFromRegisterToMemory(Register source)
+        // {
+        //     var address = Registers.HL;
 
-            // Determine if we should allow the write to memory based on the address
-            // if the configuration has specified a restricted writeable range.
-            var enforceWriteBoundsCheck = Config.WriteableMemoryStart != 0 && Config.WriteableMemoryEnd != 0;
-            var allowWrite = true;
+        //     // Determine if we should allow the write to memory based on the address
+        //     // if the configuration has specified a restricted writeable range.
+        //     var enforceWriteBoundsCheck = Config.WriteableMemoryStart != 0 && Config.WriteableMemoryEnd != 0;
+        //     var allowWrite = true;
 
-            if (enforceWriteBoundsCheck)
-                allowWrite = address >= Config.WriteableMemoryStart && address <= Config.WriteableMemoryEnd;
+        //     if (enforceWriteBoundsCheck)
+        //         allowWrite = address >= Config.WriteableMemoryStart && address <= Config.WriteableMemoryEnd;
 
-            if (allowWrite)
-                Memory[address] = Registers[source];
-            else
-            {
-                var programCounterFormatted = String.Format("0x{0:X4}", ProgramCounter);
-                var addressFormatted = String.Format("0x{0:X4}", address);
-                var startAddressFormatted = String.Format("0x{0:X4}", Config.WriteableMemoryStart);
-                var endAddressFormatted = String.Format("0x{0:X4}", Config.WriteableMemoryEnd);
-                throw new Exception($"Illegal memory address ({addressFormatted}) specified for 'MOV M, {source}' operation at address {programCounterFormatted}; expected address to be between {startAddressFormatted} and {endAddressFormatted} inclusive.");
-            }
-        }
+        //     if (allowWrite)
+        //         WriteMemory(address, Registers[source]);
+        //     else
+        //     {
+        //         var programCounterFormatted = String.Format("0x{0:X4}", ProgramCounter);
+        //         var addressFormatted = String.Format("0x{0:X4}", address);
+        //         var startAddressFormatted = String.Format("0x{0:X4}", Config.WriteableMemoryStart);
+        //         var endAddressFormatted = String.Format("0x{0:X4}", Config.WriteableMemoryEnd);
+        //         throw new Exception($"Illegal memory address ({addressFormatted}) specified for 'MOV M, {source}' operation at address {programCounterFormatted}; expected address to be between {startAddressFormatted} and {endAddressFormatted} inclusive.");
+        //     }
+        // }
 
-        private void ExecuteMOVIToMemory(byte data)
-        {
-            var address = Registers.HL;
+        // private void ExecuteMOVIToMemory(byte data)
+        // {
+        //     var address = Registers.HL;
 
-            // Determine if we should allow the write to memory based on the address
-            // if the configuration has specified a restricted writeable range.
-            var enforceWriteBoundsCheck = Config.WriteableMemoryStart != 0 && Config.WriteableMemoryEnd != 0;
-            var allowWrite = true;
+        //     // Determine if we should allow the write to memory based on the address
+        //     // if the configuration has specified a restricted writeable range.
+        //     var enforceWriteBoundsCheck = Config.WriteableMemoryStart != 0 && Config.WriteableMemoryEnd != 0;
+        //     var allowWrite = true;
 
-            if (enforceWriteBoundsCheck)
-                allowWrite = address >= Config.WriteableMemoryStart && address <= Config.WriteableMemoryEnd;
+        //     if (enforceWriteBoundsCheck)
+        //         allowWrite = address >= Config.WriteableMemoryStart && address <= Config.WriteableMemoryEnd;
 
-            if (allowWrite)
-                Memory[address] = data;
-            else
-            {
-                var programCounterFormatted = String.Format("0x{0:X4}", ProgramCounter);
-                var addressFormatted = String.Format("0x{0:X4}", address);
-                var startAddressFormatted = String.Format("0x{0:X4}", Config.WriteableMemoryStart);
-                var endAddressFormatted = String.Format("0x{0:X4}", Config.WriteableMemoryEnd);
-                throw new Exception($"Illegal memory address ({addressFormatted}) specified for 'MVI M, d8' operation at address {programCounterFormatted}; expected address to be between {startAddressFormatted} and {endAddressFormatted} inclusive.");
-            }
-        }
+        //     if (allowWrite)
+        //         WriteMemory(address, data);
+        //     else
+        //     {
+        //         var programCounterFormatted = String.Format("0x{0:X4}", ProgramCounter);
+        //         var addressFormatted = String.Format("0x{0:X4}", address);
+        //         var startAddressFormatted = String.Format("0x{0:X4}", Config.WriteableMemoryStart);
+        //         var endAddressFormatted = String.Format("0x{0:X4}", Config.WriteableMemoryEnd);
+        //         throw new Exception($"Illegal memory address ({addressFormatted}) specified for 'MVI M, d8' operation at address {programCounterFormatted}; expected address to be between {startAddressFormatted} and {endAddressFormatted} inclusive.");
+        //     }
+        // }
 
         private void ExecuteADD(byte value, bool addCarryFlag = false)
         {
@@ -1965,6 +1973,101 @@ namespace JustinCredible.Intel8080
 
             // Parity bit is set if number of bits is even.
             return setBits == 0 || setBits % 2 == 0;
+        }
+
+
+        private byte ReadMemory(int address)
+        {
+            var mirroringEnabled = Config.MirrorMemoryStart != 0 && Config.MirrorMemoryEnd != 0;
+            var error = false;
+
+            byte? result = null;
+
+            if (address < 0)
+            {
+                error = true;
+            }
+            else if (address < Config.MemorySize)
+            {
+                result = Memory[address];
+            }
+            else if (mirroringEnabled && address >= Config.MirrorMemoryStart && address <= Config.MirrorMemoryEnd)
+            {
+                var translated = address - (Config.MirrorMemoryEnd - Config.MirrorMemoryStart);
+
+                if (translated < 0 || translated >= Config.MemorySize)
+                {
+                    error = true;
+                }
+                else
+                {
+                    result = Memory[translated];
+                }
+            }
+            else
+            {
+                error = true;
+            }
+
+            if (error)
+            {
+                var programCounterFormatted = String.Format("0x{0:X4}", ProgramCounter);
+                var addressFormatted = String.Format("0x{0:X4}", address);
+                var startAddressFormatted = String.Format("0x{0:X4}", Config.WriteableMemoryStart);
+                var endAddressFormatted = String.Format("0x{0:X4}", Config.WriteableMemoryEnd);
+                var mirrorEndAddressFormatted = String.Format("0x{0:X4}", Config.MirrorMemoryEnd);
+                throw new Exception($"Illegal memory address ({addressFormatted}) specified for read memory operation at address {programCounterFormatted}; expected address to be between {startAddressFormatted} and {(mirroringEnabled ? mirrorEndAddressFormatted : endAddressFormatted)} inclusive.");
+            }
+
+            if (result == null)
+                throw new Exception("Failed sanity check; result should be set.");
+
+            return result.Value;
+        }
+
+        private void WriteMemory(int address, byte value)
+        {
+            // Determine if we should allow the write to memory based on the address
+            // if the configuration has specified a restricted writeable range.
+            var enforceWriteBoundsCheck = Config.WriteableMemoryStart != 0 && Config.WriteableMemoryEnd != 0;
+            var mirroringEnabled = Config.MirrorMemoryStart != 0 && Config.MirrorMemoryEnd != 0;
+            var allowWrite = true;
+            var error = false;
+
+            if (enforceWriteBoundsCheck)
+                allowWrite = address >= Config.WriteableMemoryStart && address <= Config.WriteableMemoryEnd;
+
+            if (allowWrite)
+            {
+                Memory[address] = value;
+            }
+            else if (mirroringEnabled && address >= Config.MirrorMemoryStart && address <= Config.MirrorMemoryEnd)
+            {
+                var translated = address - (Config.MirrorMemoryEnd - Config.MirrorMemoryStart);
+
+                if (translated < 0 || translated >= Config.MemorySize)
+                {
+                    error = true;
+                }
+                else
+                {
+                    Memory[translated] = value;
+                }
+            }
+            else
+            {
+                error = true;
+            }
+
+            if (error)
+            {
+                var programCounterFormatted = String.Format("0x{0:X4}", ProgramCounter);
+                var addressFormatted = String.Format("0x{0:X4}", address);
+                var startAddressFormatted = String.Format("0x{0:X4}", Config.WriteableMemoryStart);
+                var endAddressFormatted = String.Format("0x{0:X4}", Config.WriteableMemoryEnd);
+                var mirrorEndAddressFormatted = String.Format("0x{0:X4}", Config.MirrorMemoryEnd);
+                throw new Exception($"Illegal memory address ({addressFormatted}) specified for write memory operation at address {programCounterFormatted}; expected address to be between {startAddressFormatted} and {(mirroringEnabled ? mirrorEndAddressFormatted : endAddressFormatted)} inclusive.");
+            }
         }
 
         #endregion

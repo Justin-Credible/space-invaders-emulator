@@ -64,16 +64,7 @@ namespace JustinCredible.SIEmulator
         private static readonly CPUConfig _cpuConfig = new CPUConfig()
         {
             // 16 KB of RAM
-            // MemorySize = 16 * 1024,
-
-            // HACK: Add an extra kilobyte of RAM so that we don't get a crash trying to read outside
-            // of memory. This happens in the DrawSprite: routine at 0x15D3, specifically:
-            //    0x15DE	MOV M,A		; (HL) <- A
-            // when HL = 0x4017 which is 2-3 times through the loop. This occurs in attract mode right
-            // before the alien comes from the right side of the screen to flip over the upside down
-            // Y character in the "PLAY" text. Address $4000 and above is a RAM mirror, so maybe it's
-            // okay to allow reads from there? Or maybe I just have a bug elsewhere.
-            MemorySize = 17 * 1024,
+            MemorySize = 16 * 1024,
 
             /**
              * This is the memory layout specific to Space Invaders:
@@ -88,13 +79,14 @@ namespace JustinCredible.SIEmulator
              * $2000-$23ff:  work RAM (1K)
              * $2400-$3fff:  video RAM (7K)
              * 
-             * $4000-:       RAM mirror
-             * 
-             * TODO: Allow reads/writes to 0x4000 - 0x6000 (RAM mirror)?
+             * RAM Mirror (8K)
+             * $4000-$43ff:  work RAM (1K)
+             * $4400-$5fff:  video RAM (7K)
              */
             WriteableMemoryStart = 0x2000,
-            // WriteableMemoryEnd = 0x3FFF,
-            WriteableMemoryEnd = 0x4400, // HACK: Allow writes in RAM mirror area up to 17K; see hack above.
+            WriteableMemoryEnd = 0x3FFF,
+            MirrorMemoryStart = 0x4000,
+            MirrorMemoryEnd = 0x5FFF,
 
             // Interrupts are initially disabled, and will be enabled by the program ROM when ready.
             InterruptsEnabled = false,
