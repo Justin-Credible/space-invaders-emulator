@@ -61,6 +61,8 @@ namespace JustinCredible.Intel8080
         /** Fired when the IN instruction is encountered. */
         public event DeviceReadEvent OnDeviceRead;
 
+        #region Initialization
+
         public CPU(CPUConfig config)
         {
             Config = config;
@@ -98,6 +100,10 @@ namespace JustinCredible.Intel8080
                 Memory = memory;
         }
 
+        #endregion
+
+        #region Debugging
+
         public void PrintDebugSummary()
         {
             var opcodeByte = Memory[ProgramCounter];
@@ -127,6 +133,10 @@ namespace JustinCredible.Intel8080
             Console.WriteLine();
             Console.WriteLine($"Zero: {Flags.Zero}\tSign: {Flags.Sign}\tParity: {Flags.Parity}\tCarry: {Flags.Carry}\tAux Carry: {Flags.AuxCarry}");
         }
+
+        #endregion
+
+        #region Step
 
         /** Executes the given interrupt RST instruction and returns the number of cycles it took to execute. */
         public int StepInterrupt(Interrupt id)
@@ -1628,6 +1638,10 @@ namespace JustinCredible.Intel8080
             return elapsedCycles;
         }
 
+        #endregion
+
+        #region Opcodes - Additional Implementations
+
         private void ExecuteDAA()
         {
             // Decimal Adjust Accumulator
@@ -1924,6 +1938,10 @@ namespace JustinCredible.Intel8080
             Registers.A = (byte)result;
         }
 
+        #endregion
+
+        #region Utilities
+
         private void SetFlags(bool carry, byte result, bool auxCarry = false)
         {
             Flags.Carry = carry;
@@ -1948,5 +1966,7 @@ namespace JustinCredible.Intel8080
             // Parity bit is set if number of bits is even.
             return setBits == 0 || setBits % 2 == 0;
         }
+
+        #endregion
     }
 }
