@@ -168,9 +168,10 @@ namespace JustinCredible.SIEmulator
                             tickEventArgs.KeyDown = sdlEvent.key.keysym.sym;
                             UpdateKeys(tickEventArgs, sdlEvent.key.keysym.sym, true);
 
-                            // If the break/pause key is pressed, set a flag indicating the
+                            // If the break/pause or 9 key is pressed, set a flag indicating the
                             // emulator's should activate the interactive debugger.
-                            if (sdlEvent.key.keysym.sym == SDL.SDL_Keycode.SDLK_PAUSE)
+                            if (sdlEvent.key.keysym.sym == SDL.SDL_Keycode.SDLK_PAUSE
+                                || sdlEvent.key.keysym.sym == SDL.SDL_Keycode.SDLK_9)
                                 tickEventArgs.ShouldBreak = true;
 
                             break;
