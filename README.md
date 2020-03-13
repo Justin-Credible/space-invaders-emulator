@@ -1,6 +1,8 @@
 # Space Invaders Emulator
 
-This repository contains my implementation of an emulator for the Intel 8080 CPU and the related hardware for the 1978 arcade game: Space Invaders!
+This repository contains my implementation of an emulator for the Intel 8080 CPU and the related hardware for the 1978 arcade game: *Space Invaders*.
+
+It emulates the graphics and sound, supports save states, has an interactive debugger, has rewind functionality, and includes 600+ unit test cases.
 
 ![showcase](.readme/gameplay.gif)
 
@@ -8,9 +10,7 @@ This repository contains my implementation of an emulator for the Intel 8080 CPU
 
 I wrote the emulator and disassembler in C# targeting the cross-platform [.NET Core](https://dotnet.microsoft.com/) runtime.
 
-I'm using [SDL2](https://www.libsdl.org/) and [SDL2_mixer](https://www.libsdl.org/projects/SDL_mixer/) for the GUI and audio via the [SDL2#](https://github.com/flibitijibibo/SDL2-CS) wrapper.
-
-I use the [zasm](https://k1.spdns.de/Develop/Projects/zasm/Distributions/) to assemble my unit test cases, which are written in Intel 8080 assembly language.
+I used [SDL2](https://www.libsdl.org/) and [SDL2_mixer](https://www.libsdl.org/projects/SDL_mixer/) for the GUI and audio via the [SDL2#](https://github.com/flibitijibibo/SDL2-CS) wrapper.
 
 The controls are hardcoded as:
 
@@ -56,6 +56,42 @@ Options:
 
 For example: `dotnet run -- run ../roms --sfx ../roms --starting-ships 6`
 
+## Interactive Debugger
+
+If the emulator is launched with the `--debug` option, the debugger will be enabled. You can press the `pause`/`break` or `9` key which will stop execution and print the interactive debugger in the console.
+
+![showcase](.readme/debugger.png)
+
+From there you can use `F1` and `F2` to **save** and **load** the emulator **state**.
+
+To **single step** over an opcode use `F10`, or `F5` to **continue** until the next breakpoint.
+
+**Breakpoints** can be set via the `--break` option at startup, or in the debugger by pressing `F4`.
+
+If the emulator was started with the `--annotations` option, `F11` can be used to toggle between the disassembler's generated psuedocode or the provided annotation file. This is used to **show comments for each disassembled opcode** inline in the debugger, which makes tracking down issues and/or understanding the game code easier. I collected annotations from the amazing [Computer Archeology](http://computerarcheology.com/) page on [Space Invaders Code](http://computerarcheology.com/Arcade/SpaceInvaders/Code.html), and placed them at [`roms/annotations.txt`](roms/annotations.txt).
+
+`F12` is used to print the last 30 opcodes, so you can see **execution history**.
+
+Finally, if `--rewind` was specified at startup, `F9` can be used to single step _backwards_ over opcodes, effectively allowing you to **rewind CPU state one instruction at a time**. I found this to be very helpful when tracking down bugs in the CPU core.
+
+## Unit Tests
+
+While building the emulator I found it essential to write unit tests for each opcode and along the way. This made it much easier to track down bugs late in development.
+
+Each opcode test contains Intel 8080 assembly code which is assembled using [zasm](https://k1.spdns.de/Develop/Projects/zasm/Distributions/). This assembled binary is then executed on the emulated CPU and then has assertions ran against the CPU state to verify opcode behavior.
+
+Additionally, there is an [integration test](intel8080.tests/Tests/CPUIntegrationTest.cs) which uses a CPU test program written for the Intel 8080 CPU _originally from 1980_! The assembled program along with its disassembly can can be found in the [`intel8080.tests/CPUDiag`](intel8080.tests/CPUDiag) directory.
+
+Emulator tests (9 test cases):
+1. `cd emulator.tests`
+2. `dotnet restore`
+3. `dotnet test`
+
+Intel 8080 CPU tests (603 test cases):
+1. `cd intel8080.tests`
+2. `dotnet restore`
+3. `dotnet test`
+
 ## Disassembler
 
 While the disassembler is mainly used by the interactive debugger, it can be run from the command line as well:
@@ -83,51 +119,17 @@ Options:
 
 For exmaple: `dotnet run -- disassemble ../roms -a -p -o ../roms/output.asm`
 
-## Interactive Debugger
-
-If the emulator is launched with the `--debug` option, the debugger will be enabled. You can press the `pause`/`break` or `9` key which will stop execution and print the interactive debugger in the console.
-
-![showcase](.readme/debugger.png)
-
-From there you can use `F1` and `F2` to **save** and **load** the emulator **state**.
-
-To **single step** over an opcode use `F10`, or `F5` to **continue** until the next breakpoint.
-
-**Breakpoints** can be set via the `--break` option at startup, or in the debugger by pressing `F4`.
-
-If the emulator was started with the `--annotations` option, `F11` can be used to toggle between the disassembler's generated psuedocode or the provided annotation file. This is used to **show comments for each disassembled opcode** inline in the debugger, which makes tracking down issues and/or understanding the game code easier. I collected annotations from the amazing [Computer Archeology](http://computerarcheology.com/) page on [Space Invaders Code](http://computerarcheology.com/Arcade/SpaceInvaders/Code.html), and placed them at [`roms/annotations.txt`](roms/annotations.txt).
-
-`F12` is used to print the last 30 opcodes, so you can see **execution history**.
-
-Finally, if `--rewind` was specified at startup, `F9` can be used to single step _backwards_ over opcodes, effectively allowing you to **rewind CPU state one instruction at a time**. I found this to be very helpful when tracking down bugs in the CPU core.
-
-## Unit Tests
-
-While building the emulator I found it essential to write unit tests for each opcode and along the way. This made it much easier to track down bugs late in development.
-
-Additionally, there is an [integration test](intel8080.tests/Tests/CPUIntegrationTest.cs) which uses a CPU test program written for the Intel 8080 CPU _from 1980!_. The assembled program along with it's disassembly can can be found in the [`intel8080.tests/CPUDiag`](intel8080.tests/CPUDiag) directory.
-
-Emulator tests (9):
-1. `cd emulator.tests`
-2. `dotnet restore`
-3. `dotnet test`
-
-Intel 8080 CPU tests (603):
-1. `cd intel8080.tests`
-2. `dotnet restore`
-3. `dotnet test`
-
 ## Resources
 
 I found the following resources useful in building this emulator:
 
 * [Intel 8080 Assembly Programming Manual](https://www.google.com/search?q=intel+8080+assembly+language+programming+manual)
-  * [Mirror](https://altairclone.com/downloads/manuals/8080%20Programmers%20Manual.pdf)
-  * [Mirror](http://www.classiccmp.org/dunfield/r/8080asm.pdf)
-  * [Mirror](http://www.nj7p.org/Manuals/PDFs/Intel/9800004C.pdf)
+  * [Mirror 1](https://altairclone.com/downloads/manuals/8080%20Programmers%20Manual.pdf)
+  * [Mirror 2](http://www.classiccmp.org/dunfield/r/8080asm.pdf)
+  * [Mirror 3](http://www.nj7p.org/Manuals/PDFs/Intel/9800004C.pdf)
+* [Intel 8080 Instruction Set](https://www.pastraiser.com/cpu/i8080/i8080_opcodes.html)
 * [Emulator 101](http://www.emulator101.com/welcome.html)
   * [8080 Opcodes](http://www.emulator101.com/8080-by-opcode.html)
-* [Intel 8080 Instruction Set](https://www.pastraiser.com/cpu/i8080/i8080_opcodes.html)
 * [Computer Archeology - Space Invaders](http://computerarcheology.com/Arcade/SpaceInvaders/)
   * [Hardware](http://computerarcheology.com/Arcade/SpaceInvaders/Hardware.html)
   * [Code](http://computerarcheology.com/Arcade/SpaceInvaders/Code.html)
