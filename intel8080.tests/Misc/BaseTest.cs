@@ -65,7 +65,6 @@ namespace JustinCredible.Intel8080.Tests
             return Execute(memory, cpuConfig);
         }
 
-        // protected CPUResults Execute(byte[] rom, CPUConfig cpuConfig = null, CPU cpu = null)
         protected CPUResults Execute(byte[] memory, CPUConfig cpuConfig = null)
         {
             var cpu = new CPU(cpuConfig ?? GetCPUConfig());

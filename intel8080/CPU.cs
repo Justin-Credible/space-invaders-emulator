@@ -1993,7 +1993,7 @@ namespace JustinCredible.Intel8080
             }
             else if (mirroringEnabled && address >= Config.MirrorMemoryStart && address <= Config.MirrorMemoryEnd)
             {
-                var translated = address - (Config.MirrorMemoryEnd - Config.MirrorMemoryStart);
+                var translated = address - (Config.MirrorMemoryEnd - Config.MirrorMemoryStart + 1);
 
                 if (translated < 0 || translated >= Config.MemorySize)
                 {
@@ -2043,7 +2043,7 @@ namespace JustinCredible.Intel8080
             }
             else if (mirroringEnabled && address >= Config.MirrorMemoryStart && address <= Config.MirrorMemoryEnd)
             {
-                var translated = address - (Config.MirrorMemoryEnd - Config.MirrorMemoryStart);
+                var translated = address - (Config.MirrorMemoryEnd - Config.MirrorMemoryStart + 1);
 
                 if (translated < 0 || translated >= Config.MemorySize)
                 {

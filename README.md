@@ -87,7 +87,7 @@ Emulator tests (9 test cases):
 2. `dotnet restore`
 3. `dotnet test`
 
-Intel 8080 CPU tests (603 test cases):
+Intel 8080 CPU tests (605 test cases):
 1. `cd intel8080.tests`
 2. `dotnet restore`
 3. `dotnet test`
