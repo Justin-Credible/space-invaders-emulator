@@ -27,10 +27,11 @@ The controls are hardcoded as:
 ## Compiling / Running
 
 1. Install [.NET Core](https://dotnet.microsoft.com/download) 3.1
-2. Clone this repository
-3. `cd emulator`
-4. `dotnet restore`
-5. `dotnet run --` followed by the commands to pass to the CLI program
+2. Install [SDL2](https://www.libsdl.org/download-2.0.php) and [SDL2_mixer](https://www.libsdl.org/projects/SDL_mixer/)
+3. Clone this repository
+4. `cd emulator`
+5. `dotnet restore`
+6. `dotnet run --` followed by the commands to pass to the CLI program
 
 Currently there is only one command, `run`:
 
