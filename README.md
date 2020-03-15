@@ -26,7 +26,7 @@ The controls are hardcoded as:
 
 ## Compiling / Running
 
-1. Install [.NET Core](https://dotnet.microsoft.com/download) 3.2
+1. Install [.NET Core](https://dotnet.microsoft.com/download) 3.1
 2. Clone this repository
 3. `cd emulator`
 4. `dotnet restore`
