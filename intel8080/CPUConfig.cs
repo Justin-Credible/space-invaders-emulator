@@ -12,10 +12,16 @@ namespace JustinCredible.Intel8080
         public int MemorySize { get; set; }
 
         /** Starting memory location that should be writeable (leave both to 0 to allow all writes). */
-        public int WriteableMemoryStart { get; set; }
+        public UInt16 WriteableMemoryStart { get; set; }
 
         /** Ending memory location that should be writeable (leave both to 0 to allow all writes). */
-        public int WriteableMemoryEnd { get; set; }
+        public UInt16 WriteableMemoryEnd { get; set; }
+
+        /** Starting memory location that should be mirrored to the writeable memory (RAM mirror)  (leave bot to 0 to disable RAM mirror). */
+        public UInt16 MirrorMemoryStart { get; set; }
+
+        /** Ending memory location that should be mirrored to the writeable memory (RAM mirror) (leave bot to 0 to disable RAM mirror). */
+        public UInt16 MirrorMemoryEnd { get; set; }
 
         public CPURegisters Registers { get; set; }
 

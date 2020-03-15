@@ -17,7 +17,9 @@ namespace JustinCredible.Intel8080.Tests
         {
             MemorySize = 16 * 1024;
             WriteableMemoryStart = 0x2000;
-            WriteableMemoryEnd = 0x3FFFF;
+            WriteableMemoryEnd = 0x3FFF;
+            MirrorMemoryStart = 0x4000;
+            MirrorMemoryEnd = 0x5FFF;
             EnableDiagnosticsMode = false;
         }
     }
