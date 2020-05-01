@@ -1621,7 +1621,7 @@ namespace JustinCredible.Intel8080
                 #endregion
 
                 default:
-                    throw new NotImplementedException(String.Format("Attempted to execute unknown opcode 0x{0:X2} at memory address 0x{0:X4}", opcode, ProgramCounter));
+                    throw new NotImplementedException(String.Format("Attempted to execute unknown opcode 0x{0:X2} at memory address 0x{1:X4}", opcode, ProgramCounter));
             }
 
             #endregion
@@ -1634,7 +1634,7 @@ namespace JustinCredible.Intel8080
             {
                 // Sanity check; if this fails an opcode definition or implementation is invalid.
                 if (opcode.AlternateCycles == null)
-                    throw new Exception(String.Format("The implementation for opcode 0x{0:X2} at memory address 0x{0:X4} indicated the alternate number of cycles should be used, but was not defined.", opcode, ProgramCounter));
+                    throw new Exception(String.Format("The implementation for opcode 0x{0:X2} at memory address 0x{1:X4} indicated the alternate number of cycles should be used, but was not defined.", opcode, ProgramCounter));
 
                 elapsedCycles = (UInt16)opcode.AlternateCycles;
             }
