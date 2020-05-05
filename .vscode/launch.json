@@ -11,7 +11,20 @@
             "preLaunchTask": "build emulator",
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/emulator/bin/Debug/netcoreapp3.1/emulator.dll",
-            "args": [],
+            "args": [
+                "run",
+                "${workspaceFolder}/roms",
+                "-sfx",
+                "${workspaceFolder}/roms",
+                "--debug",
+                "-a",
+                "${workspaceFolder}/roms/annotations.txt",
+                // "--rewind",
+                // "--load-state",
+                // "ufo_soon3.state",
+                // "--break",
+                // "0x15D3", // DrawSprite:
+            ],
             "cwd": "${workspaceFolder}/emulator",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             // "console": "internalConsole",
