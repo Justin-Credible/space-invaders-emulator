@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using SDL2;
 
-namespace JustinCredible.SIEmulator
+namespace JustinCredible.SIEmulator.CLI
 {
     /**
      * The "platform" code which handles creating of the GUI window to show graphics,

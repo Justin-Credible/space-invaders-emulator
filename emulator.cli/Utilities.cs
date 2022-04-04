@@ -1,6 +1,6 @@
 using System.Reflection;
 
-namespace JustinCredible.SIEmulator
+namespace JustinCredible.SIEmulator.CLI
 {
     public class Utilities
     {

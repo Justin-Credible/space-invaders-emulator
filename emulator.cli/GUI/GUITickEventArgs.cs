@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using SDL2;
 
-namespace JustinCredible.SIEmulator
+namespace JustinCredible.SIEmulator.CLI
 {
     class GUITickEventArgs : EventArgs
     {
