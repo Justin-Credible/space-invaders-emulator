@@ -1,16 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Library</OutputType>
-    <TargetFramework>netstandard2.1</TargetFramework>
-    <RootNamespace>JustinCredible.I8080Disassembler</RootNamespace>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <RootNamespace>JustinCredible.I8080Disassembler.CLI</RootNamespace>
     <Version>1.0.0</Version>
     <NoWarn>CS0618</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.CommandLineUtils" Version="1.1.1" />
-    <ProjectReference Include="..\intel8080\intel8080.csproj" />
+    <ProjectReference Include="..\disassembler\disassembler.csproj" />
   </ItemGroup>
 
 </Project>

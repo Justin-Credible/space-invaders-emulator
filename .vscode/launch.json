@@ -37,7 +37,7 @@
             "request": "launch",
             "preLaunchTask": "build disassembler",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/disassembler/bin/Debug/netcoreapp3.1/disassembler.dll",
+            "program": "${workspaceFolder}/disassembler.cli/bin/Debug/netcoreapp3.1/disassembler.cli.dll",
             "args": [],
             "cwd": "${workspaceFolder}/disassembler",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console

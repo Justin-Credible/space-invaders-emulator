@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.Extensions.CommandLineUtils;
 
-namespace JustinCredible.I8080Disassembler
+namespace JustinCredible.I8080Disassembler.CLI
 {
     class Program
     {

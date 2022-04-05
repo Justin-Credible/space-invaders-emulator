@@ -33,6 +33,21 @@
             }
         },
         {
+            "label": "build emulator.meadow",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/emulator.meadow/emulator.meadow.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+            }
+        },
+        {
             "label": "build emulator.tests",
             "command": "dotnet",
             "type": "process",
@@ -85,7 +100,6 @@
             "problemMatcher": "$msCompile",
             "group": {
                 "kind": "build",
-                "isDefault": true
             }
         },
         {
@@ -114,7 +128,6 @@
             "problemMatcher": "$msCompile",
             "group": {
                 "kind": "test",
-                "isDefault": true
             }
         },
         {
@@ -130,7 +143,21 @@
             "problemMatcher": "$msCompile",
             "group": {
                 "kind": "build",
-                "isDefault": true
+            }
+        },
+        {
+            "label": "build disassembler.cli",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/disassembler.cli/disassembler.cli.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
             }
         },
     ]
