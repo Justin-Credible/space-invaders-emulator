@@ -7,7 +7,7 @@ using Meadow.Foundation.Leds;
 
 namespace JustinCredible.SIEmulator.MeadowMCU
 {
-    public class MeadowApp : App<F7Micro, MeadowApp>
+    public class MeadowApp : App<F7MicroV2, MeadowApp>
     {
         RgbPwmLed onboardLed;
 
@@ -34,6 +34,14 @@ namespace JustinCredible.SIEmulator.MeadowMCU
             Console.WriteLine("Running...");
 
             onboardLed.StartPulse(Color.Green);
+
+            Console.WriteLine("List data directory files: " + MeadowOS.FileSystem.DataDirectory);
+
+            var files = System.IO.Directory.GetFiles(MeadowOS.FileSystem.DataDirectory);
+            foreach (var file in files)
+            {
+                Console.WriteLine(" • " + file);
+            }
         }
     }
 }
