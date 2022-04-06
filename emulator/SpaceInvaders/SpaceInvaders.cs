@@ -39,6 +39,9 @@ namespace JustinCredible.SIEmulator
 
         #region Events
 
+        public delegate void EmulationStoppedEvent();
+        public event EmulationStoppedEvent OnEmulationStopped;
+
         // Fired when a frame is ready to be rendered.
         public delegate void RenderEvent(RenderEventArgs e);
         public event RenderEvent OnRender;
@@ -155,6 +158,11 @@ namespace JustinCredible.SIEmulator
          * Enables debugging statistics and features.
          */
         public bool Debug { get; set; } = false;
+
+        /**
+         * Enables stats for performance; writes various info to the console during runtime.
+         */
+        public bool StatsEnabled { get; set; } = false;
 
         /**
          * When Debug=true, stores the last MAX_ADDRESS_HISTORY values of the program counter.
@@ -450,6 +458,22 @@ namespace JustinCredible.SIEmulator
                     {
                         _cpuStopWatch.Stop();
 
+                        if (StatsEnabled)
+                        {
+                            Console.WriteLine($"[STATS] Processed {_cycleCount} cycles in {_cpuStopWatch.Elapsed.TotalMilliseconds}ms");
+
+                            if (_cpuStopWatch.Elapsed.TotalMilliseconds < 16.6)
+                            {
+                                var extraTimeMs = 16.6 - _cpuStopWatch.Elapsed.TotalMilliseconds;
+                                Console.WriteLine($"[STATS] Underbudget: {extraTimeMs}ms remaining, will sleep. ({_cpuStopWatch.Elapsed.TotalMilliseconds}ms < 16.6ms)");
+                            }
+                            else
+                            {
+                                var defecitTimeMs = _cpuStopWatch.Elapsed.TotalMilliseconds - 16.6;
+                                Console.WriteLine($"[STATS] Overbudget: {defecitTimeMs}ms! ({_cpuStopWatch.Elapsed.TotalMilliseconds}ms > 16.6ms)");
+                            }
+                        }
+
                         if (_cpuStopWatch.Elapsed.TotalMilliseconds < 16.6)
                         {
                             var sleepForMs = 16.6 - _cpuStopWatch.Elapsed.TotalMilliseconds;
@@ -477,6 +501,11 @@ namespace JustinCredible.SIEmulator
 
             _cpu = null;
             _thread = null;
+
+            if (OnEmulationStopped != null)
+            {
+                OnEmulationStopped();
+            }
         }
 
         /**
