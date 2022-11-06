@@ -2,14 +2,16 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using Meadow;
 using Meadow.Devices;
 using Meadow.Foundation;
 using Meadow.Foundation.Leds;
+using Meadow.Units;
 
 namespace JustinCredible.SIEmulator.MeadowMCU
 {
-    public class MeadowApp : App<F7MicroV2, MeadowApp>
+    public class MeadowApp : App<F7FeatherV2>
     {
         private RgbPwmLed _onboardLed;
         private SpaceInvaders _game;
@@ -38,7 +40,7 @@ namespace JustinCredible.SIEmulator.MeadowMCU
             }
         }
 
-        private void Initialize()
+        public override Task Initialize()
         {
             Console.WriteLine("Initialize hardware...");
 
@@ -46,11 +48,12 @@ namespace JustinCredible.SIEmulator.MeadowMCU
                 redPwmPin: Device.Pins.OnboardLedRed,
                 greenPwmPin: Device.Pins.OnboardLedGreen,
                 bluePwmPin: Device.Pins.OnboardLedBlue,
-                3.3f, 3.3f, 3.3f,
-                Meadow.Peripherals.Leds.IRgbLed.CommonType.CommonAnode);
+                Meadow.Peripherals.Leds.CommonType.CommonAnode);
+
+            return base.Initialize();
         }
 
-        private void Run()
+        public override Task Run()
         {
             Console.WriteLine("Starting MCU application code...");
             _onboardLed.StartPulse(Color.Yellow);
@@ -71,7 +74,8 @@ namespace JustinCredible.SIEmulator.MeadowMCU
             _game.Start(rom);
 
             Console.WriteLine("Emulator is running!");
-            Thread.Sleep(Timeout.Infinite);
+            //Thread.Sleep(Timeout.Infinite);
+            return base.Run();
         }
 
         #region Emulator Event Handlers
