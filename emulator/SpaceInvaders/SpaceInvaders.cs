@@ -52,6 +52,11 @@ namespace JustinCredible.SIEmulator
         public event SoundEvent OnSound;
         private SoundEventArgs _soundEventArgs;
 
+        // Fired when statistic data is emitted.
+        public delegate void StatsEvent(StatsEventArgs e);
+        public event StatsEvent OnStats;
+        private StatsEventArgs _statsEventArgs;
+
         #endregion
 
         #region Hardware
@@ -114,6 +119,12 @@ namespace JustinCredible.SIEmulator
         // To keep the emulated CPU from running too fast, we use a stopwatch and count cycles.
         private Stopwatch _cpuStopWatch = new Stopwatch();
         private int _cycleCount = 0;
+
+        // Used when StatsEnabled is set to true; records time in milliseconds it took to execute approximately
+        // 33k emulated CPU cycles which should be approximately 1/60th of a second (16.6ms) on real hardware.
+        // This can be used to determine if the emulation is running too slow on the target platform. This is
+        // emitted via the OnStats event.
+        private List<double> _timeMsToVsyncMeasurements = new List<double>(60);
 
         // Holds the last data written by the CPU to ports 3 and 5, which are used for sound effects.
         // The CPU holds the bits high when the sounds are playing, and then flips low to stop.
@@ -242,6 +253,7 @@ namespace JustinCredible.SIEmulator
             };
 
             _soundEventArgs = new SoundEventArgs();
+            _statsEventArgs = new StatsEventArgs();
 
             if (state != null)
                 LoadState(state);
@@ -458,28 +470,24 @@ namespace JustinCredible.SIEmulator
                     {
                         _cpuStopWatch.Stop();
 
-                        if (StatsEnabled)
-                        {
-                            Console.WriteLine($"[STATS] Processed {_cycleCount} cycles in {_cpuStopWatch.Elapsed.TotalMilliseconds}ms");
-
-                            if (_cpuStopWatch.Elapsed.TotalMilliseconds < 16.6)
-                            {
-                                var extraTimeMs = 16.6 - _cpuStopWatch.Elapsed.TotalMilliseconds;
-                                Console.WriteLine($"[STATS] Underbudget: {extraTimeMs}ms remaining, will sleep. ({_cpuStopWatch.Elapsed.TotalMilliseconds}ms < 16.6ms)");
-                            }
-                            else
-                            {
-                                var defecitTimeMs = _cpuStopWatch.Elapsed.TotalMilliseconds - 16.6;
-                                Console.WriteLine($"[STATS] Overbudget: {defecitTimeMs}ms! ({_cpuStopWatch.Elapsed.TotalMilliseconds}ms > 16.6ms)");
-                            }
-                        }
-
                         if (_cpuStopWatch.Elapsed.TotalMilliseconds < 16.6)
                         {
                             var sleepForMs = 16.6 - _cpuStopWatch.Elapsed.TotalMilliseconds;
 
                             if (sleepForMs >= 1)
                                 System.Threading.Thread.Sleep((int)sleepForMs);
+                        }
+
+                        if (StatsEnabled)
+                        {
+                            _timeMsToVsyncMeasurements.Add(_cpuStopWatch.Elapsed.TotalMilliseconds);
+
+                            if (_timeMsToVsyncMeasurements.Count >= 60)
+                            {
+                                _statsEventArgs.TimeMsToVsyncMeasurements = _timeMsToVsyncMeasurements;
+                                OnStats?.Invoke(_statsEventArgs);
+                                _timeMsToVsyncMeasurements.Clear();
+                            }
                         }
 
                         _cycleCount = 0;

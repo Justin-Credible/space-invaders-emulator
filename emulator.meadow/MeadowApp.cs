@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Linq;
 using Meadow;
 using Meadow.Devices;
 using Meadow.Foundation;
@@ -16,29 +17,8 @@ namespace JustinCredible.SIEmulator.MeadowMCU
         private RgbPwmLed _onboardLed;
         private SpaceInvaders _game;
 
-        public MeadowApp()
-        {
-            try
-            {
-                Initialize();
-                Run();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("An unhandled exception occurred!");
-                _onboardLed.StartPulse(Color.Red);
-
-                Console.WriteLine(ex.Message);
-                Console.WriteLine(ex.StackTrace);
-
-                if (ex.InnerException != null)
-                {
-                    Console.WriteLine("Inner exception:");
-                    Console.WriteLine(ex.InnerException.Message);
-                    Console.WriteLine(ex.InnerException.StackTrace);
-                }
-            }
-        }
+        private int _maxStatCount = 10;
+        private int _statCount = 0;
 
         public override Task Initialize()
         {
@@ -56,7 +36,7 @@ namespace JustinCredible.SIEmulator.MeadowMCU
         public override Task Run()
         {
             Console.WriteLine("Starting MCU application code...");
-            _onboardLed.StartPulse(Color.Yellow);
+            _onboardLed.SetColor(Color.Yellow);
 
             Console.WriteLine("Reading ROM files...");
             var rom = ReadRomFiles(MeadowOS.FileSystem.DataDirectory);
@@ -66,15 +46,21 @@ namespace JustinCredible.SIEmulator.MeadowMCU
             _game.OnEmulationStopped += SpaceInvaders_OnEmulationStopped;
             _game.OnRender += SpaceInvaders_OnRender;
             _game.OnSound += SpaceInvaders_OnSound;
+
+            _game.OnStats += SpaceInvaders_OnStats;
             _game.StatsEnabled = true;
+
+            _onboardLed.SetColor(Color.Green);
 
             // Start the emulation; this occurs in a seperate thread and
             // therefore this call is non-blocking.
             Console.WriteLine("Running emulator...");
             _game.Start(rom);
 
-            Console.WriteLine("Emulator is running!");
-            //Thread.Sleep(Timeout.Infinite);
+            _onboardLed.SetColor(Color.Aqua);
+            Console.WriteLine("Sleeping main thread forever.");
+            Thread.Sleep(Timeout.Infinite);
+
             return base.Run();
         }
 
@@ -83,7 +69,7 @@ namespace JustinCredible.SIEmulator.MeadowMCU
         private void SpaceInvaders_OnEmulationStopped()
         {
             Console.WriteLine("Emulator stopped!");
-            _onboardLed.StartPulse(Color.Purple);
+            _onboardLed.SetColor(Color.Purple);
         }
 
         /**
@@ -92,7 +78,7 @@ namespace JustinCredible.SIEmulator.MeadowMCU
          */
         private void SpaceInvaders_OnRender(RenderEventArgs eventArgs)
         {
-            Console.WriteLine("SpaceInvaders_OnRender fired!");
+            //Console.WriteLine("SpaceInvaders_OnRender fired!");
         }
 
         /**
@@ -100,7 +86,32 @@ namespace JustinCredible.SIEmulator.MeadowMCU
          */
         private void SpaceInvaders_OnSound(SoundEventArgs eventArgs)
         {
-            Console.WriteLine("SpaceInvaders_OnSound fired!");
+            //Console.WriteLine("SpaceInvaders_OnSound fired!");
+        }
+
+        /**
+         * Fired when the emulator is emitting statistic events.
+         */
+        private void SpaceInvaders_OnStats(StatsEventArgs eventArgs)
+        {
+            _statCount++;
+
+            var averageMs = eventArgs.TimeMsToVsyncMeasurements.Sum() / eventArgs.TimeMsToVsyncMeasurements.Count();
+
+            if (averageMs > 16.6)
+            {
+                Console.WriteLine($"[STATS] Underbudget: Average time to execute to vsync was {averageMs} (> 16.6 ms)");
+            }
+            else
+            {
+                Console.WriteLine($"[STATS] Overbudget: Average time to execute to vsync was {averageMs} (< 16.6 ms)");
+            }
+
+            if (_statCount >= _maxStatCount)
+            {
+                Console.WriteLine($"[STATS] Stopping emulator after {_maxStatCount} statistic reports");
+                _game.Stop();
+            }
         }
 
         #endregion
