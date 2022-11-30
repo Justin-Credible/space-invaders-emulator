@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -12,6 +12,7 @@ using Meadow.Foundation.Leds;
 using Meadow.Units;
 using Meadow.Hardware;
 using Meadow.Foundation.Displays;
+using System.Diagnostics;
 
 namespace JustinCredible.SIEmulator.MeadowMCU
 {
@@ -45,9 +46,15 @@ namespace JustinCredible.SIEmulator.MeadowMCU
 
         private void InitializeDisplay()
         {
-            var frequency = new Meadow.Units.Frequency(12000, Meadow.Units.Frequency.UnitType.Kilohertz);
+            var frequency = new Meadow.Units.Frequency(48, Meadow.Units.Frequency.UnitType.Megahertz);
+
             var config = new SpiClockConfiguration(frequency, SpiClockConfiguration.Mode.Mode3);
-            var spiBus = MeadowApp.Device.CreateSpiBus(MeadowApp.Device.Pins.SCK, MeadowApp.Device.Pins.MOSI, MeadowApp.Device.Pins.MISO, config);
+
+            var spiBus = MeadowApp.Device.CreateSpiBus(
+                clock: MeadowApp.Device.Pins.SCK,
+                copi: MeadowApp.Device.Pins.COPI,
+                cipo: MeadowApp.Device.Pins.CIPO,
+                config: config);
 
             var display = new St7789
                 (
@@ -69,6 +76,18 @@ namespace JustinCredible.SIEmulator.MeadowMCU
             Console.WriteLine("Starting MCU application code...");
             _onboardLed.SetColor(Color.Yellow);
 
+            // The VSCode extension currently only has one action: build, deploy, and attach the debugger.
+            // Running with a debugger attached has a performance penalty. This block can be uncommented
+            // so that after the build/deploy/attach operation, the app immediately stops so that we can
+            // deattach and press the reset button to reboot and run the deployed code at full speed.
+            // if (Debugger.IsAttached)
+            // {
+            //     _onboardLed.SetColor(Color.Red);
+            //     Console.WriteLine("Debugger attached; sleeping main thread forever.");
+            //     Thread.Sleep(Timeout.Infinite);
+            //     return base.Run();
+            // }
+
             Console.WriteLine("Reading ROM files...");
             var rom = ReadRomFiles(MeadowOS.FileSystem.DataDirectory);
 
@@ -81,7 +100,7 @@ namespace JustinCredible.SIEmulator.MeadowMCU
             _game.OnStats += SpaceInvaders_OnStats;
             _game.StatsEnabled = true;
 
-            _onboardLed.SetColor(Color.Green);
+            _onboardLed.SetColor(Color.Purple);
 
             // Start the emulation; this occurs in a seperate thread and
             // therefore this call is non-blocking.
@@ -192,11 +211,11 @@ namespace JustinCredible.SIEmulator.MeadowMCU
 
             if (averageMs > 16.6)
             {
-                Console.WriteLine($"[STATS] Underbudget: Average time to execute to vsync was {averageMs} (> 16.6 ms)");
+                Console.WriteLine($"[STATS] Overbudget: Average time to execute to vsync was {averageMs} (> 16.6 ms)");
             }
             else
             {
-                Console.WriteLine($"[STATS] Overbudget: Average time to execute to vsync was {averageMs} (< 16.6 ms)");
+                Console.WriteLine($"[STATS] Underbudget: Average time to execute to vsync was {averageMs} (< 16.6 ms)");
             }
 
             if (_statCount >= _maxStatCount)
