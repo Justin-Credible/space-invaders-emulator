@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>JustinCredible.I8080Disassembler.CLI</RootNamespace>
     <Version>1.0.0</Version>
     <NoWarn>CS0618</NoWarn>

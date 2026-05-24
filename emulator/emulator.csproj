@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Text.Json" Version="6.0.2" />
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
     <ProjectReference Include="..\intel8080\intel8080.csproj" />
     <ProjectReference Include="..\disassembler\disassembler.csproj" />
   </ItemGroup>

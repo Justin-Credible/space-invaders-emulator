@@ -10,7 +10,7 @@
             "request": "launch",
             "preLaunchTask": "build emulator.cli",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/emulator.cli/bin/Debug/netcoreapp3.1/emulator.cli.dll",
+            "program": "${workspaceFolder}/emulator.cli/bin/Debug/net10.0/emulator.cli.dll",
             "args": [
                 "run",
                 "${workspaceFolder}/roms",
@@ -37,7 +37,7 @@
             "request": "launch",
             "preLaunchTask": "build disassembler",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/disassembler.cli/bin/Debug/netcoreapp3.1/disassembler.cli.dll",
+            "program": "${workspaceFolder}/disassembler.cli/bin/Debug/net10.0/disassembler.cli.dll",
             "args": [],
             "cwd": "${workspaceFolder}/disassembler",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
