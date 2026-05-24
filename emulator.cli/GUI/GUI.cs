@@ -118,7 +118,7 @@ namespace JustinCredible.SIEmulator.CLI
 
                 var pointer = SDL_mixer.Mix_LoadWAV(filePath);
 
-                if (pointer == null)
+                if (pointer == IntPtr.Zero)
                     throw new Exception(String.Format("Error loading sound {0}. SDL Error: {1}", sfx, SDL.SDL_GetError()));
 
                 soundEffects.Add(sfx, pointer);
