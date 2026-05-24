@@ -26,12 +26,16 @@ The controls are hardcoded as:
 
 ## Compiling / Running
 
-1. Install [.NET Core](https://dotnet.microsoft.com/download) 3.1
-2. Install [SDL2](https://www.libsdl.org/download-2.0.php) and [SDL2_mixer](https://www.libsdl.org/projects/SDL_mixer/)
-3. Clone this repository
-4. `cd emulator`
-5. `dotnet restore`
-6. `dotnet run --` followed by the commands to pass to the CLI program
+1. Install [.NET SDK](https://dotnet.microsoft.com/en-us/download) 10.0
+2. Clone this repository
+3. `cd emulator`
+4. `dotnet restore`
+5. `dotnet build`
+6. Install [SDL2](https://github.com/libsdl-org/SDL) and [SDL2_mixer](https://github.com/libsdl-org/SDL_mixer)
+    - SDL2 Version [2.30.12](https://github.com/libsdl-org/SDL/releases/tag/release-2.30.12)
+    - SDL2 Mixer Version [2.8.2](https://github.com/libsdl-org/SDL_mixer/releases/tag/release-2.8.2)
+    - On Windows, copy `SDL2.dll` and `SDL2_Mixer.dll` from the release archives to the `emulator.cli/bin/debug/net10.0` directory
+7. `dotnet run --` followed by the commands to pass to the CLI program
 
 Currently there is only one command, `run`:
 
