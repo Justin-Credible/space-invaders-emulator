@@ -617,31 +617,31 @@ namespace JustinCredible.SIEmulator
             }
             else if (deviceID == 0x05) // Port 5
             {
-                if ((_device3WriteLastData & 0b00000001) == 0 && (data & 0b00000001) == 0b00000001) // Bit 0 - Invader Movement 1
+                if ((_device5WriteLastData & 0b00000001) == 0 && (data & 0b00000001) == 0b00000001) // Bit 0 - Invader Movement 1
                 {
                     _soundEventArgs.SoundEffect = SoundEffect.InvaderMove1;
                     OnSound(_soundEventArgs);
                 }
 
-                if ((_device3WriteLastData & 0b00000010) == 0 && (data & 0b00000010) == 0b00000010) // Bit 1 - Invader Movement 2
+                if ((_device5WriteLastData & 0b00000010) == 0 && (data & 0b00000010) == 0b00000010) // Bit 1 - Invader Movement 2
                 {
                     _soundEventArgs.SoundEffect = SoundEffect.InvaderMove2;
                     OnSound(_soundEventArgs);
                 }
 
-                if ((_device3WriteLastData & 0b00000100) == 0 && (data & 0b00000100) == 0b00000100) // Bit 2 - Invader Movement 3
+                if ((_device5WriteLastData & 0b00000100) == 0 && (data & 0b00000100) == 0b00000100) // Bit 2 - Invader Movement 3
                 {
                     _soundEventArgs.SoundEffect = SoundEffect.InvaderMove3;
                     OnSound(_soundEventArgs);
                 }
 
-                if ((_device3WriteLastData & 0b00001000) == 0 && (data & 0b00001000) == 0b00001000) // Bit 3 - Invader Movement 4
+                if ((_device5WriteLastData & 0b00001000) == 0 && (data & 0b00001000) == 0b00001000) // Bit 3 - Invader Movement 4
                 {
                     _soundEventArgs.SoundEffect = SoundEffect.InvaderMove4;
                     OnSound(_soundEventArgs);
                 }
 
-                if ((_device3WriteLastData & 0b00010000) == 0 && (data & 0b00010000) == 0b00010000) // Bit 4 - UFO Hit
+                if ((_device5WriteLastData & 0b00010000) == 0 && (data & 0b00010000) == 0b00010000) // Bit 4 - UFO Hit
                 {
                     _soundEventArgs.SoundEffect = SoundEffect.UFOHit;
                     OnSound(_soundEventArgs);
