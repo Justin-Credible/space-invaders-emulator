@@ -11,6 +11,7 @@ using Meadow.Foundation.Graphics;
 using Meadow.Foundation.Leds;
 using Meadow.Units;
 using Meadow.Hardware;
+using Meadow.Peripherals.Displays;
 using Meadow.Foundation.Displays;
 using System.Diagnostics;
 
@@ -33,10 +34,10 @@ namespace JustinCredible.SIEmulator.MeadowMCU
         {
             Console.WriteLine("Initialize hardware...");
 
-            _onboardLed = new RgbPwmLed(device: Device,
-                redPwmPin: Device.Pins.OnboardLedRed,
-                greenPwmPin: Device.Pins.OnboardLedGreen,
-                bluePwmPin: Device.Pins.OnboardLedBlue,
+            _onboardLed = new RgbPwmLed(
+                Device.Pins.OnboardLedRed,
+                Device.Pins.OnboardLedGreen,
+                Device.Pins.OnboardLedBlue,
                 Meadow.Peripherals.Leds.CommonType.CommonAnode);
 
             InitializeDisplay();
@@ -46,26 +47,24 @@ namespace JustinCredible.SIEmulator.MeadowMCU
 
         private void InitializeDisplay()
         {
-            var frequency = new Meadow.Units.Frequency(48, Meadow.Units.Frequency.UnitType.Megahertz);
+            var frequency = new Frequency(48, Frequency.UnitType.Megahertz);
 
             var config = new SpiClockConfiguration(frequency, SpiClockConfiguration.Mode.Mode3);
 
-            var spiBus = MeadowApp.Device.CreateSpiBus(
-                clock: MeadowApp.Device.Pins.SCK,
-                copi: MeadowApp.Device.Pins.COPI,
-                cipo: MeadowApp.Device.Pins.CIPO,
+            var spiBus = Device.CreateSpiBus(
+                clock: Device.Pins.SCK,
+                copi: Device.Pins.COPI,
+                cipo: Device.Pins.CIPO,
                 config: config);
 
-            var display = new St7789
-                (
-                    device: MeadowApp.Device,
-                    spiBus: spiBus,
-                    chipSelectPin: null,
-                    dcPin: MeadowApp.Device.Pins.D01,
-                    resetPin: MeadowApp.Device.Pins.D00,
-                    width: 240, height: 240,
-                    colorMode: ColorType.Format16bppRgb565
-                );
+            var display = new St7789(
+                spiBus: spiBus,
+                chipSelectPin: null,
+                dcPin: Device.Pins.D01,
+                resetPin: Device.Pins.D00,
+                width: 240,
+                height: 240,
+                colorMode: ColorMode.Format16bppRgb565);
 
             _canvas = new MicroGraphics(display);
             _canvas.Clear(updateDisplay: true);

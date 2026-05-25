@@ -1,0 +1,9 @@
+# http://developer.wildernesslabs.co/Meadow/Meadow.OS/Configuration/Application_Settings_Configuration/
+
+Lifecycle:
+    RestartOnAppFailure: true
+    AppFailureRestartDelaySeconds: 15
+
+Logging:
+    LogLevel:
+        Default: Information

@@ -1,2 +1,10 @@
-﻿MonoControl:
-    Options: --jit
+﻿# https://developer.wildernesslabs.co/Meadow/Meadow.OS/Configuration/OS_Device_Configuration/
+
+Device:
+    Name: space-invaders-emulator
+    SdStorageSupported: false
+
+Coprocessor:
+    AutomaticallyStartNetwork: false
+    AutomaticallyReconnect: false
+    MaximumRetryCount: 7
