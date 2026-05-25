@@ -148,35 +148,44 @@ namespace JustinCredible.SIEmulator.MeadowMCU
             // Clear the screen.
             _canvas.Clear(updateDisplay: false);
 
-            var bits = new System.Collections.BitArray(eventArgs.FrameBuffer);
             var x = 0;
             var y = SpaceInvaders.RESOLUTION_WIDTH - 1;
 
             // TODO: Adjust for the 240x240 screen; the top/bottom will need to be chopped by 8 pixels each.
-            for (var i = 0; i < bits.Length; i++)
+            var frameBuffer = eventArgs.FrameBuffer;
+
+            for (var byteIndex = 0; byteIndex < frameBuffer.Length; byteIndex++)
             {
-                if (bits[i])
+                var value = frameBuffer[byteIndex];
+
+                for (var bit = 0; bit < 8; bit++)
                 {
-                    // The CRT is black/white and the framebuffer is 1-bit per pixel.
-                    // A transparent overlay added "colors" to areas of the CRT. These
-                    // are the approximate y locations of each area/color of the overlay:
+                    if ((value & (1 << bit)) != 0) // Is bit set?
+                    {
+                        // The CRT is black/white and the framebuffer is 1-bit per pixel.
+                        // A transparent overlay added "colors" to areas of the CRT. These
+                        // are the approximate y locations of each area/color of the overlay:
 
-                    if (y >= 182 && y <= 223)
-                        _canvas.PenColor = Color.Green; // Player and shields
-                    else if (y >= 33 && y <= 55)
-                        _canvas.PenColor = Color.Red; // UFO
-                    else
-                        _canvas.PenColor = Color.White; // Everything else
+                        if (y >= 182 && y <= 223)
+                            _canvas.PenColor = Color.Green; // Player and shields
+                        else if (y >= 33 && y <= 55)
+                            _canvas.PenColor = Color.Red; // UFO
+                        else
+                            _canvas.PenColor = Color.White; // Everything else
 
-                    _canvas.DrawPixel(x, y);
-                }
+                        _canvas.DrawPixel(x, y);
+                    }
 
-                y--;
+                    y--;
 
-                if (y == -1)
-                {
-                    y = SpaceInvaders.RESOLUTION_WIDTH - 1;
-                    x++;
+                    if (y == -1)
+                    {
+                        y = SpaceInvaders.RESOLUTION_WIDTH - 1;
+                        x++;
+                    }
+
+                    if (x == SpaceInvaders.RESOLUTION_HEIGHT)
+                        break;
                 }
 
                 if (x == SpaceInvaders.RESOLUTION_HEIGHT)
