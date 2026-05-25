@@ -31,7 +31,7 @@ namespace JustinCredible.I8080Disassembler
         public static string Disassemble(byte[] rom, UInt16 address, out int instructionSize, bool emitAddress = false, bool emitPseudocode = false)
         {
             var opcodeByte = rom[address];
-            var opcode = Opcodes.Lookup[opcodeByte];
+            var opcode = Opcodes.LookupDictionary[opcodeByte];
 
             var disassembly = new StringBuilder();
 

@@ -1,11 +1,12 @@
 
 using System.Collections.Generic;
+using System.Security.Cryptography.X509Certificates;
 
 namespace JustinCredible.Intel8080
 {
     public partial class Opcodes
     {
-        public static Dictionary<byte, Opcode> Lookup = new Dictionary<byte, Opcode>()
+        public static Dictionary<byte, Opcode> LookupDictionary = new Dictionary<byte, Opcode>()
         {
             /** Halt */
             [OpcodeBytes.HLT] = HLT,
@@ -514,5 +515,17 @@ namespace JustinCredible.Intel8080
 
             #endregion
         };
+
+        public static readonly Opcode[] LookupArray = BuildLookupArray();
+
+        private static Opcode[] BuildLookupArray()
+        {
+            var table = new Opcode[256];
+
+            foreach (var pair in LookupDictionary)
+                table[pair.Key] = pair.Value;
+
+            return table;
+        }
     }
 }

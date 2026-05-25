@@ -107,7 +107,7 @@ namespace JustinCredible.Intel8080
         public void PrintDebugSummary()
         {
             var opcodeByte = ReadMemory(ProgramCounter);
-            var opcodeInstruction = Opcodes.Lookup[opcodeByte].Instruction;
+            var opcodeInstruction = Opcodes.LookupArray[opcodeByte].Instruction;
 
             var opcode = String.Format("0x{0:X2} {1}", opcodeByte, opcodeInstruction);
             var pc = String.Format("0x{0:X4}", ProgramCounter);
@@ -188,7 +188,7 @@ namespace JustinCredible.Intel8080
                 throw new Exception("Program has finished execution; Reset() must be invoked before invoking Step() again.");
 
             // Fetch the opcode metadata.
-            var opcode = Opcodes.Lookup[opcodeByte];
+            var opcode = Opcodes.LookupArray[opcodeByte];
 
             // Indicates if we should increment the program counter after executing the instruction.
             // This is almost always the case, but there are a few cases where we don't want to.
