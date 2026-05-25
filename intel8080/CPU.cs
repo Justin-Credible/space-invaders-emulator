@@ -35,6 +35,16 @@ namespace JustinCredible.Intel8080
         /** Configuration for the CPU; used to customize the CPU instance. */
         public CPUConfig Config { get; private set; }
 
+        /** Values copied from the CPUConfig instance in order to improve performance. */
+        private readonly int _memorySize;
+        private readonly bool _enforceWriteBoundsCheck;
+        private readonly int _writeableMemoryStart;
+        private readonly int _writeableMemoryEnd;
+        private readonly bool _mirroringEnabled;
+        private readonly int _mirrorMemoryStart;
+        private readonly int _mirrorMemoryEnd;
+        private readonly int _mirrorOffset;
+
         public delegate void CPUDiagDebugEvent(int eventID);
 
         /** Fired on CALL 0x05 when EnableCPUDiagMode is true. */
@@ -66,6 +76,18 @@ namespace JustinCredible.Intel8080
         public CPU(CPUConfig config)
         {
             Config = config;
+
+            // Copy values from the config that are in the hot paths.
+            // Avoids a deference to the config object on every memory read/write.
+            _memorySize = Config.MemorySize;
+            _enforceWriteBoundsCheck = Config.WriteableMemoryStart != 0 && Config.WriteableMemoryEnd != 0;
+            _writeableMemoryStart = Config.WriteableMemoryStart;
+            _writeableMemoryEnd = Config.WriteableMemoryEnd;
+            _mirroringEnabled = Config.MirrorMemoryStart != 0 && Config.MirrorMemoryEnd != 0;
+            _mirrorMemoryStart = Config.MirrorMemoryStart;
+            _mirrorMemoryEnd = Config.MirrorMemoryEnd;
+            _mirrorOffset = _mirrorMemoryEnd - _mirrorMemoryStart + 1;
+
             this.Reset();
         }
 
@@ -86,14 +108,14 @@ namespace JustinCredible.Intel8080
         public void LoadMemory(byte[] memory)
         {
             // Ensure the memory data is not larger than we can load.
-            if (memory.Length > Config.MemorySize)
-                throw new Exception($"Memory cannot exceed {Config.MemorySize} bytes.");
+            if (memory.Length > _memorySize)
+                throw new Exception($"Memory cannot exceed {_memorySize} bytes.");
 
-            if (memory.Length != Config.MemorySize)
+            if (memory.Length != _memorySize)
             {
                 // If the memory given is less than the configured memory size, then
                 // ensure that the rest of the memory array is zeroed out.
-                Memory = new byte[Config.MemorySize];
+                Memory = new byte[_memorySize];
                 Array.Copy(memory, Memory, memory.Length);
             }
             else
@@ -129,7 +151,7 @@ namespace JustinCredible.Intel8080
             Console.WriteLine();
             Console.WriteLine($"A: {regA}\t\tB: {regB}\t\tC: {regC}");
             Console.WriteLine($"D: {regD}\t\tE: {regE}\t\tH: {regH}\t\tL: {regL}");
-            Console.WriteLine($"(DE): {valueAtHL}\t\t\t(HL): {valueAtHL}");
+            Console.WriteLine($"(DE): {valueAtDE}\t\t\t(HL): {valueAtHL}");
             Console.WriteLine();
             Console.WriteLine($"Zero: {Flags.Zero}\tSign: {Flags.Sign}\tParity: {Flags.Parity}\tCarry: {Flags.Carry}\tAux Carry: {Flags.AuxCarry}");
         }
@@ -1978,96 +2000,63 @@ namespace JustinCredible.Intel8080
 
         private byte ReadMemory(int address)
         {
-            var mirroringEnabled = Config.MirrorMemoryStart != 0 && Config.MirrorMemoryEnd != 0;
-            var error = false;
+            if ((uint)address < (uint)_memorySize)
+                return Memory[address];
 
-            byte? result = null;
+            if (_mirroringEnabled && address >= _mirrorMemoryStart && address <= _mirrorMemoryEnd)
+            {
+                var translated = address - _mirrorOffset;
 
-            if (address < 0)
-            {
-                error = true;
-            }
-            else if (address < Config.MemorySize)
-            {
-                result = Memory[address];
-            }
-            else if (mirroringEnabled && address >= Config.MirrorMemoryStart && address <= Config.MirrorMemoryEnd)
-            {
-                var translated = address - (Config.MirrorMemoryEnd - Config.MirrorMemoryStart + 1);
-
-                if (translated < 0 || translated >= Config.MemorySize)
-                {
-                    error = true;
-                }
-                else
-                {
-                    result = Memory[translated];
-                }
-            }
-            else
-            {
-                error = true;
+                if ((uint)translated < (uint)_memorySize)
+                    return Memory[translated];
             }
 
-            if (error)
-            {
-                var programCounterFormatted = String.Format("0x{0:X4}", ProgramCounter);
-                var addressFormatted = String.Format("0x{0:X4}", address);
-                var startAddressFormatted = String.Format("0x{0:X4}", Config.WriteableMemoryStart);
-                var endAddressFormatted = String.Format("0x{0:X4}", Config.WriteableMemoryEnd);
-                var mirrorEndAddressFormatted = String.Format("0x{0:X4}", Config.MirrorMemoryEnd);
-                throw new Exception($"Illegal memory address ({addressFormatted}) specified for read memory operation at address {programCounterFormatted}; expected address to be between {startAddressFormatted} and {(mirroringEnabled ? mirrorEndAddressFormatted : endAddressFormatted)} inclusive.");
-            }
-
-            if (result == null)
-                throw new Exception("Failed sanity check; result should be set.");
-
-            return result.Value;
+            throw CreateReadMemoryException(address);
         }
 
         private void WriteMemory(int address, byte value)
         {
-            // Determine if we should allow the write to memory based on the address
-            // if the configuration has specified a restricted writeable range.
-            var enforceWriteBoundsCheck = Config.WriteableMemoryStart != 0 && Config.WriteableMemoryEnd != 0;
-            var mirroringEnabled = Config.MirrorMemoryStart != 0 && Config.MirrorMemoryEnd != 0;
-            var allowWrite = true;
-            var error = false;
-
-            if (enforceWriteBoundsCheck)
-                allowWrite = address >= Config.WriteableMemoryStart && address <= Config.WriteableMemoryEnd;
-
-            if (allowWrite)
+            if ((uint)address < (uint)_memorySize)
             {
-                Memory[address] = value;
-            }
-            else if (mirroringEnabled && address >= Config.MirrorMemoryStart && address <= Config.MirrorMemoryEnd)
-            {
-                var translated = address - (Config.MirrorMemoryEnd - Config.MirrorMemoryStart + 1);
-
-                if (translated < 0 || translated >= Config.MemorySize)
+                if (!_enforceWriteBoundsCheck || (address >= _writeableMemoryStart && address <= _writeableMemoryEnd))
                 {
-                    error = true;
+                    Memory[address] = value;
+                    return;
                 }
-                else
+            }
+
+            if (_mirroringEnabled && address >= _mirrorMemoryStart && address <= _mirrorMemoryEnd)
+            {
+                var translated = address - _mirrorOffset;
+
+                if ((uint)translated < (uint)_memorySize)
                 {
                     Memory[translated] = value;
+                    return;
                 }
             }
-            else
-            {
-                error = true;
-            }
 
-            if (error)
-            {
-                var programCounterFormatted = String.Format("0x{0:X4}", ProgramCounter);
-                var addressFormatted = String.Format("0x{0:X4}", address);
-                var startAddressFormatted = String.Format("0x{0:X4}", Config.WriteableMemoryStart);
-                var endAddressFormatted = String.Format("0x{0:X4}", Config.WriteableMemoryEnd);
-                var mirrorEndAddressFormatted = String.Format("0x{0:X4}", Config.MirrorMemoryEnd);
-                throw new Exception($"Illegal memory address ({addressFormatted}) specified for write memory operation at address {programCounterFormatted}; expected address to be between {startAddressFormatted} and {(mirroringEnabled ? mirrorEndAddressFormatted : endAddressFormatted)} inclusive.");
-            }
+            throw CreateWriteMemoryException(address);
+        }
+
+        private Exception CreateReadMemoryException(int address)
+        {
+            var programCounterFormatted = String.Format("0x{0:X4}", ProgramCounter);
+            var addressFormatted = String.Format("0x{0:X4}", address);
+            var startAddressFormatted = String.Format("0x{0:X4}", Config.WriteableMemoryStart);
+            var endAddressFormatted = String.Format("0x{0:X4}", Config.WriteableMemoryEnd);
+            var mirrorEndAddressFormatted = String.Format("0x{0:X4}", Config.MirrorMemoryEnd);
+            throw new Exception($"Illegal memory address ({addressFormatted}) specified for read memory operation at address {programCounterFormatted}; expected address to be between {startAddressFormatted} and {(_mirroringEnabled ? mirrorEndAddressFormatted : endAddressFormatted)} inclusive.");
+        }
+
+        private Exception CreateWriteMemoryException(int address)
+        {
+            var programCounterFormatted = String.Format("0x{0:X4}", ProgramCounter);
+            var addressFormatted = String.Format("0x{0:X4}", address);
+            var startAddressFormatted = String.Format("0x{0:X4}", Config.WriteableMemoryStart);
+            var endAddressFormatted = String.Format("0x{0:X4}", Config.WriteableMemoryEnd);
+            var mirrorEndAddressFormatted = String.Format("0x{0:X4}", Config.MirrorMemoryEnd);
+            throw new Exception($"Illegal memory address ({addressFormatted}) specified for write memory operation at address {programCounterFormatted}; expected address to be between {startAddressFormatted} and {(_mirroringEnabled ? mirrorEndAddressFormatted : endAddressFormatted)} inclusive.");
         }
 
         #endregion
