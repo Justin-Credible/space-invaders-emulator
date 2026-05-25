@@ -13,27 +13,20 @@ using Meadow.Units;
 using Meadow.Hardware;
 using Meadow.Peripherals.Displays;
 using Meadow.Foundation.Displays;
-using System.Diagnostics;
 
 namespace JustinCredible.SIEmulator.MeadowMCU
 {
     public class MeadowApp : App<F7FeatherV2>
     {
+        private const bool ENABLE_EMULATION_STATS = true;
+        private const bool ENABLE_RENDER_METRICS = true;
+        private const bool ENABLE_DROPPED_FRAME_WARNINGS = false;
+
         private RgbPwmLed _onboardLed;
-
-        private MicroGraphics _canvas;
-        private object _renderLock = new object();
-
-        private const int FRAME_BUFFER_SIZE = (SpaceInvaders.RESOLUTION_WIDTH * SpaceInvaders.RESOLUTION_HEIGHT) / 8;
-        private AutoResetEvent _renderSignal = new AutoResetEvent(false);
-        private Thread _renderThread;
-        private bool _renderThreadRunning = false;
-        private bool _renderFramePending = false;
-        private byte[] _queuedFrameBuffer = new byte[FRAME_BUFFER_SIZE];
-        private byte[] _renderFrameBuffer = new byte[FRAME_BUFFER_SIZE];
-        private int _droppedRenderFrameCount = 0;
+        private St7789 _display;
 
         private SpaceInvaders _game;
+        private Renderer _renderer;
 
         private int _maxStatCount = 10;
         private int _statCount = 0;
@@ -65,7 +58,7 @@ namespace JustinCredible.SIEmulator.MeadowMCU
                 cipo: Device.Pins.CIPO,
                 config: config);
 
-            var display = new St7789(
+            _display = new St7789(
                 spiBus: spiBus,
                 chipSelectPin: null,
                 dcPin: Device.Pins.D01,
@@ -74,8 +67,7 @@ namespace JustinCredible.SIEmulator.MeadowMCU
                 height: 240,
                 colorMode: ColorMode.Format16bppRgb565);
 
-            _canvas = new MicroGraphics(display);
-            _canvas.Clear(updateDisplay: true);
+            _display.Clear(updateDisplay: true);
         }
 
         public override Task Run()
@@ -100,22 +92,32 @@ namespace JustinCredible.SIEmulator.MeadowMCU
 
             Console.WriteLine("Initializing emulator...");
             _game = new SpaceInvaders();
+
+            // Wire up event listeners.
             _game.OnEmulationStopped += SpaceInvaders_OnEmulationStopped;
             _game.OnRender += SpaceInvaders_OnRender;
             _game.OnSound += SpaceInvaders_OnSound;
-
             _game.OnStats += SpaceInvaders_OnStats;
-            _game.StatsEnabled = true;
 
-            StartRenderWorker();
+            // Set game options.
+            _game.StatsEnabled = ENABLE_EMULATION_STATS;
+
+            // Initialize the renderer and start it. The renderer will wait for frames to be queued and
+            // then render them to the given display in a speparate thread.
+            _renderer = new Renderer(
+                _display,
+                enableRenderMetrics: ENABLE_RENDER_METRICS,
+                enableDroppedFrameWarnings: ENABLE_DROPPED_FRAME_WARNINGS);
+            _renderer.Start();
 
             _onboardLed.SetColor(Color.Purple);
 
-            // Start the emulation; this occurs in a seperate thread and
-            // therefore this call is non-blocking.
+            // Start the game CPU emulation! This occurs in a seperate thread.
             Console.WriteLine("Running emulator...");
             _game.Start(rom);
 
+            // The main thread can be used for other things like responding to event handlers.
+            // For now, we'll just sleep it indefinitely.
             _onboardLed.SetColor(Color.Aqua);
             Console.WriteLine("Sleeping main thread forever.");
             Thread.Sleep(Timeout.Infinite);
@@ -129,7 +131,8 @@ namespace JustinCredible.SIEmulator.MeadowMCU
         {
             Console.WriteLine("Emulator stopped!");
             _onboardLed.SetColor(Color.Purple);
-            StopRenderWorker();
+            _renderer.Dispose();
+            _renderer = null;
         }
 
         /**
@@ -138,23 +141,7 @@ namespace JustinCredible.SIEmulator.MeadowMCU
          */
         private void SpaceInvaders_OnRender(RenderEventArgs eventArgs)
         {
-            lock(_renderLock)
-            {
-                if (_renderFramePending)
-                {
-                    _droppedRenderFrameCount++;
-
-                    if (_droppedRenderFrameCount % 120 == 0)
-                        Console.WriteLine($"[WARN] Dropped {_droppedRenderFrameCount} render frames so far");
-
-                    return;
-                }
-
-                Array.Copy(eventArgs.FrameBuffer, _queuedFrameBuffer, FRAME_BUFFER_SIZE);
-                _renderFramePending = true;
-            }
-
-            _renderSignal.Set();
+            _renderer.QueueFrame(eventArgs.FrameBuffer);
         }
 
         /**
@@ -162,7 +149,8 @@ namespace JustinCredible.SIEmulator.MeadowMCU
          */
         private void SpaceInvaders_OnSound(SoundEventArgs eventArgs)
         {
-            //Console.WriteLine("SpaceInvaders_OnSound fired!");
+            // TODO: Implement sound output.
+            // Console.WriteLine("SpaceInvaders_OnSound fired!");
         }
 
         /**
@@ -188,124 +176,6 @@ namespace JustinCredible.SIEmulator.MeadowMCU
                 Console.WriteLine($"[STATS] Stopping emulator after {_maxStatCount} statistic reports");
                 _game.Stop();
             }
-        }
-
-        #endregion
-
-        #region Render Worker
-
-        private void StartRenderWorker()
-        {
-            lock(_renderLock)
-            {
-                if (_renderThreadRunning)
-                    return;
-
-                _renderThreadRunning = true;
-            }
-
-            _renderThread = new Thread(new ThreadStart(RenderLoop));
-            _renderThread.Name = "Emulator: Render Loop";
-            _renderThread.Start();
-        }
-
-        private void StopRenderWorker()
-        {
-            Thread threadToJoin = null;
-
-            lock(_renderLock)
-            {
-                if (!_renderThreadRunning)
-                    return;
-
-                _renderThreadRunning = false;
-                threadToJoin = _renderThread;
-            }
-
-            _renderSignal.Set();
-            threadToJoin?.Join();
-        }
-
-        private void RenderLoop()
-        {
-            while (_renderThreadRunning)
-            {
-                _renderSignal.WaitOne(100);
-
-                if (!_renderThreadRunning)
-                    break;
-
-                lock(_renderLock)
-                {
-                    if (!_renderFramePending)
-                        continue;
-
-                    var temp = _renderFrameBuffer;
-                    _renderFrameBuffer = _queuedFrameBuffer;
-                    _queuedFrameBuffer = temp;
-                    _renderFramePending = false;
-                }
-
-                RenderFrame(_renderFrameBuffer);
-            }
-        }
-
-        private void RenderFrame(byte[] frameBuffer)
-        {
-
-            // Render screen from the updated the frame buffer.
-            // NOTE: The electron beam scans from left to right, starting in the upper left corner
-            // of the CRT when it is in 4:3 (landscape), which is how the framebuffer is stored.
-            // However, since the CRT in the cabinet is rotated left (-90 degrees) to show the game
-            // in 3:4 (portrait) we need to perform the rotation of points below by starting in the
-            // bottom left corner of the window and drawing upwards, ending on the top right.
-
-            // Clear the screen.
-            _canvas.Clear(updateDisplay: false);
-
-            var x = 0;
-            var y = SpaceInvaders.RESOLUTION_WIDTH - 1;
-
-            // TODO: Adjust for the 240x240 screen; the top/bottom will need to be chopped by 8 pixels each.
-            for (var byteIndex = 0; byteIndex < frameBuffer.Length; byteIndex++)
-            {
-                var value = frameBuffer[byteIndex];
-
-                for (var bit = 0; bit < 8; bit++)
-                {
-                    if ((value & (1 << bit)) != 0) // Is bit set?
-                    {
-                        // The CRT is black/white and the framebuffer is 1-bit per pixel.
-                        // A transparent overlay added "colors" to areas of the CRT. These
-                        // are the approximate y locations of each area/color of the overlay:
-
-                        if (y >= 182 && y <= 223)
-                            _canvas.PenColor = Color.Green; // Player and shields
-                        else if (y >= 33 && y <= 55)
-                            _canvas.PenColor = Color.Red; // UFO
-                        else
-                            _canvas.PenColor = Color.White; // Everything else
-
-                        _canvas.DrawPixel(x, y);
-                    }
-
-                    y--;
-
-                    if (y == -1)
-                    {
-                        y = SpaceInvaders.RESOLUTION_WIDTH - 1;
-                        x++;
-                    }
-
-                    if (x == SpaceInvaders.RESOLUTION_HEIGHT)
-                        break;
-                }
-
-                if (x == SpaceInvaders.RESOLUTION_HEIGHT)
-                    break;
-            }
-
-            _canvas.Show();
         }
 
         #endregion
