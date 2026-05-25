@@ -33,7 +33,7 @@ namespace JustinCredible.SIEmulator.MeadowMCU
 
         public override Task Initialize()
         {
-            Console.WriteLine("Initialize hardware...");
+            Resolver.Log.Info("Initialize hardware...");
 
             _onboardLed = new RgbPwmLed(
                 Device.Pins.OnboardLedRed,
@@ -72,7 +72,7 @@ namespace JustinCredible.SIEmulator.MeadowMCU
 
         public override Task Run()
         {
-            Console.WriteLine("Starting MCU application code...");
+            Resolver.Log.Info("Starting MCU application code...");
             _onboardLed.SetColor(Color.Yellow);
 
             // The VSCode extension currently only has one action: build, deploy, and attach the debugger.
@@ -82,15 +82,15 @@ namespace JustinCredible.SIEmulator.MeadowMCU
             // if (Debugger.IsAttached)
             // {
             //     _onboardLed.SetColor(Color.Red);
-            //     Console.WriteLine("Debugger attached; sleeping main thread forever.");
+            //     Resolver.Log.Info("Debugger attached; sleeping main thread forever.");
             //     Thread.Sleep(Timeout.Infinite);
             //     return base.Run();
             // }
 
-            Console.WriteLine("Reading ROM files...");
+            Resolver.Log.Info("Reading ROM files...");
             var rom = ReadRomFiles(MeadowOS.FileSystem.DataDirectory);
 
-            Console.WriteLine("Initializing emulator...");
+            Resolver.Log.Info("Initializing emulator...");
             _game = new SpaceInvaders();
 
             // Wire up event listeners.
@@ -113,13 +113,13 @@ namespace JustinCredible.SIEmulator.MeadowMCU
             _onboardLed.SetColor(Color.Purple);
 
             // Start the game CPU emulation! This occurs in a seperate thread.
-            Console.WriteLine("Running emulator...");
+            Resolver.Log.Info("Running emulator...");
             _game.Start(rom);
 
             // The main thread can be used for other things like responding to event handlers.
             // For now, we'll just sleep it indefinitely.
             _onboardLed.SetColor(Color.Aqua);
-            Console.WriteLine("Sleeping main thread forever.");
+            Resolver.Log.Info("Sleeping main thread forever.");
             Thread.Sleep(Timeout.Infinite);
 
             return base.Run();
@@ -129,7 +129,7 @@ namespace JustinCredible.SIEmulator.MeadowMCU
 
         private void SpaceInvaders_OnEmulationStopped()
         {
-            Console.WriteLine("Emulator stopped!");
+            Resolver.Log.Info("Emulator stopped!");
             _onboardLed.SetColor(Color.Purple);
             _renderer.Dispose();
             _renderer = null;
@@ -150,7 +150,7 @@ namespace JustinCredible.SIEmulator.MeadowMCU
         private void SpaceInvaders_OnSound(SoundEventArgs eventArgs)
         {
             // TODO: Implement sound output.
-            // Console.WriteLine("SpaceInvaders_OnSound fired!");
+            // Resolver.Log.Info("SpaceInvaders_OnSound fired!");
         }
 
         /**
@@ -164,16 +164,16 @@ namespace JustinCredible.SIEmulator.MeadowMCU
 
             if (averageMs > 16.6)
             {
-                Console.WriteLine($"[STATS] Overbudget: Average time to execute to vsync was {averageMs} (> 16.6 ms)");
+                Resolver.Log.Info($"[STATS] Overbudget: Average time to execute to vsync was {averageMs} (> 16.6 ms)");
             }
             else
             {
-                Console.WriteLine($"[STATS] Underbudget: Average time to execute to vsync was {averageMs} (< 16.6 ms)");
+                Resolver.Log.Info($"[STATS] Underbudget: Average time to execute to vsync was {averageMs} (< 16.6 ms)");
             }
 
             if (_statCount >= _maxStatCount)
             {
-                Console.WriteLine($"[STATS] Stopping emulator after {_maxStatCount} statistic reports");
+                Resolver.Log.Info($"[STATS] Stopping emulator after {_maxStatCount} statistic reports");
                 _game.Stop();
             }
         }

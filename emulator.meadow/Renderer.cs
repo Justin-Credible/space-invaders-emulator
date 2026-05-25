@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Threading;
+using Meadow;
 using Meadow.Foundation.Displays;
 
 namespace JustinCredible.SIEmulator.MeadowMCU
@@ -107,7 +108,7 @@ namespace JustinCredible.SIEmulator.MeadowMCU
                         _droppedRenderFrameCount++;
 
                     if (_enableDroppedFrameWarnings && _droppedRenderFrameCount % 120 == 0)
-                        Console.WriteLine($"[WARN] Dropped {_droppedRenderFrameCount} render frames so far");
+                        Resolver.Log.Info($"[WARN] Dropped {_droppedRenderFrameCount} render frames so far");
 
                     return;
                 }
@@ -297,7 +298,7 @@ namespace JustinCredible.SIEmulator.MeadowMCU
                     var droppedSinceLastLog = _droppedRenderFrameCount - _droppedRenderFrameCountLastMetricsLog;
                     var totalAverageMs = fillAverageMs + showAverageMs;
 
-                    Console.WriteLine($"[RENDER] Avg over {_renderMetricsWindowCount} rendered frames: fill={fillAverageMs:F2} ms, show={showAverageMs:F2} ms, total={totalAverageMs:F2} ms, dropped={droppedSinceLastLog}");
+                    Resolver.Log.Info($"[RENDER] Avg over {_renderMetricsWindowCount} rendered frames: fill={fillAverageMs:F2} ms, show={showAverageMs:F2} ms, total={totalAverageMs:F2} ms, dropped={droppedSinceLastLog}");
 
                     _droppedRenderFrameCountLastMetricsLog = _droppedRenderFrameCount;
                     _renderMetricsFillTicks = 0;

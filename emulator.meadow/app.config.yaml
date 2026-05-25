@@ -4,6 +4,7 @@ Lifecycle:
     RestartOnAppFailure: true
     AppFailureRestartDelaySeconds: 15
 
+# Currently using info for all log statements.
 Logging:
     LogLevel:
         Default: Information
