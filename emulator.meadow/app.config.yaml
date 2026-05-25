@@ -8,3 +8,29 @@ Lifecycle:
 Logging:
     LogLevel:
         Default: Information
+
+Game:
+    # Specify the number of ships the player starts with; 3 (default), 4, 5, or 6.
+    StartingShips: 3
+
+    # Specify the number points needed to get an extra ship; 1000 (default) or 1500.
+    ExtraShip: 1000
+
+Diagnostics:
+    # Tracks the number of virtual CPU cycles executed per second and calculates if
+    # we're over or under budget (16.6ms) on the emulation thread.
+    EnableEmulationStats: true
+
+    # When EnableEmulationStats is true, this specifies the number of times stats
+    # will be recorded before halting the emulator. Use -1 (or remove this key)
+    # to disable auto-halt and run without a limit. Useful during development.
+    HaltAfterRecordedStatCount: 20
+
+    # Tracks average render thread timing (buffer fill + display show) and dropped
+    # frames in rolling windows to help diagnose rendering performance.
+    EnableRenderMetrics: true
+
+    # Emits warning logs when queued render frames are dropped because the renderer
+    # is still busy with a prior frame.
+    EnableDroppedFrameWarnings: false
+

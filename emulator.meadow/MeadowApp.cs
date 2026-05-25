@@ -18,9 +18,7 @@ namespace JustinCredible.SIEmulator.MeadowMCU
 {
     public class MeadowApp : App<F7FeatherV2>
     {
-        private const bool ENABLE_EMULATION_STATS = true;
-        private const bool ENABLE_RENDER_METRICS = true;
-        private const bool ENABLE_DROPPED_FRAME_WARNINGS = false;
+        private Configuration _configuration;
 
         private RgbPwmLed _onboardLed;
         private St7789 _display;
@@ -28,11 +26,13 @@ namespace JustinCredible.SIEmulator.MeadowMCU
         private SpaceInvaders _game;
         private Renderer _renderer;
 
-        private int _maxStatCount = 10;
         private int _statCount = 0;
 
         public override Task Initialize()
         {
+            Resolver.Log.Info("Reading app configuration...");
+            _configuration = new Configuration(Settings, warning => Resolver.Log.Warn(warning));
+
             Resolver.Log.Info("Initialize hardware...");
 
             _onboardLed = new RgbPwmLed(
@@ -100,14 +100,16 @@ namespace JustinCredible.SIEmulator.MeadowMCU
             _game.OnStats += SpaceInvaders_OnStats;
 
             // Set game options.
-            _game.StatsEnabled = ENABLE_EMULATION_STATS;
+            _game.StatsEnabled = _configuration.EnableEmulationStats;
+            _game.StartingShips = _configuration.StartingShips;
+            _game.ExtraShipAt = _configuration.ExtraShipAt;
 
             // Initialize the renderer and start it. The renderer will wait for frames to be queued and
             // then render them to the given display in a speparate thread.
             _renderer = new Renderer(
                 _display,
-                enableRenderMetrics: ENABLE_RENDER_METRICS,
-                enableDroppedFrameWarnings: ENABLE_DROPPED_FRAME_WARNINGS);
+                enableRenderMetrics: _configuration.EnableRenderMetrics,
+                enableDroppedFrameWarnings: _configuration.EnableDroppedFrameWarnings);
             _renderer.Start();
 
             _onboardLed.SetColor(Color.Purple);
@@ -171,9 +173,9 @@ namespace JustinCredible.SIEmulator.MeadowMCU
                 Resolver.Log.Info($"[STATS] Underbudget: Average time to execute to vsync was {averageMs} (< 16.6 ms)");
             }
 
-            if (_statCount >= _maxStatCount)
+            if (_configuration.HaltAfterRecordedStatCount >= 0 && _statCount >= _configuration.HaltAfterRecordedStatCount)
             {
-                Resolver.Log.Info($"[STATS] Stopping emulator after {_maxStatCount} statistic reports");
+                Resolver.Log.Info($"[STATS] Stopping emulator after {_configuration.HaltAfterRecordedStatCount} statistic reports");
                 _game.Stop();
             }
         }
