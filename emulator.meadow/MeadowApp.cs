@@ -23,7 +23,15 @@ namespace JustinCredible.SIEmulator.MeadowMCU
 
         private MicroGraphics _canvas;
         private object _renderLock = new object();
-        private bool _isRendering = false;
+
+        private const int FRAME_BUFFER_SIZE = (SpaceInvaders.RESOLUTION_WIDTH * SpaceInvaders.RESOLUTION_HEIGHT) / 8;
+        private AutoResetEvent _renderSignal = new AutoResetEvent(false);
+        private Thread _renderThread;
+        private bool _renderThreadRunning = false;
+        private bool _renderFramePending = false;
+        private byte[] _queuedFrameBuffer = new byte[FRAME_BUFFER_SIZE];
+        private byte[] _renderFrameBuffer = new byte[FRAME_BUFFER_SIZE];
+        private int _droppedRenderFrameCount = 0;
 
         private SpaceInvaders _game;
 
@@ -99,6 +107,8 @@ namespace JustinCredible.SIEmulator.MeadowMCU
             _game.OnStats += SpaceInvaders_OnStats;
             _game.StatsEnabled = true;
 
+            StartRenderWorker();
+
             _onboardLed.SetColor(Color.Purple);
 
             // Start the emulation; this occurs in a seperate thread and
@@ -119,6 +129,7 @@ namespace JustinCredible.SIEmulator.MeadowMCU
         {
             Console.WriteLine("Emulator stopped!");
             _onboardLed.SetColor(Color.Purple);
+            StopRenderWorker();
         }
 
         /**
@@ -129,14 +140,118 @@ namespace JustinCredible.SIEmulator.MeadowMCU
         {
             lock(_renderLock)
             {
-                if (_isRendering)
+                if (_renderFramePending)
                 {
-                    Console.WriteLine("[WARN] A render operation is already in progress; skipping");
+                    _droppedRenderFrameCount++;
+
+                    if (_droppedRenderFrameCount % 120 == 0)
+                        Console.WriteLine($"[WARN] Dropped {_droppedRenderFrameCount} render frames so far");
+
                     return;
                 }
 
-                _isRendering = true;
+                Array.Copy(eventArgs.FrameBuffer, _queuedFrameBuffer, FRAME_BUFFER_SIZE);
+                _renderFramePending = true;
             }
+
+            _renderSignal.Set();
+        }
+
+        /**
+         * Fired when the emulator needs to play a sound.
+         */
+        private void SpaceInvaders_OnSound(SoundEventArgs eventArgs)
+        {
+            //Console.WriteLine("SpaceInvaders_OnSound fired!");
+        }
+
+        /**
+         * Fired when the emulator is emitting statistic events.
+         */
+        private void SpaceInvaders_OnStats(StatsEventArgs eventArgs)
+        {
+            _statCount++;
+
+            var averageMs = eventArgs.TimeMsToVsyncMeasurements.Sum() / eventArgs.TimeMsToVsyncMeasurements.Count();
+
+            if (averageMs > 16.6)
+            {
+                Console.WriteLine($"[STATS] Overbudget: Average time to execute to vsync was {averageMs} (> 16.6 ms)");
+            }
+            else
+            {
+                Console.WriteLine($"[STATS] Underbudget: Average time to execute to vsync was {averageMs} (< 16.6 ms)");
+            }
+
+            if (_statCount >= _maxStatCount)
+            {
+                Console.WriteLine($"[STATS] Stopping emulator after {_maxStatCount} statistic reports");
+                _game.Stop();
+            }
+        }
+
+        #endregion
+
+        #region Render Worker
+
+        private void StartRenderWorker()
+        {
+            lock(_renderLock)
+            {
+                if (_renderThreadRunning)
+                    return;
+
+                _renderThreadRunning = true;
+            }
+
+            _renderThread = new Thread(new ThreadStart(RenderLoop));
+            _renderThread.Name = "Emulator: Render Loop";
+            _renderThread.Start();
+        }
+
+        private void StopRenderWorker()
+        {
+            Thread threadToJoin = null;
+
+            lock(_renderLock)
+            {
+                if (!_renderThreadRunning)
+                    return;
+
+                _renderThreadRunning = false;
+                threadToJoin = _renderThread;
+            }
+
+            _renderSignal.Set();
+            threadToJoin?.Join();
+        }
+
+        private void RenderLoop()
+        {
+            while (_renderThreadRunning)
+            {
+                _renderSignal.WaitOne(100);
+
+                if (!_renderThreadRunning)
+                    break;
+
+                lock(_renderLock)
+                {
+                    if (!_renderFramePending)
+                        continue;
+
+                    var temp = _renderFrameBuffer;
+                    _renderFrameBuffer = _queuedFrameBuffer;
+                    _queuedFrameBuffer = temp;
+                    _renderFramePending = false;
+                }
+
+                RenderFrame(_renderFrameBuffer);
+            }
+        }
+
+        private void RenderFrame(byte[] frameBuffer)
+        {
 
             // Render screen from the updated the frame buffer.
             // NOTE: The electron beam scans from left to right, starting in the upper left corner
@@ -152,8 +267,6 @@ namespace JustinCredible.SIEmulator.MeadowMCU
             var y = SpaceInvaders.RESOLUTION_WIDTH - 1;
 
             // TODO: Adjust for the 240x240 screen; the top/bottom will need to be chopped by 8 pixels each.
-            var frameBuffer = eventArgs.FrameBuffer;
-
             for (var byteIndex = 0; byteIndex < frameBuffer.Length; byteIndex++)
             {
                 var value = frameBuffer[byteIndex];
@@ -193,44 +306,6 @@ namespace JustinCredible.SIEmulator.MeadowMCU
             }
 
             _canvas.Show();
-
-            lock(_renderLock)
-            {
-                _isRendering = false;
-            }
-        }
-
-        /**
-         * Fired when the emulator needs to play a sound.
-         */
-        private void SpaceInvaders_OnSound(SoundEventArgs eventArgs)
-        {
-            //Console.WriteLine("SpaceInvaders_OnSound fired!");
-        }
-
-        /**
-         * Fired when the emulator is emitting statistic events.
-         */
-        private void SpaceInvaders_OnStats(StatsEventArgs eventArgs)
-        {
-            _statCount++;
-
-            var averageMs = eventArgs.TimeMsToVsyncMeasurements.Sum() / eventArgs.TimeMsToVsyncMeasurements.Count();
-
-            if (averageMs > 16.6)
-            {
-                Console.WriteLine($"[STATS] Overbudget: Average time to execute to vsync was {averageMs} (> 16.6 ms)");
-            }
-            else
-            {
-                Console.WriteLine($"[STATS] Underbudget: Average time to execute to vsync was {averageMs} (< 16.6 ms)");
-            }
-
-            if (_statCount >= _maxStatCount)
-            {
-                Console.WriteLine($"[STATS] Stopping emulator after {_maxStatCount} statistic reports");
-                _game.Stop();
-            }
         }
 
         #endregion
