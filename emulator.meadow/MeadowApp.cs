@@ -99,6 +99,9 @@ namespace JustinCredible.SIEmulator.MeadowMCU
             _game.OnSound += SpaceInvaders_OnSound;
             _game.OnStats += SpaceInvaders_OnStats;
 
+            // Wire up all the controls.
+            InitializeButtons();
+
             // Set game options.
             _game.StatsEnabled = _configuration.EnableEmulationStats;
             _game.StartingShips = _configuration.StartingShips;
@@ -126,6 +129,51 @@ namespace JustinCredible.SIEmulator.MeadowMCU
 
             return base.Run();
         }
+
+        #region Pushbutton/Inputs
+
+        private void InitializeButtons()
+        {
+            Resolver.Log.Info("Initializing button inputs...");
+
+            // Pull-up + active-low assumes each button shorts the pin to GND when pressed.
+            ConfigureButton("P1 Credit", Device.Pins.D02, pressed => _game.ButtonCredit = pressed);
+            ConfigureButton("P1 Start", Device.Pins.D03, pressed => _game.ButtonStart1P = pressed);
+            ConfigureButton("P1 Left", Device.Pins.D04, pressed => _game.ButtonP1Left = pressed);
+            ConfigureButton("P1 Right", Device.Pins.D05, pressed => _game.ButtonP1Right = pressed);
+            ConfigureButton("P1 Fire", Device.Pins.D06, pressed => _game.ButtonP1Fire = pressed);
+
+            // These are optional in the original request but fit on the remaining digital pins.
+            ConfigureButton("P2 Start", Device.Pins.D07, pressed => _game.ButtonStart2P = pressed);
+            ConfigureButton("P2 Left", Device.Pins.D08, pressed => _game.ButtonP2Left = pressed);
+            ConfigureButton("P2 Right", Device.Pins.D09, pressed => _game.ButtonP2Right = pressed);
+            ConfigureButton("P2 Fire", Device.Pins.D10, pressed => _game.ButtonP2Fire = pressed);
+        }
+
+        private void ConfigureButton(string name, IPin pin, Action<bool> onChanged)
+        {
+            var port = Device.CreateDigitalInterruptPort(
+                pin: pin,
+                interruptMode: InterruptMode.EdgeBoth,
+                resistorMode: ResistorMode.InternalPullUp,
+                debounceDuration: TimeSpan.FromMilliseconds(25),
+                glitchDuration: TimeSpan.FromMilliseconds(1));
+
+            // NOTE: States are active-low: pulled high when released, low when pressed.
+
+            // Set initial button state.
+            onChanged(port.State == false);
+
+            // Update button state when it changes.
+            port.Changed += (_, changeResult) =>
+            {
+                onChanged(changeResult.New.State == false);
+            };
+
+            Resolver.Log.Info($"Mapped {name} -> {pin.Name}");
+        }
+
+        #endregion
 
         #region Emulator Event Handlers
 
