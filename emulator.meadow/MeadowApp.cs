@@ -65,7 +65,7 @@ namespace JustinCredible.SIEmulator.MeadowMCU
                 resetPin: Device.Pins.D00,
                 width: 240,
                 height: 240,
-                colorMode: ColorMode.Format16bppRgb565);
+                colorMode: ColorMode.Format8bppRgb332);
 
             _display.Clear(updateDisplay: true);
         }
