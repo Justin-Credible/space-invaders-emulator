@@ -1,3 +1,5 @@
+// SET PIXEL
+
 using System;
 using System.Diagnostics;
 using System.Threading;
@@ -8,16 +10,8 @@ namespace JustinCredible.SIEmulator.MeadowMCU
 {
     public class Renderer : IDisposable
     {
-        // The display device used for rendering and it's buffer used when _display.Show() is called.
-        // We manipulate the buffer directly for performance and to minimize the amount of data sent to the display.
+        // The display device used for rendering.
         private readonly St7789 _display;
-        private readonly byte[] _displayBufferBytes;
-
-        // Colors for rendering the Space Invaders frame buffer; the original game is monochrome, but it used a colored overlay.
-        private const ushort COLOR_WHITE = 0xFFFF;
-        private const ushort COLOR_RED = 0xF800;
-        private const ushort COLOR_GREEN = 0x07E0;
-        private const ushort COLOR_BLACK = 0x0000;
 
         // Synchronization primitives for the render thread.
         private readonly object _renderLock = new object();
@@ -56,7 +50,6 @@ namespace JustinCredible.SIEmulator.MeadowMCU
         public Renderer(St7789 display, bool enableRenderMetrics, bool enableDroppedFrameWarnings)
         {
             _display = display ?? throw new ArgumentNullException(nameof(display));
-            _displayBufferBytes = _display.PixelBuffer.Buffer;
             _enableRenderMetrics = enableRenderMetrics;
             _enableDroppedFrameWarnings = enableDroppedFrameWarnings;
         }
@@ -206,11 +199,6 @@ namespace JustinCredible.SIEmulator.MeadowMCU
             if (_enableRenderMetrics)
                 fillStartTimestamp = Stopwatch.GetTimestamp();
 
-            // Initialize dirty-rectangle bounds to an empty rectangle; they expand as changed pixels are found.
-            var minX = _display.Width;
-            var minY = _display.Height;
-            var maxX = -1;
-            var maxY = -1;
             var pixelNumber = 0;
 
             // Walk the 1bpp frame buffer, update only changed pixels, and track a dirty rectangle.
@@ -244,21 +232,9 @@ namespace JustinCredible.SIEmulator.MeadowMCU
                         {
                             var color = (currentValue & mask) != 0
                                 ? GetOverlayColorForY(y)
-                                : COLOR_BLACK;
+                                : Color.Black;
 
-                            // Find the pixel index into the display buffer. The display is 16bpp, so each pixel takes 2 bytes.
-                            var pixelIndex = ((y * _display.Width) + x) * 2;
-
-                            // Update the pixel in the display buffer with the new color. The display buffer is in RGB565 format,
-                            // so we need to split our 16-bit color into two bytes and account for big-endian.
-                            _displayBufferBytes[pixelIndex] = (byte)(color >> 8);
-                            _displayBufferBytes[pixelIndex + 1] = (byte)color;
-
-                            // Expand the dirty rectangle to include this changed pixel.
-                            if (x < minX) minX = x;
-                            if (y < minY) minY = y;
-                            if (x > maxX) maxX = x;
-                            if (y > maxY) maxY = y;
+                            _display.PixelBuffer.SetPixel(x, y, color);
                         }
                     }
 
@@ -277,11 +253,7 @@ namespace JustinCredible.SIEmulator.MeadowMCU
             if (_enableRenderMetrics)
                 showStartTimestamp = Stopwatch.GetTimestamp();
 
-            // Flush only the changed area to the display.
-            if (maxX >= minX && maxY >= minY)
-            {
-                _display.Show(minX, minY, (maxX - minX) + 1, (maxY - minY) + 1);
-            }
+            _display.Show();
 
             // Optional rolling render metrics (fill, show, total, dropped frames).
             if (_enableRenderMetrics)
@@ -297,8 +269,20 @@ namespace JustinCredible.SIEmulator.MeadowMCU
                     var showAverageMs = ((_renderMetricsShowTicks * 1000.0) / Stopwatch.Frequency) / _renderMetricsWindowCount;
                     var droppedSinceLastLog = _droppedRenderFrameCount - _droppedRenderFrameCountLastMetricsLog;
                     var totalAverageMs = fillAverageMs + showAverageMs;
+                    var totalWindowMs = ((_renderMetricsFillTicks + _renderMetricsShowTicks) * 1000.0) / Stopwatch.Frequency;
+                    var renderedFrameCount = _renderMetricsWindowCount;
+                    var sourceFrameCount = renderedFrameCount + droppedSinceLastLog;
+                    var renderedFps = totalWindowMs > 0
+                        ? (renderedFrameCount * 1000.0) / totalWindowMs
+                        : 0;
+                    var sourceFpsEstimate = totalWindowMs > 0
+                        ? (sourceFrameCount * 1000.0) / totalWindowMs
+                        : 0;
+                    var dropPercent = sourceFrameCount > 0
+                        ? (droppedSinceLastLog * 100.0) / sourceFrameCount
+                        : 0;
 
-                    Resolver.Log.Info($"[RENDER] Avg over {_renderMetricsWindowCount} rendered frames: fill={fillAverageMs:F2} ms, show={showAverageMs:F2} ms, total={totalAverageMs:F2} ms, dropped={droppedSinceLastLog}");
+                    Resolver.Log.Info($"[RENDER] Avg over {_renderMetricsWindowCount} rendered frames: fill={fillAverageMs:F2} ms, show={showAverageMs:F2} ms, total={totalAverageMs:F2} ms, renderedFps={renderedFps:F2}, sourceFps~={sourceFpsEstimate:F2}, dropped={droppedSinceLastLog} ({dropPercent:F1}%)");
 
                     _droppedRenderFrameCountLastMetricsLog = _droppedRenderFrameCount;
                     _renderMetricsFillTicks = 0;
@@ -308,15 +292,15 @@ namespace JustinCredible.SIEmulator.MeadowMCU
             }
         }
 
-        private static ushort GetOverlayColorForY(int y)
+        private static Color GetOverlayColorForY(int y)
         {
             if (y >= 182 && y <= 223)
-                return COLOR_GREEN; // Player ship and shields
+                return Color.Green; // Player ship and shields
 
             if (y >= 33 && y <= 55)
-                return COLOR_RED; // UFO and explosions at top of screen
+                return Color.Red; // UFO and explosions at top of screen
 
-            return COLOR_WHITE; // Everything else; invaders, projectiles, and most explosions.
+            return Color.White; // Everything else; invaders, projectiles, and most explosions.
         }
 
         #endregion
