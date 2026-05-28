@@ -4,7 +4,11 @@ This repository contains my implementation of an emulator for the Intel 8080 CPU
 
 It emulates the graphics and sound, supports save states, has an interactive debugger, has rewind functionality, and includes 600+ unit test cases.
 
-![showcase](.readme/gameplay.gif)
+It can run as a desktop application on macOS, Windows, and Linux, or as a standalone hardware device using the [Meadow F7 Feather](https://store.wildernesslabs.co/products/meadow-f7-feather) microcontroller.
+
+![Desktop app showcase](.readme/gameplay.gif)
+
+![Microcontroller](.readme/mcu.jpg)
 
 ## Implementation
 
@@ -123,6 +127,42 @@ Options:
 ```
 
 For exmaple: `dotnet run -- disassemble ../roms -a -p -o ../roms/output.asm`
+
+## Meadow MCU Port
+
+I've also made a port for this project so that it can run on a [Meadow Feather F7](https://store.wildernesslabs.co/products/meadow-f7-feather) v2 micrcontroller by [Wildreness Labs](https://www.wildernesslabs.co/). It's located in the `emulator.meadow` directory.
+
+You will need the [Meadow CLI](https://developer.wildernesslabs.co/Meadow/Getting_Started/MCUs/F7_Feather/) installed in order to build and deploy.
+
+```
+$ cd emulator.meadow
+$ meadow app build
+$ meadow app run
+```
+
+It is currently hardcoded to use a ST7789 display running at 240x240 over SPI and several push buttons for player 1.
+
+### Display Pinout (ST7789, SPI)
+
+| Display| Feather F7 v2 Pin |
+|--------|-------------------|
+| GND    | GND               |
+| VCC    | VCC (3.3v)        |
+| SCL    | SCK               |
+| SDA    | COPI              |
+| RES    | D00               |
+| DC     | D01               |
+| BLK    | VCC (3.3v)        |
+
+### Button Pinout (active-low, pull-up)
+
+| Button    | Feather F7 v2 Pin |
+|-----------|-------------------|
+| Credit    | D07               |
+| P1 Start  | D03               |
+| P1 Left   | D04               |
+| P1 Right  | D05               |
+| P1 Fire   | D06               |
 
 ## Resources
 
