@@ -20,15 +20,21 @@ namespace JustinCredible.Intel8080.Tests
 
         protected static byte[] AssembleSource(string source)
         {
-            var tempFilePath = Path.GetTempFileName();
-            var sourceFilePath = tempFilePath;
-            var romFilePath = Path.Combine(Path.GetDirectoryName(tempFilePath), Path.GetFileNameWithoutExtension(tempFilePath) + ".rom");
+            var tempDirectory = Path.Combine(Path.GetTempPath(), "intel8080-tests");
+            Directory.CreateDirectory(tempDirectory);
+
+            var baseFileName = Path.GetFileNameWithoutExtension(Path.GetRandomFileName());
+            var sourceFileName = $"{baseFileName}.asm";
+            var sourceFilePath = Path.Combine(tempDirectory, sourceFileName);
+            var romFilePath = Path.Combine(tempDirectory, $"{baseFileName}.rom");
 
             File.WriteAllText(sourceFilePath, source);
 
             var startInfo = new ProcessStartInfo();
             startInfo.FileName = GetAssemblerBinaryPath();
-            startInfo.Arguments = $"--asm8080 \"{sourceFilePath}\"";
+            startInfo.Arguments = $"--asm8080 \"{sourceFileName}\"";
+            startInfo.WorkingDirectory = tempDirectory;
+            startInfo.RedirectStandardOutput = true;
             startInfo.RedirectStandardError = true;
 
             var process = new Process();
@@ -36,13 +42,22 @@ namespace JustinCredible.Intel8080.Tests
             process.Start();
             process.WaitForExit();
 
+            var stdOut = process.StandardOutput.ReadToEnd();
             var stdErr = process.StandardError.ReadToEnd();
             var exitCode = process.ExitCode;
 
             if (exitCode != 0)
-                throw new Exception($"Error assembling Intel 8080 source code; non-zero exit code: {exitCode}; stdErr: {stdErr}");
+                throw new Exception($"Error assembling Intel 8080 source code; non-zero exit code: {exitCode}; stdOut: {stdOut}; stdErr: {stdErr}");
 
-            return File.ReadAllBytes(romFilePath);
+            if (!File.Exists(romFilePath))
+                throw new Exception($"Error assembling Intel 8080 source code; output ROM not found at '{romFilePath}'; stdOut: {stdOut}; stdErr: {stdErr}");
+
+            var romBytes = File.ReadAllBytes(romFilePath);
+
+            File.Delete(sourceFilePath);
+            File.Delete(romFilePath);
+
+            return romBytes;
         }
 
         private static String GetAssemblerBinaryPath()
@@ -52,7 +67,7 @@ namespace JustinCredible.Intel8080.Tests
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                 return "../../../../assembler/zasm-4.2.4-macos10.12/zasm";
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                throw new Exception("The zasm assembler is not available for Windows; try using the Windows Subsystem for Linux (WSL).");
+                return "../../../../assembler/zasm-4.4.9-win64/zasm.exe";
             else
                 throw new Exception("The zasm assembler is not available this platform.");
         }

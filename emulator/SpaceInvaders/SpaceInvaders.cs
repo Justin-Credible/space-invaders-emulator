@@ -39,6 +39,9 @@ namespace JustinCredible.SIEmulator
 
         #region Events
 
+        public delegate void EmulationStoppedEvent();
+        public event EmulationStoppedEvent OnEmulationStopped;
+
         // Fired when a frame is ready to be rendered.
         public delegate void RenderEvent(RenderEventArgs e);
         public event RenderEvent OnRender;
@@ -48,6 +51,11 @@ namespace JustinCredible.SIEmulator
         public delegate void SoundEvent(SoundEventArgs e);
         public event SoundEvent OnSound;
         private SoundEventArgs _soundEventArgs;
+
+        // Fired when statistic data is emitted.
+        public delegate void StatsEvent(StatsEventArgs e);
+        public event StatsEvent OnStats;
+        private StatsEventArgs _statsEventArgs;
 
         #endregion
 
@@ -112,6 +120,12 @@ namespace JustinCredible.SIEmulator
         private Stopwatch _cpuStopWatch = new Stopwatch();
         private int _cycleCount = 0;
 
+        // Used when StatsEnabled is set to true; records time in milliseconds it took to execute approximately
+        // 33k emulated CPU cycles which should be approximately 1/60th of a second (16.6ms) on real hardware.
+        // This can be used to determine if the emulation is running too slow on the target platform. This is
+        // emitted via the OnStats event.
+        private List<double> _timeMsToVsyncMeasurements = new List<double>(60);
+
         // Holds the last data written by the CPU to ports 3 and 5, which are used for sound effects.
         // The CPU holds the bits high when the sounds are playing, and then flips low to stop.
         // For our purposes, we just need to know when the bits flip so we can emit a sound effect
@@ -155,6 +169,11 @@ namespace JustinCredible.SIEmulator
          * Enables debugging statistics and features.
          */
         public bool Debug { get; set; } = false;
+
+        /**
+         * Enables stats for performance; writes various info to the console during runtime.
+         */
+        public bool StatsEnabled { get; set; } = false;
 
         /**
          * When Debug=true, stores the last MAX_ADDRESS_HISTORY values of the program counter.
@@ -234,6 +253,7 @@ namespace JustinCredible.SIEmulator
             };
 
             _soundEventArgs = new SoundEventArgs();
+            _statsEventArgs = new StatsEventArgs();
 
             if (state != null)
                 LoadState(state);
@@ -458,6 +478,18 @@ namespace JustinCredible.SIEmulator
                                 System.Threading.Thread.Sleep((int)sleepForMs);
                         }
 
+                        if (StatsEnabled)
+                        {
+                            _timeMsToVsyncMeasurements.Add(_cpuStopWatch.Elapsed.TotalMilliseconds);
+
+                            if (_timeMsToVsyncMeasurements.Count >= 60)
+                            {
+                                _statsEventArgs.TimeMsToVsyncMeasurements = _timeMsToVsyncMeasurements;
+                                OnStats?.Invoke(_statsEventArgs);
+                                _timeMsToVsyncMeasurements.Clear();
+                            }
+                        }
+
                         _cycleCount = 0;
                         _cpuStopWatch.Restart();
                     }
@@ -477,6 +509,11 @@ namespace JustinCredible.SIEmulator
 
             _cpu = null;
             _thread = null;
+
+            if (OnEmulationStopped != null)
+            {
+                OnEmulationStopped();
+            }
         }
 
         /**
@@ -580,31 +617,31 @@ namespace JustinCredible.SIEmulator
             }
             else if (deviceID == 0x05) // Port 5
             {
-                if ((_device3WriteLastData & 0b00000001) == 0 && (data & 0b00000001) == 0b00000001) // Bit 0 - Invader Movement 1
+                if ((_device5WriteLastData & 0b00000001) == 0 && (data & 0b00000001) == 0b00000001) // Bit 0 - Invader Movement 1
                 {
                     _soundEventArgs.SoundEffect = SoundEffect.InvaderMove1;
                     OnSound(_soundEventArgs);
                 }
 
-                if ((_device3WriteLastData & 0b00000010) == 0 && (data & 0b00000010) == 0b00000010) // Bit 1 - Invader Movement 2
+                if ((_device5WriteLastData & 0b00000010) == 0 && (data & 0b00000010) == 0b00000010) // Bit 1 - Invader Movement 2
                 {
                     _soundEventArgs.SoundEffect = SoundEffect.InvaderMove2;
                     OnSound(_soundEventArgs);
                 }
 
-                if ((_device3WriteLastData & 0b00000100) == 0 && (data & 0b00000100) == 0b00000100) // Bit 2 - Invader Movement 3
+                if ((_device5WriteLastData & 0b00000100) == 0 && (data & 0b00000100) == 0b00000100) // Bit 2 - Invader Movement 3
                 {
                     _soundEventArgs.SoundEffect = SoundEffect.InvaderMove3;
                     OnSound(_soundEventArgs);
                 }
 
-                if ((_device3WriteLastData & 0b00001000) == 0 && (data & 0b00001000) == 0b00001000) // Bit 3 - Invader Movement 4
+                if ((_device5WriteLastData & 0b00001000) == 0 && (data & 0b00001000) == 0b00001000) // Bit 3 - Invader Movement 4
                 {
                     _soundEventArgs.SoundEffect = SoundEffect.InvaderMove4;
                     OnSound(_soundEventArgs);
                 }
 
-                if ((_device3WriteLastData & 0b00010000) == 0 && (data & 0b00010000) == 0b00010000) // Bit 4 - UFO Hit
+                if ((_device5WriteLastData & 0b00010000) == 0 && (data & 0b00010000) == 0b00010000) // Bit 4 - UFO Hit
                 {
                     _soundEventArgs.SoundEffect = SoundEffect.UFOHit;
                     OnSound(_soundEventArgs);

@@ -35,6 +35,22 @@ namespace JustinCredible.Intel8080
         /** Configuration for the CPU; used to customize the CPU instance. */
         public CPUConfig Config { get; private set; }
 
+        /**
+         * EI enables interrupts only after the next instruction executes.
+         * This countdown tracks when the delayed enable should be applied.
+         */
+        private int _enableInterruptsInSteps;
+
+        /** Values copied from the CPUConfig instance in order to improve performance. */
+        private readonly int _memorySize;
+        private readonly bool _enforceWriteBoundsCheck;
+        private readonly int _writeableMemoryStart;
+        private readonly int _writeableMemoryEnd;
+        private readonly bool _mirroringEnabled;
+        private readonly int _mirrorMemoryStart;
+        private readonly int _mirrorMemoryEnd;
+        private readonly int _mirrorOffset;
+
         public delegate void CPUDiagDebugEvent(int eventID);
 
         /** Fired on CALL 0x05 when EnableCPUDiagMode is true. */
@@ -66,6 +82,18 @@ namespace JustinCredible.Intel8080
         public CPU(CPUConfig config)
         {
             Config = config;
+
+            // Copy values from the config that are in the hot paths.
+            // Avoids a deference to the config object on every memory read/write.
+            _memorySize = Config.MemorySize;
+            _enforceWriteBoundsCheck = Config.WriteableMemoryStart != 0 && Config.WriteableMemoryEnd != 0;
+            _writeableMemoryStart = Config.WriteableMemoryStart;
+            _writeableMemoryEnd = Config.WriteableMemoryEnd;
+            _mirroringEnabled = Config.MirrorMemoryStart != 0 && Config.MirrorMemoryEnd != 0;
+            _mirrorMemoryStart = Config.MirrorMemoryStart;
+            _mirrorMemoryEnd = Config.MirrorMemoryEnd;
+            _mirrorOffset = _mirrorMemoryEnd - _mirrorMemoryStart + 1;
+
             this.Reset();
         }
 
@@ -78,6 +106,7 @@ namespace JustinCredible.Intel8080
             ProgramCounter = Config.ProgramCounter;
             StackPointer = Config.StackPointer;
             InterruptsEnabled = Config.InterruptsEnabled;
+            _enableInterruptsInSteps = 0;
 
             // Reset the flag that indicates that the ROM has finished executing.
             Finished = false;
@@ -86,14 +115,14 @@ namespace JustinCredible.Intel8080
         public void LoadMemory(byte[] memory)
         {
             // Ensure the memory data is not larger than we can load.
-            if (memory.Length > Config.MemorySize)
-                throw new Exception($"Memory cannot exceed {Config.MemorySize} bytes.");
+            if (memory.Length > _memorySize)
+                throw new Exception($"Memory cannot exceed {_memorySize} bytes.");
 
-            if (memory.Length != Config.MemorySize)
+            if (memory.Length != _memorySize)
             {
                 // If the memory given is less than the configured memory size, then
                 // ensure that the rest of the memory array is zeroed out.
-                Memory = new byte[Config.MemorySize];
+                Memory = new byte[_memorySize];
                 Array.Copy(memory, Memory, memory.Length);
             }
             else
@@ -107,7 +136,7 @@ namespace JustinCredible.Intel8080
         public void PrintDebugSummary()
         {
             var opcodeByte = ReadMemory(ProgramCounter);
-            var opcodeInstruction = Opcodes.Lookup[opcodeByte].Instruction;
+            var opcodeInstruction = Opcodes.LookupArray[opcodeByte].Instruction;
 
             var opcode = String.Format("0x{0:X2} {1}", opcodeByte, opcodeInstruction);
             var pc = String.Format("0x{0:X4}", ProgramCounter);
@@ -129,7 +158,7 @@ namespace JustinCredible.Intel8080
             Console.WriteLine();
             Console.WriteLine($"A: {regA}\t\tB: {regB}\t\tC: {regC}");
             Console.WriteLine($"D: {regD}\t\tE: {regE}\t\tH: {regH}\t\tL: {regL}");
-            Console.WriteLine($"(DE): {valueAtHL}\t\t\t(HL): {valueAtHL}");
+            Console.WriteLine($"(DE): {valueAtDE}\t\t\t(HL): {valueAtHL}");
             Console.WriteLine();
             Console.WriteLine($"Zero: {Flags.Zero}\tSign: {Flags.Sign}\tParity: {Flags.Parity}\tCarry: {Flags.Carry}\tAux Carry: {Flags.AuxCarry}");
         }
@@ -188,7 +217,7 @@ namespace JustinCredible.Intel8080
                 throw new Exception("Program has finished execution; Reset() must be invoked before invoking Step() again.");
 
             // Fetch the opcode metadata.
-            var opcode = Opcodes.Lookup[opcodeByte];
+            var opcode = Opcodes.LookupArray[opcodeByte];
 
             // Indicates if we should increment the program counter after executing the instruction.
             // This is almost always the case, but there are a few cases where we don't want to.
@@ -240,40 +269,31 @@ namespace JustinCredible.Intel8080
                     #region INR - Increment Register or Memory
 
                         case OpcodeBytes.INR_B:
-                            Registers.B++;
-                            SetFlags(false, Registers.B);
+                            Registers.B = ExecuteINR(Registers.B);
                             break;
                         case OpcodeBytes.INR_C:
-                            Registers.C++;
-                            SetFlags(false, Registers.C);
+                            Registers.C = ExecuteINR(Registers.C);
                             break;
                         case OpcodeBytes.INR_D:
-                            Registers.D++;
-                            SetFlags(false, Registers.D);
+                            Registers.D = ExecuteINR(Registers.D);
                             break;
                         case OpcodeBytes.INR_E:
-                            Registers.E++;
-                            SetFlags(false, Registers.E);
+                            Registers.E = ExecuteINR(Registers.E);
                             break;
                         case OpcodeBytes.INR_H:
-                            Registers.H++;
-                            SetFlags(false, Registers.H);
+                            Registers.H = ExecuteINR(Registers.H);
                             break;
                         case OpcodeBytes.INR_L:
-                            Registers.L++;
-                            SetFlags(false, Registers.L);
+                            Registers.L = ExecuteINR(Registers.L);
                             break;
                         case OpcodeBytes.INR_M:
                         {
-                            var value = ReadMemory(Registers.HL);
-                            value++;
+                            var value = ExecuteINR(ReadMemory(Registers.HL));
                             WriteMemory(Registers.HL, value);
-                            SetFlags(false, ReadMemory(Registers.HL));
                             break;
                         }
                         case OpcodeBytes.INR_A:
-                            Registers.A++;
-                            SetFlags(false, Registers.A);
+                            Registers.A = ExecuteINR(Registers.A);
                             break;
 
                     #endregion
@@ -281,40 +301,31 @@ namespace JustinCredible.Intel8080
                     #region DCR - Decrement Register or Memory
 
                         case OpcodeBytes.DCR_B:
-                            Registers.B--;
-                            SetFlags(false, Registers.B);
+                            Registers.B = ExecuteDCR(Registers.B);
                             break;
                         case OpcodeBytes.DCR_C:
-                            Registers.C--;
-                            SetFlags(false, Registers.C);
+                            Registers.C = ExecuteDCR(Registers.C);
                             break;
                         case OpcodeBytes.DCR_D:
-                            Registers.D--;
-                            SetFlags(false, Registers.D);
+                            Registers.D = ExecuteDCR(Registers.D);
                             break;
                         case OpcodeBytes.DCR_E:
-                            Registers.E--;
-                            SetFlags(false, Registers.E);
+                            Registers.E = ExecuteDCR(Registers.E);
                             break;
                         case OpcodeBytes.DCR_H:
-                            Registers.H--;
-                            SetFlags(false, Registers.H);
+                            Registers.H = ExecuteDCR(Registers.H);
                             break;
                         case OpcodeBytes.DCR_L:
-                            Registers.L--;
-                            SetFlags(false, Registers.L);
+                            Registers.L = ExecuteDCR(Registers.L);
                             break;
                         case OpcodeBytes.DCR_M:
                         {
-                            var value = ReadMemory(Registers.HL);
-                            value--;
+                            var value = ExecuteDCR(ReadMemory(Registers.HL));
                             WriteMemory(Registers.HL, value);
-                            SetFlags(false, ReadMemory(Registers.HL));
                             break;
                         }
                         case OpcodeBytes.DCR_A:
-                            Registers.A--;
-                            SetFlags(false, Registers.A);
+                            Registers.A = ExecuteDCR(Registers.A);
                             break;
 
                     #endregion
@@ -1586,14 +1597,18 @@ namespace JustinCredible.Intel8080
 
                 #region Interrupt flip-flop instructions
 
+                    // Intel 8080 EI behavior: interrupts are enabled after the
+                    // instruction immediately following EI executes.
+
                     // Enable interrupts
                     case OpcodeBytes.EI:
-                        InterruptsEnabled = true;
+                        _enableInterruptsInSteps = 2;
                         break;
 
                     // Disable interrupts
                     case OpcodeBytes.DI:
                         InterruptsEnabled = false;
+                        _enableInterruptsInSteps = 0;
                         break;
 
                 #endregion
@@ -1642,6 +1657,15 @@ namespace JustinCredible.Intel8080
             // Increment the program counter.
             if (incrementProgramCounter)
                ProgramCounter += (UInt16)opcode.Size;
+
+            // Apply EI's delayed interrupt-enable semantics.
+            if (_enableInterruptsInSteps > 0)
+            {
+                _enableInterruptsInSteps--;
+
+                if (_enableInterruptsInSteps == 0)
+                    InterruptsEnabled = true;
+            }
 
             return elapsedCycles;
         }
@@ -1857,6 +1881,28 @@ namespace JustinCredible.Intel8080
             Registers.A = (byte)result;
         }
 
+        private byte ExecuteINR(byte value)
+        {
+            var result = (byte)(value + 1);
+            var auxCarryOccurred = (value & 0x0F) == 0x0F;
+
+            // Carry flag remains unchained for INR.
+            SetFlags(Flags.Carry, result, auxCarryOccurred);
+
+            return result;
+        }
+
+        private byte ExecuteDCR(byte value)
+        {
+            var result = (byte)(value - 1);
+            var auxBorrowOccurred = (value & 0x0F) == 0x00;
+
+            // Carry flag remains unchained for DCR.
+            SetFlags(Flags.Carry, result, auxBorrowOccurred);
+
+            return result;
+        }
+
         private void ExecuteSUB(byte value, bool subtractCarryFlag = false, bool updateAccumulator = true)
         {
             var borrowOccurred = (subtractCarryFlag && Flags.Carry)
@@ -1978,96 +2024,63 @@ namespace JustinCredible.Intel8080
 
         private byte ReadMemory(int address)
         {
-            var mirroringEnabled = Config.MirrorMemoryStart != 0 && Config.MirrorMemoryEnd != 0;
-            var error = false;
+            if ((uint)address < (uint)_memorySize)
+                return Memory[address];
 
-            byte? result = null;
+            if (_mirroringEnabled && address >= _mirrorMemoryStart && address <= _mirrorMemoryEnd)
+            {
+                var translated = address - _mirrorOffset;
 
-            if (address < 0)
-            {
-                error = true;
-            }
-            else if (address < Config.MemorySize)
-            {
-                result = Memory[address];
-            }
-            else if (mirroringEnabled && address >= Config.MirrorMemoryStart && address <= Config.MirrorMemoryEnd)
-            {
-                var translated = address - (Config.MirrorMemoryEnd - Config.MirrorMemoryStart + 1);
-
-                if (translated < 0 || translated >= Config.MemorySize)
-                {
-                    error = true;
-                }
-                else
-                {
-                    result = Memory[translated];
-                }
-            }
-            else
-            {
-                error = true;
+                if ((uint)translated < (uint)_memorySize)
+                    return Memory[translated];
             }
 
-            if (error)
-            {
-                var programCounterFormatted = String.Format("0x{0:X4}", ProgramCounter);
-                var addressFormatted = String.Format("0x{0:X4}", address);
-                var startAddressFormatted = String.Format("0x{0:X4}", Config.WriteableMemoryStart);
-                var endAddressFormatted = String.Format("0x{0:X4}", Config.WriteableMemoryEnd);
-                var mirrorEndAddressFormatted = String.Format("0x{0:X4}", Config.MirrorMemoryEnd);
-                throw new Exception($"Illegal memory address ({addressFormatted}) specified for read memory operation at address {programCounterFormatted}; expected address to be between {startAddressFormatted} and {(mirroringEnabled ? mirrorEndAddressFormatted : endAddressFormatted)} inclusive.");
-            }
-
-            if (result == null)
-                throw new Exception("Failed sanity check; result should be set.");
-
-            return result.Value;
+            throw CreateReadMemoryException(address);
         }
 
         private void WriteMemory(int address, byte value)
         {
-            // Determine if we should allow the write to memory based on the address
-            // if the configuration has specified a restricted writeable range.
-            var enforceWriteBoundsCheck = Config.WriteableMemoryStart != 0 && Config.WriteableMemoryEnd != 0;
-            var mirroringEnabled = Config.MirrorMemoryStart != 0 && Config.MirrorMemoryEnd != 0;
-            var allowWrite = true;
-            var error = false;
-
-            if (enforceWriteBoundsCheck)
-                allowWrite = address >= Config.WriteableMemoryStart && address <= Config.WriteableMemoryEnd;
-
-            if (allowWrite)
+            if ((uint)address < (uint)_memorySize)
             {
-                Memory[address] = value;
-            }
-            else if (mirroringEnabled && address >= Config.MirrorMemoryStart && address <= Config.MirrorMemoryEnd)
-            {
-                var translated = address - (Config.MirrorMemoryEnd - Config.MirrorMemoryStart + 1);
-
-                if (translated < 0 || translated >= Config.MemorySize)
+                if (!_enforceWriteBoundsCheck || (address >= _writeableMemoryStart && address <= _writeableMemoryEnd))
                 {
-                    error = true;
+                    Memory[address] = value;
+                    return;
                 }
-                else
+            }
+
+            if (_mirroringEnabled && address >= _mirrorMemoryStart && address <= _mirrorMemoryEnd)
+            {
+                var translated = address - _mirrorOffset;
+
+                if ((uint)translated < (uint)_memorySize)
                 {
                     Memory[translated] = value;
+                    return;
                 }
             }
-            else
-            {
-                error = true;
-            }
 
-            if (error)
-            {
-                var programCounterFormatted = String.Format("0x{0:X4}", ProgramCounter);
-                var addressFormatted = String.Format("0x{0:X4}", address);
-                var startAddressFormatted = String.Format("0x{0:X4}", Config.WriteableMemoryStart);
-                var endAddressFormatted = String.Format("0x{0:X4}", Config.WriteableMemoryEnd);
-                var mirrorEndAddressFormatted = String.Format("0x{0:X4}", Config.MirrorMemoryEnd);
-                throw new Exception($"Illegal memory address ({addressFormatted}) specified for write memory operation at address {programCounterFormatted}; expected address to be between {startAddressFormatted} and {(mirroringEnabled ? mirrorEndAddressFormatted : endAddressFormatted)} inclusive.");
-            }
+            throw CreateWriteMemoryException(address);
+        }
+
+        private Exception CreateReadMemoryException(int address)
+        {
+            var programCounterFormatted = String.Format("0x{0:X4}", ProgramCounter);
+            var addressFormatted = String.Format("0x{0:X4}", address);
+            var startAddressFormatted = String.Format("0x{0:X4}", Config.WriteableMemoryStart);
+            var endAddressFormatted = String.Format("0x{0:X4}", Config.WriteableMemoryEnd);
+            var mirrorEndAddressFormatted = String.Format("0x{0:X4}", Config.MirrorMemoryEnd);
+            throw new Exception($"Illegal memory address ({addressFormatted}) specified for read memory operation at address {programCounterFormatted}; expected address to be between {startAddressFormatted} and {(_mirroringEnabled ? mirrorEndAddressFormatted : endAddressFormatted)} inclusive.");
+        }
+
+        private Exception CreateWriteMemoryException(int address)
+        {
+            var programCounterFormatted = String.Format("0x{0:X4}", ProgramCounter);
+            var addressFormatted = String.Format("0x{0:X4}", address);
+            var startAddressFormatted = String.Format("0x{0:X4}", Config.WriteableMemoryStart);
+            var endAddressFormatted = String.Format("0x{0:X4}", Config.WriteableMemoryEnd);
+            var mirrorEndAddressFormatted = String.Format("0x{0:X4}", Config.MirrorMemoryEnd);
+            throw new Exception($"Illegal memory address ({addressFormatted}) specified for write memory operation at address {programCounterFormatted}; expected address to be between {startAddressFormatted} and {(_mirroringEnabled ? mirrorEndAddressFormatted : endAddressFormatted)} inclusive.");
         }
 
         #endregion

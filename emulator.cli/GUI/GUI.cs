@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using SDL2;
 
-namespace JustinCredible.SIEmulator
+namespace JustinCredible.SIEmulator.CLI
 {
     /**
      * The "platform" code which handles creating of the GUI window to show graphics,
@@ -118,7 +118,7 @@ namespace JustinCredible.SIEmulator
 
                 var pointer = SDL_mixer.Mix_LoadWAV(filePath);
 
-                if (pointer == null)
+                if (pointer == IntPtr.Zero)
                     throw new Exception(String.Format("Error loading sound {0}. SDL Error: {1}", sfx, SDL.SDL_GetError()));
 
                 soundEffects.Add(sfx, pointer);

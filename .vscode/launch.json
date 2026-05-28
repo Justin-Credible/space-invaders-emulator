@@ -5,12 +5,12 @@
    "version": "0.2.0",
    "configurations": [
         {
-            "name": ".NET Core Launch (emulator)",
+            "name": ".NET Core Launch (emulator.cli)",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "build emulator",
+            "preLaunchTask": "build emulator.cli",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/emulator/bin/Debug/netcoreapp3.1/emulator.dll",
+            "program": "${workspaceFolder}/emulator.cli/bin/Debug/net10.0/emulator.cli.dll",
             "args": [
                 "run",
                 "${workspaceFolder}/roms",
@@ -37,7 +37,7 @@
             "request": "launch",
             "preLaunchTask": "build disassembler",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/disassembler/bin/Debug/netcoreapp3.1/disassembler.dll",
+            "program": "${workspaceFolder}/disassembler.cli/bin/Debug/net10.0/disassembler.cli.dll",
             "args": [],
             "cwd": "${workspaceFolder}/disassembler",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
@@ -49,6 +49,16 @@
             "type": "coreclr",
             "request": "attach",
             "processId": "${command:pickProcess}"
+        },
+        {
+            "name": "Meadow MCU Run",
+            "type": "meadow",
+            "request": "launch",
+            "preLaunchTask": "meadow: Build",
+            "deviceInfo": {
+                "name": "COM4",
+                "serial": "COM4"
+            }
         }
     ]
 }

@@ -1,6 +1,6 @@
 using System.Reflection;
 
-namespace JustinCredible.I8080Disassembler
+namespace JustinCredible.SIEmulator.CLI
 {
     public class Utilities
     {

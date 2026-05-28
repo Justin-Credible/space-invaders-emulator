@@ -272,6 +272,107 @@ namespace JustinCredible.Intel8080.Tests
             Assert.Equal(0x01, state.ProgramCounter);
         }
 
+        [Theory]
+        [InlineData(Register.A)]
+        [InlineData(Register.B)]
+        [InlineData(Register.C)]
+        [InlineData(Register.D)]
+        [InlineData(Register.E)]
+        [InlineData(Register.H)]
+        [InlineData(Register.L)]
+        public void TestDCR_PreservesCarryFlag(Register sourceReg)
+        {
+            var rom = AssembleSource($@"
+                org 00h
+                DCR {sourceReg}
+                HLT
+            ");
+
+            var registers = new CPURegisters()
+            {
+                [sourceReg] = 0x44,
+            };
+
+            var initialState = new CPUConfig()
+            {
+                Registers = registers,
+                Flags = new ConditionFlags()
+                {
+                    Carry = true,
+                },
+            };
+
+            var state = Execute(rom, initialState);
+
+            Assert.Equal(0x43, state.Registers[sourceReg]);
+            Assert.True(state.Flags.Carry);
+        }
+
+        [Theory]
+        [InlineData(Register.A)]
+        [InlineData(Register.B)]
+        [InlineData(Register.C)]
+        [InlineData(Register.D)]
+        [InlineData(Register.E)]
+        [InlineData(Register.H)]
+        [InlineData(Register.L)]
+        public void TestDCR_SetsAuxCarry(Register sourceReg)
+        {
+            var rom = AssembleSource($@"
+                org 00h
+                DCR {sourceReg}
+                HLT
+            ");
+
+            var registers = new CPURegisters()
+            {
+                [sourceReg] = 0x10,
+            };
+
+            var initialState = new CPUConfig()
+            {
+                Registers = registers,
+            };
+
+            var state = Execute(rom, initialState);
+
+            Assert.Equal(0x0F, state.Registers[sourceReg]);
+            Assert.True(state.Flags.AuxCarry);
+        }
+
+        [Fact]
+        public void TestDCR_M_PreservesCarryFlag()
+        {
+            var rom = AssembleSource($@"
+                org 00h
+                DCR M
+                HLT
+            ");
+
+            var registers = new CPURegisters()
+            {
+                HL = 0x2477,
+            };
+
+            var memory = new byte[16384];
+            memory[0x2477] = 0x44;
+
+            var initialState = new CPUConfig()
+            {
+                Registers = registers,
+                MemorySize = memory.Length,
+                Flags = new ConditionFlags()
+                {
+                    Carry = true,
+                },
+            };
+
+            var state = Execute(rom, memory, initialState);
+
+            Assert.Equal(0x43, state.Memory[0x2477]);
+            Assert.True(state.Flags.Carry);
+        }
+
         [Fact]
         public void TestDCR_M_SignFlag()
         {

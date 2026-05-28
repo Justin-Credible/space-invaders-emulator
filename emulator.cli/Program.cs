@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.Extensions.CommandLineUtils;
 
-namespace JustinCredible.SIEmulator
+namespace JustinCredible.SIEmulator.CLI
 {
     /**
      * The main entry point into the emulator which handles parsing CLI arguments

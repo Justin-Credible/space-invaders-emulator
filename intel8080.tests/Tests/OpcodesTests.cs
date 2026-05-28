@@ -8,7 +8,7 @@ namespace JustinCredible.Intel8080.Tests
         [Fact]
         public void TestLookupTableHasCorrectBytes()
         {
-            foreach (var entry in Opcodes.Lookup)
+            foreach (var entry in Opcodes.LookupDictionary)
             {
                 var opcodeByteIndex = entry.Key;
                 var opcodeByteDefined = entry.Value.Code;
