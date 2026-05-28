@@ -137,17 +137,12 @@ namespace JustinCredible.SIEmulator.MeadowMCU
             Resolver.Log.Info("Initializing button inputs...");
 
             // Pull-up + active-low assumes each button shorts the pin to GND when pressed.
-            ConfigureButton("P1 Credit", Device.Pins.D02, pressed => _game.ButtonCredit = pressed);
+            // The port numbers are important here as each must be on a different interrupt group.
+            ConfigureButton("P1 Credit", Device.Pins.D07, pressed => _game.ButtonCredit = pressed);
             ConfigureButton("P1 Start", Device.Pins.D03, pressed => _game.ButtonStart1P = pressed);
             ConfigureButton("P1 Left", Device.Pins.D04, pressed => _game.ButtonP1Left = pressed);
             ConfigureButton("P1 Right", Device.Pins.D05, pressed => _game.ButtonP1Right = pressed);
             ConfigureButton("P1 Fire", Device.Pins.D06, pressed => _game.ButtonP1Fire = pressed);
-
-            // These are optional in the original request but fit on the remaining digital pins.
-            ConfigureButton("P2 Start", Device.Pins.D07, pressed => _game.ButtonStart2P = pressed);
-            ConfigureButton("P2 Left", Device.Pins.D08, pressed => _game.ButtonP2Left = pressed);
-            ConfigureButton("P2 Right", Device.Pins.D09, pressed => _game.ButtonP2Right = pressed);
-            ConfigureButton("P2 Fire", Device.Pins.D10, pressed => _game.ButtonP2Fire = pressed);
         }
 
         private void ConfigureButton(string name, IPin pin, Action<bool> onChanged)
