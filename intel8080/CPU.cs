@@ -35,6 +35,12 @@ namespace JustinCredible.Intel8080
         /** Configuration for the CPU; used to customize the CPU instance. */
         public CPUConfig Config { get; private set; }
 
+        /**
+         * EI enables interrupts only after the next instruction executes.
+         * This countdown tracks when the delayed enable should be applied.
+         */
+        private int _enableInterruptsInSteps;
+
         /** Values copied from the CPUConfig instance in order to improve performance. */
         private readonly int _memorySize;
         private readonly bool _enforceWriteBoundsCheck;
@@ -100,6 +106,7 @@ namespace JustinCredible.Intel8080
             ProgramCounter = Config.ProgramCounter;
             StackPointer = Config.StackPointer;
             InterruptsEnabled = Config.InterruptsEnabled;
+            _enableInterruptsInSteps = 0;
 
             // Reset the flag that indicates that the ROM has finished executing.
             Finished = false;
@@ -1608,14 +1615,18 @@ namespace JustinCredible.Intel8080
 
                 #region Interrupt flip-flop instructions
 
+                    // Intel 8080 EI behavior: interrupts are enabled after the
+                    // instruction immediately following EI executes.
+
                     // Enable interrupts
                     case OpcodeBytes.EI:
-                        InterruptsEnabled = true;
+                        _enableInterruptsInSteps = 2;
                         break;
 
                     // Disable interrupts
                     case OpcodeBytes.DI:
                         InterruptsEnabled = false;
+                        _enableInterruptsInSteps = 0;
                         break;
 
                 #endregion
@@ -1664,6 +1675,15 @@ namespace JustinCredible.Intel8080
             // Increment the program counter.
             if (incrementProgramCounter)
                ProgramCounter += (UInt16)opcode.Size;
+
+            // Apply EI's delayed interrupt-enable semantics.
+            if (_enableInterruptsInSteps > 0)
+            {
+                _enableInterruptsInSteps--;
+
+                if (_enableInterruptsInSteps == 0)
+                    InterruptsEnabled = true;
+            }
 
             return elapsedCycles;
         }
