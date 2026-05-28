@@ -269,40 +269,31 @@ namespace JustinCredible.Intel8080
                     #region INR - Increment Register or Memory
 
                         case OpcodeBytes.INR_B:
-                            Registers.B++;
-                            SetFlags(false, Registers.B);
+                            Registers.B = ExecuteINR(Registers.B);
                             break;
                         case OpcodeBytes.INR_C:
-                            Registers.C++;
-                            SetFlags(false, Registers.C);
+                            Registers.C = ExecuteINR(Registers.C);
                             break;
                         case OpcodeBytes.INR_D:
-                            Registers.D++;
-                            SetFlags(false, Registers.D);
+                            Registers.D = ExecuteINR(Registers.D);
                             break;
                         case OpcodeBytes.INR_E:
-                            Registers.E++;
-                            SetFlags(false, Registers.E);
+                            Registers.E = ExecuteINR(Registers.E);
                             break;
                         case OpcodeBytes.INR_H:
-                            Registers.H++;
-                            SetFlags(false, Registers.H);
+                            Registers.H = ExecuteINR(Registers.H);
                             break;
                         case OpcodeBytes.INR_L:
-                            Registers.L++;
-                            SetFlags(false, Registers.L);
+                            Registers.L = ExecuteINR(Registers.L);
                             break;
                         case OpcodeBytes.INR_M:
                         {
-                            var value = ReadMemory(Registers.HL);
-                            value++;
+                            var value = ExecuteINR(ReadMemory(Registers.HL));
                             WriteMemory(Registers.HL, value);
-                            SetFlags(false, ReadMemory(Registers.HL));
                             break;
                         }
                         case OpcodeBytes.INR_A:
-                            Registers.A++;
-                            SetFlags(false, Registers.A);
+                            Registers.A = ExecuteINR(Registers.A);
                             break;
 
                     #endregion
@@ -310,40 +301,31 @@ namespace JustinCredible.Intel8080
                     #region DCR - Decrement Register or Memory
 
                         case OpcodeBytes.DCR_B:
-                            Registers.B--;
-                            SetFlags(false, Registers.B);
+                            Registers.B = ExecuteDCR(Registers.B);
                             break;
                         case OpcodeBytes.DCR_C:
-                            Registers.C--;
-                            SetFlags(false, Registers.C);
+                            Registers.C = ExecuteDCR(Registers.C);
                             break;
                         case OpcodeBytes.DCR_D:
-                            Registers.D--;
-                            SetFlags(false, Registers.D);
+                            Registers.D = ExecuteDCR(Registers.D);
                             break;
                         case OpcodeBytes.DCR_E:
-                            Registers.E--;
-                            SetFlags(false, Registers.E);
+                            Registers.E = ExecuteDCR(Registers.E);
                             break;
                         case OpcodeBytes.DCR_H:
-                            Registers.H--;
-                            SetFlags(false, Registers.H);
+                            Registers.H = ExecuteDCR(Registers.H);
                             break;
                         case OpcodeBytes.DCR_L:
-                            Registers.L--;
-                            SetFlags(false, Registers.L);
+                            Registers.L = ExecuteDCR(Registers.L);
                             break;
                         case OpcodeBytes.DCR_M:
                         {
-                            var value = ReadMemory(Registers.HL);
-                            value--;
+                            var value = ExecuteDCR(ReadMemory(Registers.HL));
                             WriteMemory(Registers.HL, value);
-                            SetFlags(false, ReadMemory(Registers.HL));
                             break;
                         }
                         case OpcodeBytes.DCR_A:
-                            Registers.A--;
-                            SetFlags(false, Registers.A);
+                            Registers.A = ExecuteDCR(Registers.A);
                             break;
 
                     #endregion
@@ -1897,6 +1879,28 @@ namespace JustinCredible.Intel8080
             SetFlags(carryOccurred, (byte)result);
 
             Registers.A = (byte)result;
+        }
+
+        private byte ExecuteINR(byte value)
+        {
+            var result = (byte)(value + 1);
+            var auxCarryOccurred = (value & 0x0F) == 0x0F;
+
+            // Carry flag remains unchained for INR.
+            SetFlags(Flags.Carry, result, auxCarryOccurred);
+
+            return result;
+        }
+
+        private byte ExecuteDCR(byte value)
+        {
+            var result = (byte)(value - 1);
+            var auxBorrowOccurred = (value & 0x0F) == 0x00;
+
+            // Carry flag remains unchained for DCR.
+            SetFlags(Flags.Carry, result, auxBorrowOccurred);
+
+            return result;
         }
 
         private void ExecuteSUB(byte value, bool subtractCarryFlag = false, bool updateAccumulator = true)
